@@ -256,7 +256,7 @@ async def login(request: LoginRequest):
     )
 
 
-@api_router.post("/auth/register", response_model=UsuarioResponseDTO, tags=["Auth"])
+@api_router.post("/auth/register", response_model=UsuarioResponseDTO, status_code=status.HTTP_201_CREATED, tags=["Auth"])
 async def register(request: RegisterRequest):
     """Registra um novo usuário"""
     # Verifica se email já existe
