@@ -2,10 +2,10 @@
 from typing import List
 from io import BytesIO
 
-from ...domain.entities import Usuario
-from ...domain.repositories import IPedidoRepository, IAuditoriaRepository
-from ...domain.exceptions import BusinessRuleException, AuthorizationException
-from ...infrastructure.exporters import ExportadorFactory
+from src.domain.entities import Usuario
+from src.domain.repositories import IPedidoRepository, IAuditoriaRepository
+from src.domain.exceptions import BusinessRuleException, AuthorizationException
+from src.infrastructure.exporters import ExportadorFactory
 
 
 class GerarExportacaoTOTVSUseCase:

@@ -3,11 +3,11 @@ import uuid
 from datetime import datetime, timezone
 from typing import List
 
-from ...domain.entities import PedidoMatricula, Aluno, Usuario
-from ...domain.value_objects import CPF, Email, Telefone, StatusPedido
-from ...domain.repositories import IPedidoRepository, IAuditoriaRepository
-from ...domain.exceptions import BusinessRuleException, DuplicidadeException
-from ..dtos.request import CriarPedidoDTO, AlunoCreateDTO
+from src.domain.entities import PedidoMatricula, Aluno, Usuario
+from src.domain.value_objects import CPF, Email, Telefone, StatusPedido
+from src.domain.repositories import IPedidoRepository, IAuditoriaRepository
+from src.domain.exceptions import BusinessRuleException, DuplicidadeException
+from src.application.dtos.request import CriarPedidoDTO, AlunoCreateDTO
 
 
 class CriarPedidoMatriculaUseCase:

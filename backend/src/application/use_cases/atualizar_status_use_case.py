@@ -1,9 +1,9 @@
 """Use Case - Atualizar Status do Pedido"""
-from ...domain.entities import PedidoMatricula, Usuario
-from ...domain.value_objects import StatusPedido
-from ...domain.repositories import IPedidoRepository, IAuditoriaRepository
-from ...domain.exceptions import PedidoNaoEncontradoException, AuthorizationException
-from ..dtos.request import AtualizarStatusDTO
+from src.domain.entities import PedidoMatricula, Usuario
+from src.domain.value_objects import StatusPedido
+from src.domain.repositories import IPedidoRepository, IAuditoriaRepository
+from src.domain.exceptions import PedidoNaoEncontradoException, AuthorizationException
+from src.application.dtos.request import AtualizarStatusDTO
 
 
 class AtualizarStatusPedidoUseCase:

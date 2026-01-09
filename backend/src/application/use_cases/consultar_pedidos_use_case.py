@@ -2,12 +2,12 @@
 from typing import Optional, Tuple, List
 import math
 
-from ...domain.entities import PedidoMatricula, Usuario
-from ...domain.value_objects import StatusPedido
-from ...domain.repositories import IPedidoRepository
-from ...domain.exceptions import AuthorizationException, PedidoNaoEncontradoException
-from ..dtos.request import FiltrosPedidoDTO
-from ..dtos.response import ListaPedidosResponseDTO, PedidoResponseDTO, PaginacaoDTO
+from src.domain.entities import PedidoMatricula, Usuario
+from src.domain.value_objects import StatusPedido
+from src.domain.repositories import IPedidoRepository
+from src.domain.exceptions import AuthorizationException, PedidoNaoEncontradoException
+from src.application.dtos.request import FiltrosPedidoDTO
+from src.application.dtos.response import ListaPedidosResponseDTO, PedidoResponseDTO, PaginacaoDTO
 
 
 class ConsultarPedidosUseCase:
