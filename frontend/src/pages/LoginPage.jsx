@@ -47,20 +47,15 @@ const LoginPage = () => {
       <Card className="w-full max-w-md shadow-2xl animate-fadeIn">
         <CardHeader className="space-y-4 pb-4">
           {/* Logo SENAI CIMATEC */}
-          <div className="text-center space-y-2">
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-12 h-12 bg-[#004587] rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl font-['Chivo']">S</span>
-              </div>
-              <div className="text-left">
-                <h1 className="text-2xl font-bold text-[#004587] font-['Chivo'] tracking-tight">
-                  SENAI CIMATEC
-                </h1>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">
-                  Central de Matrículas
-                </p>
-              </div>
-            </div>
+          <div className="text-center space-y-3">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_matricula-hub/artifacts/p7o5gy77_logo_cimatec.jpg" 
+              alt="SENAI CIMATEC"
+              className="h-16 mx-auto object-contain"
+            />
+            <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
+              Central de Matrículas
+            </p>
           </div>
         </CardHeader>
         

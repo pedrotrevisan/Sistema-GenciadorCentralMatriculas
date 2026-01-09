@@ -72,13 +72,12 @@ const DashboardLayout = () => {
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-                <span className="text-[#004587] font-bold text-sm font-['Chivo']">S</span>
-              </div>
-              <span className="text-white font-semibold font-['Chivo'] hidden sm:block">
-                SENAI CIMATEC
-              </span>
+            <div className="flex items-center gap-3">
+              <img 
+                src="https://customer-assets.emergentagent.com/job_matricula-hub/artifacts/p7o5gy77_logo_cimatec.jpg" 
+                alt="SENAI CIMATEC"
+                className="h-10 bg-white rounded px-2 py-1 object-contain"
+              />
             </div>
           </div>
 
