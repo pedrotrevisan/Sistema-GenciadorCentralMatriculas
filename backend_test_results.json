@@ -1,0 +1,166 @@
+{
+  "summary": {
+    "total_tests": 25,
+    "passed_tests": 20,
+    "success_rate": 80.0,
+    "timestamp": "2026-01-09T12:52:39.825486"
+  },
+  "test_details": [
+    {
+      "name": "Root endpoint (/api/)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:37.612763"
+    },
+    {
+      "name": "Health endpoint (/api/health)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:37.644604"
+    },
+    {
+      "name": "Login admin",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-09T12:52:37.910931"
+    },
+    {
+      "name": "Login assistente",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-09T12:52:38.179313"
+    },
+    {
+      "name": "Login consultor",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-09T12:52:38.438647"
+    },
+    {
+      "name": "Get current user (admin)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:38.482303"
+    },
+    {
+      "name": "Get current user (assistente)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:38.527875"
+    },
+    {
+      "name": "Get current user (consultor)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:38.567326"
+    },
+    {
+      "name": "Get cursos",
+      "success": true,
+      "details": "Returned 8 items",
+      "timestamp": "2026-01-09T12:52:38.604996"
+    },
+    {
+      "name": "Get projetos",
+      "success": true,
+      "details": "Returned 4 items",
+      "timestamp": "2026-01-09T12:52:38.639830"
+    },
+    {
+      "name": "Get empresas",
+      "success": true,
+      "details": "Returned 5 items",
+      "timestamp": "2026-01-09T12:52:38.677799"
+    },
+    {
+      "name": "Get status-pedido",
+      "success": true,
+      "details": "Returned 8 items",
+      "timestamp": "2026-01-09T12:52:38.712470"
+    },
+    {
+      "name": "Dashboard (admin)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:38.798301"
+    },
+    {
+      "name": "Dashboard (assistente)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:38.840214"
+    },
+    {
+      "name": "Dashboard (consultor)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:38.881713"
+    },
+    {
+      "name": "List pedidos (admin)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:38.914678"
+    },
+    {
+      "name": "List pedidos (assistente)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:38.999023"
+    },
+    {
+      "name": "List pedidos (consultor)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:39.052001"
+    },
+    {
+      "name": "Create pedido (consultor)",
+      "success": false,
+      "details": "Status: 400",
+      "timestamp": "2026-01-09T12:52:39.091261"
+    },
+    {
+      "name": "List users (admin)",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:39.176702"
+    },
+    {
+      "name": "Create new user",
+      "success": false,
+      "details": "Status: 200",
+      "timestamp": "2026-01-09T12:52:39.447426"
+    },
+    {
+      "name": "Export TOTVS (admin)",
+      "success": false,
+      "details": "Status: 422",
+      "timestamp": "2026-01-09T12:52:39.485674"
+    },
+    {
+      "name": "Export TOTVS (assistente)",
+      "success": false,
+      "details": "Status: 422",
+      "timestamp": "2026-01-09T12:52:39.526903"
+    },
+    {
+      "name": "Consultor blocked from users endpoint",
+      "success": false,
+      "details": "Authorization not working",
+      "timestamp": "2026-01-09T12:52:39.562819"
+    },
+    {
+      "name": "Assistente blocked from creating users",
+      "success": true,
+      "details": "Should be blocked",
+      "timestamp": "2026-01-09T12:52:39.825457"
+    }
+  ],
+  "tokens_obtained": [
+    "admin",
+    "assistente",
+    "consultor"
+  ],
+  "base_url": "https://matricula-hub.preview.emergentagent.com"
+}
