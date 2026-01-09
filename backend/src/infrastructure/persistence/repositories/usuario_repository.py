@@ -2,8 +2,8 @@
 from typing import List, Optional, Tuple
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from ...domain.repositories import IUsuarioRepository
-from ...domain.entities import Usuario
+from src.domain.repositories import IUsuarioRepository
+from src.domain.entities import Usuario
 
 
 class UsuarioRepositoryMongo(IUsuarioRepository):

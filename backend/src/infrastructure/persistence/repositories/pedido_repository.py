@@ -3,9 +3,9 @@ from typing import List, Optional, Tuple
 from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from ...domain.repositories import IPedidoRepository
-from ...domain.entities import PedidoMatricula
-from ...domain.value_objects import StatusPedido
+from src.domain.repositories import IPedidoRepository
+from src.domain.entities import PedidoMatricula
+from src.domain.value_objects import StatusPedido
 
 
 class PedidoRepositoryMongo(IPedidoRepository):

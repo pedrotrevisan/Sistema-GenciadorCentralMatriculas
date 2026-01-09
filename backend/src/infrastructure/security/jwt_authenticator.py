@@ -5,8 +5,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 import os
 
-from ...domain.entities import Usuario, RoleUsuario
-from ...domain.exceptions import AuthenticationException
+from src.domain.entities import Usuario, RoleUsuario
+from src.domain.exceptions import AuthenticationException
 
 
 class JWTAuthenticator:

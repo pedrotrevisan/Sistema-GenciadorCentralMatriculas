@@ -7,7 +7,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 import csv
 
-from ...domain.entities import PedidoMatricula
+from src.domain.entities import PedidoMatricula
 
 
 class IExportadorArquivo(ABC):

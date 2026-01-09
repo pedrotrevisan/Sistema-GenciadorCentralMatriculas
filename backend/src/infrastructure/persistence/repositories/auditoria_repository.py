@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import uuid
 
-from ...domain.repositories import IAuditoriaRepository
+from src.domain.repositories import IAuditoriaRepository
 
 
 class AuditoriaRepositoryMongo(IAuditoriaRepository):
