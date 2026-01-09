@@ -1,30 +1,25 @@
 # FastAPI and server
-fastapi==0.115.12
-uvicorn[standard]==0.34.2
-python-dotenv==1.1.0
+fastapi
+uvicorn
+python-dotenv
 
 # Database - SQLite
-sqlalchemy==2.0.45
-aiosqlite==0.22.1
-greenlet==3.3.0
+sqlalchemy
+aiosqlite
 
 # Authentication
-python-jose[cryptography]==3.5.0
-passlib[bcrypt]==1.7.4
-bcrypt==4.3.0
+python-jose[cryptography]
+passlib[bcrypt]
 
 # Validation
-pydantic==2.11.4
-email-validator==2.2.0
+pydantic
+email-validator
 
 # Excel export
-openpyxl==3.1.5
-et-xmlfile==2.0.0
+openpyxl
 
-# Async HTTP
-httpx==0.28.1
-anyio==4.9.0
+# HTTP client
+httpx
 
 # Others
-python-multipart==0.0.20
-typing_extensions==4.15.0
+python-multipart
