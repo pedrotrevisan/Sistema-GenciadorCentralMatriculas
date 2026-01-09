@@ -1,0 +1,146 @@
+{
+  "identity": {
+    "name": "SENAI CIMATEC - Central de Matrículas",
+    "persona": "E1 - The Anti-AI Designer",
+    "tone": "Industrial, Precision, Corporate, Efficient",
+    "theme_mode": "light"
+  },
+  "typography": {
+    "font_family": {
+      "heading": "Chivo, sans-serif",
+      "body": "Manrope, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-4xl md:text-5xl font-bold tracking-tight leading-tight",
+      "h2": "text-3xl md:text-4xl font-bold tracking-tight",
+      "h3": "text-2xl font-semibold tracking-tight",
+      "h4": "text-xl font-semibold tracking-tight",
+      "body_lg": "text-lg leading-relaxed",
+      "body_base": "text-base leading-relaxed text-slate-600",
+      "body_sm": "text-sm leading-relaxed text-slate-500",
+      "caption": "text-xs font-medium uppercase tracking-wider text-slate-400"
+    },
+    "imports": [
+      "https://fonts.googleapis.com/css2?family=Chivo:wght@300;400;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    ]
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "#004587",
+        "foreground": "#FFFFFF",
+        "50": "#f0f7ff",
+        "100": "#e0effe",
+        "200": "#bae6fd",
+        "300": "#7dd3fc",
+        "400": "#38bdf8",
+        "500": "#0ea5e9",
+        "600": "#0284c7",
+        "700": "#004587",
+        "800": "#075985",
+        "900": "#0c4a6e"
+      },
+      "action": {
+        "DEFAULT": "#E30613",
+        "foreground": "#FFFFFF",
+        "hover": "#b9050f"
+      },
+      "background": {
+        "DEFAULT": "#F8FAFC",
+        "paper": "#FFFFFF",
+        "subtle": "#F1F5F9"
+      },
+      "text": {
+        "primary": "#0F172A",
+        "secondary": "#475569",
+        "muted": "#94A3B8"
+      },
+      "border": {
+        "DEFAULT": "#E2E8F0",
+        "focus": "#004587"
+      },
+      "status": {
+        "success": "#10B981",
+        "warning": "#F59E0B",
+        "error": "#EF4444",
+        "info": "#3B82F6"
+      }
+    },
+    "usage_rules": {
+      "primary_action": "bg-[#E30613] hover:bg-[#b9050f] text-white shadow-sm hover:shadow-md transition-all",
+      "secondary_action": "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900",
+      "surface": "bg-white border border-slate-200 shadow-sm",
+      "dashboard_bg": "bg-slate-50"
+    }
+  },
+  "layout": {
+    "grid_system": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-12 gap-6 p-6 md:p-8",
+      "form_wizard": "max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+    },
+    "spacing": {
+      "section_gap": "gap-8 md:gap-12",
+      "card_padding": "p-6 md:p-8",
+      "container_padding": "px-4 md:px-8"
+    },
+    "structure": {
+      "sidebar_width": "w-64",
+      "header_height": "h-16"
+    }
+  },
+  "components": {
+    "buttons": {
+      "base": "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2",
+      "primary": "bg-[#E30613] text-white hover:bg-[#c40510] shadow-sm",
+      "outline": "border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 text-slate-700",
+      "ghost": "hover:bg-slate-100 hover:text-slate-900 text-slate-600"
+    },
+    "cards": {
+      "base": "rounded-lg border border-slate-200 bg-white text-slate-950 shadow-sm",
+      "header": "flex flex-col space-y-1.5 p-6",
+      "content": "p-6 pt-0",
+      "footer": "flex items-center p-6 pt-0"
+    },
+    "inputs": {
+      "base": "flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004587] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    },
+    "badges": {
+      "base": "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      "success": "border-transparent bg-emerald-100 text-emerald-700 hover:bg-emerald-200",
+      "warning": "border-transparent bg-amber-100 text-amber-700 hover:bg-amber-200",
+      "error": "border-transparent bg-red-100 text-red-700 hover:bg-red-200",
+      "neutral": "border-transparent bg-slate-100 text-slate-700 hover:bg-slate-200"
+    }
+  },
+  "visual_assets": {
+    "logo_strategy": "Use text 'SENAI CIMATEC' in Chivo font, Bold, text-2xl. Primary color #004587. If image required, use placeholder.",
+    "images": {
+      "login_bg": "https://images.unsplash.com/photo-1690356107685-3725367f6f3f?q=80&w=2070&auto=format&fit=crop",
+      "student_context": "https://images.unsplash.com/photo-1614492898637-435e0f87cef8?q=80&w=2070&auto=format&fit=crop",
+      "office_context": "https://images.unsplash.com/photo-1750768145390-f0ad18d3e65b?q=80&w=2070&auto=format&fit=crop"
+    },
+    "icons": "Lucide React (already installed). Use stroke-width={1.5} for a clean, technical look."
+  },
+  "motion": {
+    "transitions": "transition-all duration-200 ease-in-out",
+    "hover_lift": "hover:-translate-y-0.5 hover:shadow-md",
+    "page_enter": "animate-in fade-in slide-in-from-bottom-4 duration-500"
+  },
+  "accessibility": {
+    "contrast_check": "Ensure all text on #004587 background is #FFFFFF. Ensure text on #E30613 is #FFFFFF.",
+    "focus_states": "All interactive elements must have visible focus rings (ring-2 ring-offset-2 ring-[#004587]).",
+    "aria_labels": "Required for all icon-only buttons."
+  },
+  "universal_guidelines": [
+    "Do not use gradients for backgrounds, stick to solid #F8FAFC or #FFFFFF.",
+    "Use 'Manrope' for all body text to ensure high readability.",
+    "Use 'Chivo' for all headings to give an industrial/technical feel.",
+    "Primary Action buttons must ALWAYS be #E30613 (Red).",
+    "Dashboard cards must be white with a subtle border and shadow-sm.",
+    "All interactive elements must have data-testid attributes.",
+    "No dark mode support - force light mode styles.",
+    "Use 'Control Room' grid density for dashboards - minimize wasted space."
+  ],
+  "instructions_to_main_agent": "You are building the SENAI CIMATEC Central Enrollment System. Adhere strictly to the color palette (#004587 Blue, #E30613 Red). Use the provided image URLs for the login screen and context areas. Implement the 'Control Room' grid layout for dashboards. Ensure all forms use the Wizard pattern defined in the layout section."
+}
