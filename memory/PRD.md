@@ -7,7 +7,7 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 ### Backend (Clean Architecture)
 - **Domain Layer**: Entidades ricas (PedidoMatricula, Aluno, Usuario), Value Objects (CPF, Email, Telefone, StatusPedido), Interfaces de Repositório
 - **Application Layer**: Use Cases (CriarPedido, AtualizarStatus, GerarExportacao, ConsultarPedidos), DTOs
-- **Infrastructure Layer**: Repositórios MongoDB, Exportador XLSX/CSV (Strategy Pattern), JWT Authentication
+- **Infrastructure Layer**: Repositórios SQLAlchemy (PostgreSQL/SQLite), Exportador XLSX/CSV, JWT Authentication
 - **Interface Layer**: Controllers FastAPI, Middlewares
 
 ### Frontend (React)
@@ -29,15 +29,18 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Dashboard com métricas por status
 - [x] Gestão de Usuários (Admin)
 - [x] Clean Architecture + DDD
+- [x] Suporte a PostgreSQL e SQLite
 
-## What's Been Implemented (2026-01-09)
-### Backend
+## What's Been Implemented
+
+### Backend (2026-01-10)
 - Domain Layer completo (Entidades, Value Objects, Exceções)
-- Repositórios MongoDB async
+- **Repositórios SQLAlchemy async (compatível PostgreSQL e SQLite)**
 - Use Cases: CriarPedido, AtualizarStatus, GerarExportacao, ConsultarPedidos
 - JWT Authentication com roles
 - Exportador XLSX para TOTVS (openpyxl)
 - API RESTful com tratamento de erros
+- **Migração completa de MongoDB para SQLAlchemy**
 
 ### Frontend
 - Tela de Login com identidade SENAI CIMATEC
@@ -56,11 +59,13 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - Empresas: 5 empresas parceiras
 
 ## Prioritized Backlog
-### P0 (Concluído)
+
+### P0 (Concluído ✅)
 - [x] Autenticação e autorização
 - [x] CRUD de pedidos
 - [x] Dashboard por role
 - [x] Exportação TOTVS
+- [x] Suporte a PostgreSQL/SQLite
 
 ### P1 (Próximos)
 - [ ] Filtros avançados de data na listagem
@@ -75,11 +80,29 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [ ] API de CEP (ViaCEP)
 
 ## Tech Stack
-- Backend: Python 3.10+, FastAPI, MongoDB, Motor (async), Pydantic, openpyxl
+- Backend: Python 3.10+, FastAPI, SQLAlchemy (Async), PostgreSQL/SQLite, Pydantic, openpyxl
 - Frontend: React 19, Tailwind CSS, Shadcn/UI, React Router, Axios
 - Auth: JWT (python-jose), bcrypt (passlib)
+
+## Database Configuration
+O sistema suporta dois bancos de dados:
+
+### PostgreSQL (Produção/Local)
+```env
+DATABASE_URL=postgresql+asyncpg://usuario:senha@localhost:5432/db_central_matriculas
+```
+
+### SQLite (Desenvolvimento)
+Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/database.db`
 
 ## Default Credentials
 - Admin: admin@senai.br / admin123
 - Assistente: assistente@senai.br / assistente123
 - Consultor: consultor@senai.br / consultor123
+
+## Files Changed (2026-01-10)
+- `/app/backend/src/infrastructure/persistence/database.py` - Suporte PostgreSQL/SQLite
+- `/app/backend/src/infrastructure/persistence/repositories/*.py` - Repositórios SQLAlchemy
+- `/app/backend/.env` - Configuração do ambiente
+- `/app/backend/requirements.txt` - Dependências atualizadas
+- `/app/README.md` - Instruções de instalação atualizadas
