@@ -3,9 +3,11 @@ fastapi
 uvicorn
 python-dotenv
 
-# Database - SQLite
-sqlalchemy
-aiosqlite
+# Database - PostgreSQL/SQLAlchemy
+sqlalchemy[asyncio]
+asyncpg
+psycopg2-binary
+greenlet
 
 # Authentication
 python-jose[cryptography]
