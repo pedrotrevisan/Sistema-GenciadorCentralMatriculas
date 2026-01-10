@@ -8,6 +8,7 @@ sqlalchemy[asyncio]
 asyncpg
 psycopg2-binary
 greenlet
+aiosqlite
 
 # Authentication
 python-jose[cryptography]
