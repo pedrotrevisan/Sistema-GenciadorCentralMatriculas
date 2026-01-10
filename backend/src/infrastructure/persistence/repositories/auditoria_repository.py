@@ -1,17 +1,19 @@
-"""Implementação do Repositório de Auditoria com MongoDB"""
+"""Implementação do Repositório de Auditoria com PostgreSQL/SQLAlchemy"""
 from typing import List
 from datetime import datetime, timezone
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 import uuid
 
 from src.domain.repositories import IAuditoriaRepository
+from ..models import AuditoriaModel
 
 
-class AuditoriaRepositoryMongo(IAuditoriaRepository):
-    """Implementação concreta do repositório de auditoria usando MongoDB"""
+class AuditoriaRepository(IAuditoriaRepository):
+    """Implementação concreta do repositório de auditoria usando PostgreSQL"""
 
-    def __init__(self, db: AsyncIOMotorDatabase):
-        self.collection = db.auditoria
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
     async def registrar(
         self,
@@ -21,21 +23,34 @@ class AuditoriaRepositoryMongo(IAuditoriaRepository):
         detalhes: dict
     ) -> None:
         """Registra uma ação de auditoria"""
-        registro = {
-            "id": str(uuid.uuid4()),
-            "pedido_id": pedido_id,
-            "usuario_id": usuario_id,
-            "acao": acao,
-            "detalhes": detalhes,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-        await self.collection.insert_one(registro)
+        registro = AuditoriaModel(
+            id=str(uuid.uuid4()),
+            pedido_id=pedido_id,
+            usuario_id=usuario_id,
+            acao=acao,
+            detalhes=detalhes,
+            timestamp=datetime.now(timezone.utc)
+        )
+        self.session.add(registro)
+        await self.session.commit()
 
     async def listar_por_pedido(self, pedido_id: str) -> List[dict]:
         """Lista histórico de auditoria de um pedido"""
-        cursor = self.collection.find(
-            {"pedido_id": pedido_id},
-            {"_id": 0}
-        ).sort("timestamp", -1)
+        result = await self.session.execute(
+            select(AuditoriaModel)
+            .where(AuditoriaModel.pedido_id == pedido_id)
+            .order_by(AuditoriaModel.timestamp.desc())
+        )
+        models = result.scalars().all()
         
-        return await cursor.to_list(length=100)
+        return [
+            {
+                "id": m.id,
+                "pedido_id": m.pedido_id,
+                "usuario_id": m.usuario_id,
+                "acao": m.acao,
+                "detalhes": m.detalhes,
+                "timestamp": m.timestamp.isoformat() if m.timestamp else None
+            }
+            for m in models
+        ]

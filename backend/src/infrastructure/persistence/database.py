@@ -1,10 +1,13 @@
-"""SQLAlchemy Database Configuration"""
+"""PostgreSQL Database Configuration"""
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 import os
 
-# Database URL - SQLite
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///./data/matriculas.db")
+# Database URL - PostgreSQL
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", 
+    "postgresql+asyncpg://phtpa_user:682889@localhost:5432/db_central_matriculas"
+)
 
 # Create async engine
 engine = create_async_engine(

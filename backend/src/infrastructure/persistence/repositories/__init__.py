@@ -1,5 +1,5 @@
-from .pedido_repository_sqlite import PedidoRepositorySQLite
-from .usuario_repository_sqlite import UsuarioRepositorySQLite
-from .auditoria_repository_sqlite import AuditoriaRepositorySQLite
+from .pedido_repository import PedidoRepository
+from .usuario_repository import UsuarioRepository
+from .auditoria_repository import AuditoriaRepository
 
-__all__ = ["PedidoRepositorySQLite", "UsuarioRepositorySQLite", "AuditoriaRepositorySQLite"]
+__all__ = ["PedidoRepository", "UsuarioRepository", "AuditoriaRepository"]

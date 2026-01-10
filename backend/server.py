@@ -1,4 +1,4 @@
-"""FastAPI Backend - Sistema Central de Matrículas SENAI CIMATEC (SQLite)"""
+"""FastAPI Backend - Sistema Central de Matrículas SENAI CIMATEC (PostgreSQL)"""
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, Query, Response
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import StreamingResponse
@@ -18,10 +18,6 @@ from datetime import datetime, timezone
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Ensure data directory exists
-DATA_DIR = ROOT_DIR / 'data'
-DATA_DIR.mkdir(exist_ok=True)
-
 # Domain imports
 from src.domain.entities import Usuario, RoleUsuario
 from src.domain.value_objects import Email, StatusPedido
@@ -31,11 +27,9 @@ from src.domain.exceptions import (
     DuplicidadeException
 )
 
-# Infrastructure imports - SQLite
+# Infrastructure imports - PostgreSQL
 from src.infrastructure.persistence.database import engine, async_session, init_db, Base
-from src.infrastructure.persistence.repositories.pedido_repository_sqlite import PedidoRepositorySQLite
-from src.infrastructure.persistence.repositories.usuario_repository_sqlite import UsuarioRepositorySQLite
-from src.infrastructure.persistence.repositories.auditoria_repository_sqlite import AuditoriaRepositorySQLite
+from src.infrastructure.persistence.repositories import PedidoRepository, UsuarioRepository, AuditoriaRepository
 from src.infrastructure.security import JWTAuthenticator
 
 # Application imports
@@ -67,12 +61,12 @@ jwt_auth = JWTAuthenticator()
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup/shutdown"""
     # Startup
-    logger.info("Initializing SQLite database...")
+    logger.info("Initializing PostgreSQL database...")
     await init_db()
     
     # Create default users
     async with async_session() as session:
-        usuario_repo = UsuarioRepositorySQLite(session)
+        usuario_repo = UsuarioRepository(session)
         
         # Admin
         admin = await usuario_repo.buscar_por_email("admin@senai.br")
@@ -125,8 +119,8 @@ async def lifespan(app: FastAPI):
 # Create the main app
 app = FastAPI(
     title="Sistema Central de Matrículas - SENAI CIMATEC",
-    description="API para gerenciamento de matrículas (SQLite)",
-    version="1.1.0",
+    description="API para gerenciamento de matrículas (PostgreSQL)",
+    version="1.2.0",
     lifespan=lifespan
 )
 
@@ -161,7 +155,7 @@ async def get_current_user(
         payload = jwt_auth.verificar_token(token)
         usuario_id = payload.get("sub")
         
-        usuario_repo = UsuarioRepositorySQLite(session)
+        usuario_repo = UsuarioRepository(session)
         usuario = await usuario_repo.buscar_por_id(usuario_id)
         if not usuario:
             raise HTTPException(
@@ -278,7 +272,7 @@ class RegisterRequest(BaseModel):
 @api_router.post("/auth/login", response_model=LoginResponseDTO, tags=["Auth"])
 async def login(request: LoginRequest, session: AsyncSession = Depends(get_db_session)):
     """Realiza login e retorna token JWT"""
-    usuario_repo = UsuarioRepositorySQLite(session)
+    usuario_repo = UsuarioRepository(session)
     usuario = await usuario_repo.buscar_por_email(request.email)
     
     if not usuario:
@@ -315,7 +309,7 @@ async def login(request: LoginRequest, session: AsyncSession = Depends(get_db_se
 @api_router.post("/auth/register", response_model=UsuarioResponseDTO, status_code=status.HTTP_201_CREATED, tags=["Auth"])
 async def register(request: RegisterRequest, session: AsyncSession = Depends(get_db_session)):
     """Registra um novo usuário"""
-    usuario_repo = UsuarioRepositorySQLite(session)
+    usuario_repo = UsuarioRepository(session)
     
     # Verifica se email já existe
     existente = await usuario_repo.buscar_por_email(request.email)
@@ -358,8 +352,8 @@ async def criar_pedido(
 ):
     """Cria um novo pedido de matrícula"""
     usuario, session = deps
-    pedido_repo = PedidoRepositorySQLite(session)
-    auditoria_repo = AuditoriaRepositorySQLite(session)
+    pedido_repo = PedidoRepository(session)
+    auditoria_repo = AuditoriaRepository(session)
     
     criar_pedido_uc = CriarPedidoMatriculaUseCase(pedido_repo, auditoria_repo)
     pedido = await criar_pedido_uc.executar(request, usuario)
@@ -379,7 +373,7 @@ async def listar_pedidos(
 ):
     """Lista pedidos com filtros"""
     usuario = await get_current_user(token, session)
-    pedido_repo = PedidoRepositorySQLite(session)
+    pedido_repo = PedidoRepository(session)
     
     consultar_pedidos_uc = ConsultarPedidosUseCase(pedido_repo)
     
@@ -401,7 +395,7 @@ async def get_dashboard(
 ):
     """Retorna dados do dashboard"""
     usuario = await get_current_user(token, session)
-    pedido_repo = PedidoRepositorySQLite(session)
+    pedido_repo = PedidoRepository(session)
     
     consultar_pedidos_uc = ConsultarPedidosUseCase(pedido_repo)
     contagem = await consultar_pedidos_uc.contar_por_status(usuario)
@@ -424,7 +418,7 @@ async def buscar_pedido(
 ):
     """Busca pedido por ID"""
     usuario = await get_current_user(token, session)
-    pedido_repo = PedidoRepositorySQLite(session)
+    pedido_repo = PedidoRepository(session)
     
     consultar_pedidos_uc = ConsultarPedidosUseCase(pedido_repo)
     return await consultar_pedidos_uc.buscar_por_id(pedido_id, usuario)
@@ -439,8 +433,8 @@ async def atualizar_status(
 ):
     """Atualiza status do pedido"""
     usuario = await get_current_user(token, session)
-    pedido_repo = PedidoRepositorySQLite(session)
-    auditoria_repo = AuditoriaRepositorySQLite(session)
+    pedido_repo = PedidoRepository(session)
+    auditoria_repo = AuditoriaRepository(session)
     
     atualizar_status_uc = AtualizarStatusPedidoUseCase(pedido_repo, auditoria_repo)
     pedido = await atualizar_status_uc.executar(pedido_id, request, usuario)
@@ -454,8 +448,8 @@ async def exportar_totvs(
 ):
     """Exporta pedidos realizados para formato TOTVS"""
     usuario, session = deps
-    pedido_repo = PedidoRepositorySQLite(session)
-    auditoria_repo = AuditoriaRepositorySQLite(session)
+    pedido_repo = PedidoRepository(session)
+    auditoria_repo = AuditoriaRepository(session)
     
     gerar_exportacao_uc = GerarExportacaoTOTVSUseCase(pedido_repo, auditoria_repo)
     arquivo, content_type, nome_arquivo = await gerar_exportacao_uc.executar(usuario, formato)
@@ -480,7 +474,7 @@ async def listar_usuarios(
 ):
     """Lista todos os usuários"""
     usuario, session = deps
-    usuario_repo = UsuarioRepositorySQLite(session)
+    usuario_repo = UsuarioRepository(session)
     
     usuarios, total = await usuario_repo.listar_todos(
         ativo=ativo,
@@ -503,7 +497,7 @@ async def buscar_usuario(
 ):
     """Busca usuário por ID"""
     current_user, session = deps
-    usuario_repo = UsuarioRepositorySQLite(session)
+    usuario_repo = UsuarioRepository(session)
     
     usuario = await usuario_repo.buscar_por_id(usuario_id)
     if not usuario:
@@ -519,7 +513,7 @@ async def atualizar_usuario(
 ):
     """Atualiza dados do usuário"""
     current_user, session = deps
-    usuario_repo = UsuarioRepositorySQLite(session)
+    usuario_repo = UsuarioRepository(session)
     
     usuario = await usuario_repo.buscar_por_id(usuario_id)
     if not usuario:
@@ -549,7 +543,7 @@ async def deletar_usuario(
     if usuario_id == current_user.id:
         raise HTTPException(status_code=400, detail="Não é possível deletar o próprio usuário")
     
-    usuario_repo = UsuarioRepositorySQLite(session)
+    usuario_repo = UsuarioRepository(session)
     sucesso = await usuario_repo.deletar(usuario_id)
     if not sucesso:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
@@ -610,12 +604,12 @@ async def listar_status():
 
 @api_router.get("/", tags=["Health"])
 async def root():
-    return {"message": "Sistema Central de Matrículas - SENAI CIMATEC", "version": "1.1.0", "database": "SQLite"}
+    return {"message": "Sistema Central de Matrículas - SENAI CIMATEC", "version": "1.2.0", "database": "PostgreSQL"}
 
 
 @api_router.get("/health", tags=["Health"])
 async def health():
-    return {"status": "healthy", "database": "SQLite", "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "healthy", "database": "PostgreSQL", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 # Include router

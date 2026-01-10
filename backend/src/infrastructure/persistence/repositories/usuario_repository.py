@@ -1,45 +1,87 @@
-"""Implementação do Repositório de Usuários com MongoDB"""
+"""Implementação do Repositório de Usuários com PostgreSQL/SQLAlchemy"""
 from typing import List, Optional, Tuple
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from datetime import datetime, timezone
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, delete
 
 from src.domain.repositories import IUsuarioRepository
-from src.domain.entities import Usuario
+from src.domain.entities import Usuario, RoleUsuario
+from src.domain.value_objects import Email
+from ..models import UsuarioModel
 
 
-class UsuarioRepositoryMongo(IUsuarioRepository):
-    """Implementação concreta do repositório de usuários usando MongoDB"""
+class UsuarioRepository(IUsuarioRepository):
+    """Implementação concreta do repositório de usuários usando PostgreSQL"""
 
-    def __init__(self, db: AsyncIOMotorDatabase):
-        self.collection = db.usuarios
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    def _model_to_entity(self, model: UsuarioModel) -> Usuario:
+        """Converte model SQLAlchemy para entidade de domínio"""
+        return Usuario(
+            id=model.id,
+            nome=model.nome,
+            email=Email(model.email),
+            senha_hash=model.senha_hash,
+            role=RoleUsuario.from_string(model.role),
+            ativo=model.ativo,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
+            ultimo_acesso=model.ultimo_acesso
+        )
 
     async def salvar(self, usuario: Usuario) -> Usuario:
         """Salva ou atualiza um usuário"""
-        usuario_dict = usuario.to_dict(include_sensitive=True)
-        
-        existente = await self.collection.find_one({"id": usuario.id})
-        
-        if existente:
-            await self.collection.update_one(
-                {"id": usuario.id},
-                {"$set": usuario_dict}
-            )
+        result = await self.session.execute(
+            select(UsuarioModel).where(UsuarioModel.id == usuario.id)
+        )
+        existing = result.scalar_one_or_none()
+
+        if existing:
+            existing.nome = usuario.nome
+            existing.email = usuario.email.valor
+            existing.senha_hash = usuario.senha_hash
+            existing.role = usuario.role.value
+            existing.ativo = usuario.ativo
+            existing.updated_at = datetime.now(timezone.utc)
+            existing.ultimo_acesso = usuario.ultimo_acesso
         else:
-            await self.collection.insert_one(usuario_dict)
-        
+            usuario_model = UsuarioModel(
+                id=usuario.id,
+                nome=usuario.nome,
+                email=usuario.email.valor,
+                senha_hash=usuario.senha_hash,
+                role=usuario.role.value,
+                ativo=usuario.ativo,
+                created_at=usuario.created_at,
+                updated_at=usuario.updated_at,
+                ultimo_acesso=usuario.ultimo_acesso
+            )
+            self.session.add(usuario_model)
+
+        await self.session.commit()
         return usuario
 
     async def buscar_por_id(self, usuario_id: str) -> Optional[Usuario]:
         """Busca usuário por ID"""
-        doc = await self.collection.find_one({"id": usuario_id}, {"_id": 0})
-        if doc:
-            return Usuario.from_dict(doc)
+        result = await self.session.execute(
+            select(UsuarioModel).where(UsuarioModel.id == usuario_id)
+        )
+        model = result.scalar_one_or_none()
+        
+        if model:
+            return self._model_to_entity(model)
         return None
 
     async def buscar_por_email(self, email: str) -> Optional[Usuario]:
         """Busca usuário por email"""
-        doc = await self.collection.find_one({"email": email.lower()}, {"_id": 0})
-        if doc:
-            return Usuario.from_dict(doc)
+        result = await self.session.execute(
+            select(UsuarioModel).where(UsuarioModel.email == email.lower())
+        )
+        model = result.scalar_one_or_none()
+        
+        if model:
+            return self._model_to_entity(model)
         return None
 
     async def listar_todos(
@@ -49,20 +91,29 @@ class UsuarioRepositoryMongo(IUsuarioRepository):
         por_pagina: int = 10
     ) -> Tuple[List[Usuario], int]:
         """Lista todos os usuários com paginação"""
-        filtro = {}
+        query = select(UsuarioModel)
+        count_query = select(func.count(UsuarioModel.id))
+        
         if ativo is not None:
-            filtro["ativo"] = ativo
+            query = query.where(UsuarioModel.ativo == ativo)
+            count_query = count_query.where(UsuarioModel.ativo == ativo)
         
-        total = await self.collection.count_documents(filtro)
-        skip = (pagina - 1) * por_pagina
+        total_result = await self.session.execute(count_query)
+        total = total_result.scalar()
         
-        cursor = self.collection.find(filtro, {"_id": 0}).sort("nome", 1).skip(skip).limit(por_pagina)
-        docs = await cursor.to_list(length=por_pagina)
+        offset = (pagina - 1) * por_pagina
+        query = query.order_by(UsuarioModel.nome).offset(offset).limit(por_pagina)
         
-        usuarios = [Usuario.from_dict(doc) for doc in docs]
+        result = await self.session.execute(query)
+        models = result.scalars().all()
+        
+        usuarios = [self._model_to_entity(model) for model in models]
         return usuarios, total
 
     async def deletar(self, usuario_id: str) -> bool:
         """Deleta um usuário"""
-        result = await self.collection.delete_one({"id": usuario_id})
-        return result.deleted_count > 0
+        result = await self.session.execute(
+            delete(UsuarioModel).where(UsuarioModel.id == usuario_id)
+        )
+        await self.session.commit()
+        return result.rowcount > 0
