@@ -124,6 +124,21 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# CORS middleware - MUST be added right after app creation
+cors_origins = os.environ.get('CORS_ORIGINS', '*')
+if cors_origins == '*':
+    origins = ["*"]
+else:
+    origins = [origin.strip() for origin in cors_origins.split(',')]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Create API router
 api_router = APIRouter(prefix="/api")
 
