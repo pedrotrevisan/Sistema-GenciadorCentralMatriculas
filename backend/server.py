@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing PostgreSQL database...")
     await init_db()
     
-    # Create default users
+    # Create default users and seed data
     async with async_session() as session:
         usuario_repo = UsuarioRepository(session)
         
@@ -107,6 +107,54 @@ async def lifespan(app: FastAPI):
             )
             await usuario_repo.salvar(assistente_user)
             logger.info("Usuário assistente criado: assistente@senai.br / assistente123")
+        
+        # Seed Cursos
+        from sqlalchemy import select, func
+        cursos_count = await session.execute(select(func.count(CursoModel.id)))
+        if cursos_count.scalar() == 0:
+            cursos_iniciais = [
+                "Técnico em Mecatrônica",
+                "Técnico em Automação Industrial",
+                "Técnico em Eletrotécnica",
+                "Técnico em Desenvolvimento de Sistemas",
+                "Técnico em Redes de Computadores",
+                "Técnico em Segurança do Trabalho",
+                "Engenharia de Produção",
+                "Engenharia Mecânica"
+            ]
+            for nome in cursos_iniciais:
+                session.add(CursoModel(id=str(uuid.uuid4()), nome=nome))
+            await session.commit()
+            logger.info(f"{len(cursos_iniciais)} cursos criados")
+        
+        # Seed Projetos
+        projetos_count = await session.execute(select(func.count(ProjetoModel.id)))
+        if projetos_count.scalar() == 0:
+            projetos_iniciais = [
+                "Projeto SENAI de Inovação",
+                "Projeto Capacitação Industrial 4.0",
+                "Projeto Jovem Aprendiz",
+                "Projeto Qualifica Bahia"
+            ]
+            for nome in projetos_iniciais:
+                session.add(ProjetoModel(id=str(uuid.uuid4()), nome=nome))
+            await session.commit()
+            logger.info(f"{len(projetos_iniciais)} projetos criados")
+        
+        # Seed Empresas
+        empresas_count = await session.execute(select(func.count(EmpresaModel.id)))
+        if empresas_count.scalar() == 0:
+            empresas_iniciais = [
+                "Petrobras",
+                "Ford Brasil",
+                "BYD Energy",
+                "Braskem",
+                "Suzano Papel e Celulose"
+            ]
+            for nome in empresas_iniciais:
+                session.add(EmpresaModel(id=str(uuid.uuid4()), nome=nome))
+            await session.commit()
+            logger.info(f"{len(empresas_iniciais)} empresas criadas")
     
     logger.info("Database initialized successfully!")
     
