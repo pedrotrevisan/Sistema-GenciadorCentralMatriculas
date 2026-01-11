@@ -71,4 +71,28 @@ export const auxiliaresAPI = {
   getStatusPedido: () => api.get('/status-pedido'),
 };
 
+// CRUD Cursos
+export const cursosAPI = {
+  listar: (ativo) => api.get('/cursos', { params: { ativo } }),
+  criar: (data) => api.post('/cursos', data),
+  atualizar: (id, data) => api.put(`/cursos/${id}`, data),
+  deletar: (id) => api.delete(`/cursos/${id}`),
+};
+
+// CRUD Projetos
+export const projetosAPI = {
+  listar: (ativo) => api.get('/projetos', { params: { ativo } }),
+  criar: (data) => api.post('/projetos', data),
+  atualizar: (id, data) => api.put(`/projetos/${id}`, data),
+  deletar: (id) => api.delete(`/projetos/${id}`),
+};
+
+// CRUD Empresas
+export const empresasAPI = {
+  listar: (ativo) => api.get('/empresas', { params: { ativo } }),
+  criar: (data) => api.post('/empresas', data),
+  atualizar: (id, data) => api.put(`/empresas/${id}`, data),
+  deletar: (id) => api.delete(`/empresas/${id}`),
+};
+
 export default api;
