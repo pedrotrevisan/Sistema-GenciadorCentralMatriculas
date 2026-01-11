@@ -20,7 +20,8 @@ import {
   Plus,
   Download,
   ChevronDown,
-  User
+  User,
+  Settings
 } from 'lucide-react';
 
 const DashboardLayout = () => {
@@ -51,6 +52,7 @@ const DashboardLayout = () => {
         { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
         { to: '/admin/pedidos', icon: FileText, label: 'Pedidos' },
         { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
+        { to: '/admin/cadastros', icon: Settings, label: 'Cadastros' },
         { to: '/admin/novo-pedido', icon: Plus, label: 'Nova Matrícula' }
       );
     }
