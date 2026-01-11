@@ -14,6 +14,7 @@ import AssistenteDashboard from "./pages/AssistenteDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminPedidosPage from "./pages/AdminPedidosPage";
 import GestaoUsuariosPage from "./pages/GestaoUsuariosPage";
+import GestaoCadastrosPage from "./pages/GestaoCadastrosPage";
 import NovaMatriculaPage from "./pages/NovaMatriculaPage";
 import PedidoDetalhePage from "./pages/PedidoDetalhePage";
 
@@ -51,6 +52,7 @@ function App() {
               <Route path="/admin/pedidos" element={<AdminPedidosPage />} />
               <Route path="/admin/pedido/:id" element={<PedidoDetalhePage />} />
               <Route path="/admin/usuarios" element={<GestaoUsuariosPage />} />
+              <Route path="/admin/cadastros" element={<GestaoCadastrosPage />} />
               <Route path="/admin/novo-pedido" element={<NovaMatriculaPage />} />
             </Route>
           </Route>
