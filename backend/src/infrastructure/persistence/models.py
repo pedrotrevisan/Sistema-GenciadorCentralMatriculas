@@ -106,3 +106,39 @@ class AuditoriaModel(Base):
     acao = Column(String(50), nullable=False)
     detalhes = Column(JSON, nullable=True)
     timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class CursoModel(Base):
+    """SQLAlchemy model for Curso"""
+    __tablename__ = "cursos"
+
+    id = Column(String(36), primary_key=True)
+    nome = Column(String(200), nullable=False, unique=True)
+    descricao = Column(Text, nullable=True)
+    ativo = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+class ProjetoModel(Base):
+    """SQLAlchemy model for Projeto"""
+    __tablename__ = "projetos"
+
+    id = Column(String(36), primary_key=True)
+    nome = Column(String(200), nullable=False, unique=True)
+    descricao = Column(Text, nullable=True)
+    ativo = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+class EmpresaModel(Base):
+    """SQLAlchemy model for Empresa"""
+    __tablename__ = "empresas"
+
+    id = Column(String(36), primary_key=True)
+    nome = Column(String(200), nullable=False, unique=True)
+    cnpj = Column(String(14), nullable=True)
+    ativo = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
