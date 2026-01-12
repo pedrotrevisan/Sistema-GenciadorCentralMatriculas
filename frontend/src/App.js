@@ -61,18 +61,18 @@ function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        
+        {/* Toast notifications - moved inside BrowserRouter */}
+        <Toaster 
+          position="top-right"
+          richColors
+          toastOptions={{
+            style: {
+              fontFamily: 'Manrope, sans-serif',
+            },
+          }}
+        />
       </BrowserRouter>
-      
-      {/* Toast notifications */}
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          style: {
-            fontFamily: 'Manrope, sans-serif',
-          },
-          className: 'toast-custom',
-        }}
-      />
     </AuthProvider>
   );
 }
