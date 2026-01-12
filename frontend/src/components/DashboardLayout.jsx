@@ -173,34 +173,7 @@ const DashboardLayout = () => {
             <Button
               variant="outline"
               className="w-full justify-start gap-2"
-              onClick={async () => {
-                try {
-                  const token = localStorage.getItem('token');
-                  const apiUrl = process.env.REACT_APP_BACKEND_URL;
-                  const response = await fetch(`${apiUrl}/api/pedidos/exportar/totvs?formato=xlsx`, {
-                    headers: {
-                      'Authorization': `Bearer ${token}`
-                    }
-                  });
-                  
-                  if (!response.ok) {
-                    throw new Error('Erro ao exportar');
-                  }
-                  
-                  const blob = await response.blob();
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `exportacao_totvs_${new Date().toISOString().split('T')[0]}.xlsx`;
-                  document.body.appendChild(a);
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                  a.remove();
-                } catch (error) {
-                  console.error('Erro ao exportar:', error);
-                  alert('Erro ao exportar dados. Verifique se há pedidos realizados.');
-                }
-              }}
+              onClick={handleExportTOTVS}
               data-testid="export-totvs-btn"
             >
               <Download className="h-4 w-4" />
