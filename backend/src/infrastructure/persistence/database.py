@@ -44,6 +44,11 @@ class Base(DeclarativeBase):
 
 async def init_db():
     """Initialize database - create all tables"""
+    # Import all models to ensure they are registered with Base.metadata
+    from src.infrastructure.persistence.models import (
+        UsuarioModel, PedidoModel, AlunoModel, AuditoriaModel,
+        CursoModel, ProjetoModel, EmpresaModel
+    )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
