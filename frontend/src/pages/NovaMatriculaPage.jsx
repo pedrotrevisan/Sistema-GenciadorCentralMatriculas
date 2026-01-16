@@ -494,9 +494,11 @@ const NovaMatriculaPage = () => {
                         <Input
                           value={aluno.nome}
                           onChange={(e) => handleAlunoChange(index, 'nome', e.target.value)}
+                          onBlur={() => handleNomeBlur(index)}
                           placeholder="Nome completo do aluno"
                           data-testid={`aluno-${index}-nome`}
                         />
+                        <p className="text-xs text-slate-500 mt-1">O nome será formatado automaticamente (ex: "Pedro Henrique da Silva")</p>
                       </div>
                       <div>
                         <Label>CPF *</Label>
