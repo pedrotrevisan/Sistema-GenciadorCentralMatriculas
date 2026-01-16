@@ -593,6 +593,7 @@ const NovaMatriculaPage = () => {
                         <Input
                           value={aluno.endereco_logradouro}
                           onChange={(e) => handleAlunoChange(index, 'endereco_logradouro', e.target.value)}
+                          onBlur={() => handleEnderecoBlur(index, 'endereco_logradouro')}
                           placeholder="Rua, Avenida..."
                           data-testid={`aluno-${index}-logradouro`}
                         />
@@ -620,6 +621,7 @@ const NovaMatriculaPage = () => {
                         <Input
                           value={aluno.endereco_bairro}
                           onChange={(e) => handleAlunoChange(index, 'endereco_bairro', e.target.value)}
+                          onBlur={() => handleEnderecoBlur(index, 'endereco_bairro')}
                           placeholder="Bairro"
                           data-testid={`aluno-${index}-bairro`}
                         />
@@ -629,6 +631,7 @@ const NovaMatriculaPage = () => {
                         <Input
                           value={aluno.endereco_cidade}
                           onChange={(e) => handleAlunoChange(index, 'endereco_cidade', e.target.value)}
+                          onBlur={() => handleEnderecoBlur(index, 'endereco_cidade')}
                           placeholder="Cidade"
                           data-testid={`aluno-${index}-cidade`}
                         />
