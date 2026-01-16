@@ -474,6 +474,154 @@ async def get_dashboard(
     }
 
 
+@api_router.get("/pedidos/analytics", tags=["Pedidos"])
+async def get_analytics(
+    token: str = Depends(oauth2_scheme),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """Retorna dados analíticos avançados para o Dashboard 2.0"""
+    from sqlalchemy import select, func, case, text
+    from src.infrastructure.persistence.models import PedidoModel, AlunoModel
+    
+    usuario = await get_current_user(token, session)
+    
+    # 1. Funil de Matrículas - Contagem por status em ordem do fluxo
+    funil_query = select(
+        PedidoModel.status,
+        func.count(PedidoModel.id).label('total')
+    ).group_by(PedidoModel.status)
+    
+    # Filtrar por consultor se não for admin/assistente
+    if usuario.role.value == 'consultor':
+        funil_query = funil_query.where(PedidoModel.consultor_id == usuario.id)
+    
+    funil_result = await session.execute(funil_query)
+    funil_data = {row.status: row.total for row in funil_result}
+    
+    # Ordenar funil na sequência lógica
+    funil_ordem = ['pendente', 'em_analise', 'documentacao_pendente', 'aprovado', 'realizado', 'exportado']
+    funil = [
+        {"status": s, "label": s.replace('_', ' ').title(), "total": funil_data.get(s, 0)}
+        for s in funil_ordem
+    ]
+    
+    # 2. Tempo Médio de Matrícula (em dias)
+    tempo_query = select(
+        func.avg(
+            func.julianday(PedidoModel.updated_at) - func.julianday(PedidoModel.created_at)
+        ).label('tempo_medio')
+    ).where(PedidoModel.status.in_(['realizado', 'exportado']))
+    
+    if usuario.role.value == 'consultor':
+        tempo_query = tempo_query.where(PedidoModel.consultor_id == usuario.id)
+    
+    tempo_result = await session.execute(tempo_query)
+    tempo_medio = tempo_result.scalar() or 0
+    
+    # 3. Top 5 Empresas
+    empresas_query = select(
+        PedidoModel.empresa_nome,
+        func.count(PedidoModel.id).label('total')
+    ).where(
+        PedidoModel.empresa_nome.isnot(None)
+    ).group_by(PedidoModel.empresa_nome).order_by(
+        func.count(PedidoModel.id).desc()
+    ).limit(5)
+    
+    if usuario.role.value == 'consultor':
+        empresas_query = empresas_query.where(PedidoModel.consultor_id == usuario.id)
+    
+    empresas_result = await session.execute(empresas_query)
+    top_empresas = [{"nome": row.empresa_nome or "Sem empresa", "total": row.total} for row in empresas_result]
+    
+    # 4. Top 5 Projetos
+    projetos_query = select(
+        PedidoModel.projeto_nome,
+        func.count(PedidoModel.id).label('total')
+    ).where(
+        PedidoModel.projeto_nome.isnot(None)
+    ).group_by(PedidoModel.projeto_nome).order_by(
+        func.count(PedidoModel.id).desc()
+    ).limit(5)
+    
+    if usuario.role.value == 'consultor':
+        projetos_query = projetos_query.where(PedidoModel.consultor_id == usuario.id)
+    
+    projetos_result = await session.execute(projetos_query)
+    top_projetos = [{"nome": row.projeto_nome or "Sem projeto", "total": row.total} for row in projetos_result]
+    
+    # 5. Pedidos Críticos (parados há mais de 48h)
+    from datetime import timedelta
+    limite_48h = datetime.now(timezone.utc) - timedelta(hours=48)
+    
+    criticos_query = select(func.count(PedidoModel.id)).where(
+        PedidoModel.updated_at < limite_48h,
+        PedidoModel.status.in_(['pendente', 'em_analise', 'documentacao_pendente'])
+    )
+    
+    if usuario.role.value == 'consultor':
+        criticos_query = criticos_query.where(PedidoModel.consultor_id == usuario.id)
+    
+    criticos_result = await session.execute(criticos_query)
+    pedidos_criticos = criticos_result.scalar() or 0
+    
+    # 6. Total de Alunos Matriculados
+    alunos_query = select(func.count(AlunoModel.id))
+    alunos_result = await session.execute(alunos_query)
+    total_alunos = alunos_result.scalar() or 0
+    
+    # 7. Matrículas por Mês (últimos 6 meses)
+    from datetime import timedelta
+    seis_meses_atras = datetime.now(timezone.utc) - timedelta(days=180)
+    
+    # Query simplificada para SQLite
+    matriculas_mes_query = select(
+        func.strftime('%Y-%m', PedidoModel.created_at).label('mes'),
+        func.count(PedidoModel.id).label('total')
+    ).where(
+        PedidoModel.created_at >= seis_meses_atras
+    ).group_by(
+        func.strftime('%Y-%m', PedidoModel.created_at)
+    ).order_by(
+        func.strftime('%Y-%m', PedidoModel.created_at)
+    )
+    
+    if usuario.role.value == 'consultor':
+        matriculas_mes_query = matriculas_mes_query.where(PedidoModel.consultor_id == usuario.id)
+    
+    matriculas_mes_result = await session.execute(matriculas_mes_query)
+    matriculas_por_mes = [{"mes": row.mes, "total": row.total} for row in matriculas_mes_result]
+    
+    # 8. Taxa de Conversão (aprovados / total)
+    total_query = select(func.count(PedidoModel.id))
+    if usuario.role.value == 'consultor':
+        total_query = total_query.where(PedidoModel.consultor_id == usuario.id)
+    total_result = await session.execute(total_query)
+    total_pedidos = total_result.scalar() or 0
+    
+    aprovados_query = select(func.count(PedidoModel.id)).where(
+        PedidoModel.status.in_(['aprovado', 'realizado', 'exportado'])
+    )
+    if usuario.role.value == 'consultor':
+        aprovados_query = aprovados_query.where(PedidoModel.consultor_id == usuario.id)
+    aprovados_result = await session.execute(aprovados_query)
+    total_aprovados = aprovados_result.scalar() or 0
+    
+    taxa_conversao = (total_aprovados / total_pedidos * 100) if total_pedidos > 0 else 0
+    
+    return {
+        "funil": funil,
+        "tempo_medio_dias": round(tempo_medio, 1),
+        "top_empresas": top_empresas,
+        "top_projetos": top_projetos,
+        "pedidos_criticos": pedidos_criticos,
+        "total_alunos": total_alunos,
+        "matriculas_por_mes": matriculas_por_mes,
+        "taxa_conversao": round(taxa_conversao, 1),
+        "total_pedidos": total_pedidos
+    }
+
+
 @api_router.get("/pedidos/{pedido_id}", response_model=PedidoResponseDTO, tags=["Pedidos"])
 async def buscar_pedido(
     pedido_id: str,
