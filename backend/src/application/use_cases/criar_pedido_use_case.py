@@ -52,20 +52,20 @@ class CriarPedidoMatriculaUseCase:
         for aluno_dto in dto.alunos:
             aluno = Aluno(
                 id=str(uuid.uuid4()),
-                nome=aluno_dto.nome,
+                nome=formatar_nome_proprio(aluno_dto.nome),  # Formata nome automaticamente
                 cpf=CPF(aluno_dto.cpf),
                 email=Email(aluno_dto.email),
                 telefone=Telefone(aluno_dto.telefone),
                 data_nascimento=datetime.fromisoformat(aluno_dto.data_nascimento),
                 rg=aluno_dto.rg,
-                rg_orgao_emissor=aluno_dto.rg_orgao_emissor,
+                rg_orgao_emissor=aluno_dto.rg_orgao_emissor.upper() if aluno_dto.rg_orgao_emissor else None,
                 rg_uf=aluno_dto.rg_uf.upper(),
                 endereco_cep=aluno_dto.endereco_cep,
-                endereco_logradouro=aluno_dto.endereco_logradouro,
+                endereco_logradouro=formatar_texto_titulo(aluno_dto.endereco_logradouro),  # Formata endereço
                 endereco_numero=aluno_dto.endereco_numero,
                 endereco_complemento=aluno_dto.endereco_complemento,
-                endereco_bairro=aluno_dto.endereco_bairro,
-                endereco_cidade=aluno_dto.endereco_cidade,
+                endereco_bairro=formatar_texto_titulo(aluno_dto.endereco_bairro),  # Formata bairro
+                endereco_cidade=formatar_texto_titulo(aluno_dto.endereco_cidade),  # Formata cidade
                 endereco_uf=aluno_dto.endereco_uf.upper()
             )
             alunos.append(aluno)
