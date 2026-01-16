@@ -30,7 +30,7 @@ from src.domain.exceptions import (
 # Infrastructure imports - PostgreSQL
 from src.infrastructure.persistence.database import engine, async_session, init_db, Base
 from src.infrastructure.persistence.repositories import PedidoRepository, UsuarioRepository, AuditoriaRepository
-from src.infrastructure.persistence.models import CursoModel, ProjetoModel, EmpresaModel
+from src.infrastructure.persistence.models import CursoModel, ProjetoModel, EmpresaModel, AlunoModel
 from src.infrastructure.security import JWTAuthenticator
 
 # Application imports
