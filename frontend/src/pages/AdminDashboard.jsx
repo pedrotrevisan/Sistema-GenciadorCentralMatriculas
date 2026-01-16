@@ -1,290 +1,497 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { pedidosAPI, usuariosAPI } from '../services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { pedidosAPI } from '../services/api';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Skeleton } from '../components/ui/skeleton';
-import { toast } from 'sonner';
-import { 
-  FileText, 
-  Users, 
-  Clock, 
-  CheckCircle,
-  Plus,
-  RefreshCw,
-  Download,
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  FunnelChart,
+  Funnel,
+  LabelList,
+  Cell,
+  PieChart,
+  Pie,
+  LineChart,
+  Line,
+  Legend
+} from 'recharts';
+import {
   TrendingUp,
-  BarChart3
+  TrendingDown,
+  Clock,
+  AlertTriangle,
+  Users,
+  FileText,
+  CheckCircle,
+  ArrowRight,
+  Plus,
+  Download,
+  RefreshCw
 } from 'lucide-react';
+
+const COLORS = ['#004587', '#E30613', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+
+const FUNNEL_COLORS = {
+  'pendente': '#F59E0B',
+  'em_analise': '#3B82F6', 
+  'documentacao_pendente': '#EF4444',
+  'aprovado': '#10B981',
+  'realizado': '#8B5CF6',
+  'exportado': '#004587'
+};
 
 const AdminDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [dashboard, setDashboard] = useState(null);
-  const [totalUsuarios, setTotalUsuarios] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const loadAnalytics = async () => {
     try {
-      const [dashboardRes, usuariosRes] = await Promise.all([
-        pedidosAPI.getDashboard(),
-        usuariosAPI.listar({ pagina: 1, por_pagina: 1 })
-      ]);
-      setDashboard(dashboardRes.data);
-      setTotalUsuarios(usuariosRes.data.total);
+      const response = await pedidosAPI.getAnalytics();
+      setAnalytics(response.data);
     } catch (error) {
-      toast.error('Erro ao carregar dados');
+      console.error('Erro ao carregar analytics:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    loadAnalytics();
   }, []);
 
-  const handleExport = async () => {
-    try {
-      const response = await pedidosAPI.exportarTOTVS('xlsx');
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `matriculas_totvs_${new Date().toISOString().split('T')[0]}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      toast.success('Exportação realizada com sucesso');
-      fetchData();
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Erro ao exportar');
-    }
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadAnalytics();
   };
 
   if (loading) {
     return (
-      <div className="space-y-6" data-testid="admin-dashboard-loading">
-        <Skeleton className="h-8 w-64" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#004587]"></div>
       </div>
     );
   }
 
-  const contagem = dashboard?.contagem_status || {};
+  const tempoMedioStatus = analytics?.tempo_medio_dias > 5 ? 'danger' : 
+                          analytics?.tempo_medio_dias > 3 ? 'warning' : 'success';
+
+  const taxaConversaoStatus = analytics?.taxa_conversao >= 80 ? 'success' :
+                              analytics?.taxa_conversao >= 50 ? 'warning' : 'danger';
 
   return (
-    <div className="space-y-6 animate-fadeIn" data-testid="admin-dashboard">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 font-['Chivo']">
-            Dashboard Administrativo
+          <h1 className="text-2xl font-bold text-gray-900">
+            Dashboard Analítico
           </h1>
-          <p className="text-slate-500">
-            Visão geral do sistema
+          <p className="text-gray-600 mt-1">
+            Bem-vindo, {user?.nome}! Aqui está o panorama operacional.
           </p>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchData}
-            data-testid="refresh-btn"
+            onClick={handleRefresh}
+            disabled={refreshing}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
           <Button
-            variant="outline"
-            onClick={handleExport}
-            data-testid="export-btn"
+            onClick={() => navigate('/admin/novo-pedido')}
+            className="bg-[#E30613] hover:bg-[#c00510]"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar TOTVS
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Matrícula
           </Button>
         </div>
       </div>
 
-      {/* Main Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="dashboard-metric-card border-l-4 border-l-[#004587]">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Total de Pedidos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-[#004587]">
-              {contagem.total || 0}
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total de Pedidos */}
+        <Card className="border-l-4 border-l-[#004587]">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Total de Pedidos</p>
+                <p className="text-3xl font-bold text-gray-900">{analytics?.total_pedidos || 0}</p>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-full">
+                <FileText className="w-6 h-6 text-[#004587]" />
+              </div>
             </div>
-            <p className="text-sm text-slate-500 mt-1">
-              Todos os pedidos no sistema
-            </p>
           </CardContent>
         </Card>
 
-        <Card className="dashboard-metric-card border-l-4 border-l-amber-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Aguardando Ação
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-amber-600">
-              {(contagem.pendente || 0) + (contagem.em_analise || 0) + (contagem.documentacao_pendente || 0)}
+        {/* Tempo Médio */}
+        <Card className={`border-l-4 ${
+          tempoMedioStatus === 'success' ? 'border-l-green-500' :
+          tempoMedioStatus === 'warning' ? 'border-l-yellow-500' : 'border-l-red-500'
+        }`}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Tempo Médio</p>
+                <p className={`text-3xl font-bold ${
+                  tempoMedioStatus === 'success' ? 'text-green-600' :
+                  tempoMedioStatus === 'warning' ? 'text-yellow-600' : 'text-red-600'
+                }`}>
+                  {analytics?.tempo_medio_dias || 0} dias
+                </p>
+              </div>
+              <div className={`p-3 rounded-full ${
+                tempoMedioStatus === 'success' ? 'bg-green-50' :
+                tempoMedioStatus === 'warning' ? 'bg-yellow-50' : 'bg-red-50'
+              }`}>
+                <Clock className={`w-6 h-6 ${
+                  tempoMedioStatus === 'success' ? 'text-green-500' :
+                  tempoMedioStatus === 'warning' ? 'text-yellow-500' : 'text-red-500'
+                }`} />
+              </div>
             </div>
-            <p className="text-sm text-slate-500 mt-1">
-              Pedidos que precisam de atenção
-            </p>
+            <p className="text-xs text-gray-400 mt-2">Da criação até exportação</p>
           </CardContent>
         </Card>
 
-        <Card className="dashboard-metric-card border-l-4 border-l-emerald-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-2">
-              <CheckCircle className="h-4 w-4" />
-              Concluídos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-emerald-600">
-              {(contagem.realizado || 0) + (contagem.exportado || 0)}
+        {/* Taxa de Conversão */}
+        <Card className={`border-l-4 ${
+          taxaConversaoStatus === 'success' ? 'border-l-green-500' :
+          taxaConversaoStatus === 'warning' ? 'border-l-yellow-500' : 'border-l-red-500'
+        }`}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Taxa de Conversão</p>
+                <p className={`text-3xl font-bold ${
+                  taxaConversaoStatus === 'success' ? 'text-green-600' :
+                  taxaConversaoStatus === 'warning' ? 'text-yellow-600' : 'text-red-600'
+                }`}>
+                  {analytics?.taxa_conversao || 0}%
+                </p>
+              </div>
+              <div className={`p-3 rounded-full ${
+                taxaConversaoStatus === 'success' ? 'bg-green-50' :
+                taxaConversaoStatus === 'warning' ? 'bg-yellow-50' : 'bg-red-50'
+              }`}>
+                {taxaConversaoStatus === 'success' ? 
+                  <TrendingUp className="w-6 h-6 text-green-500" /> :
+                  <TrendingDown className="w-6 h-6 text-red-500" />
+                }
+              </div>
             </div>
-            <p className="text-sm text-slate-500 mt-1">
-              Matrículas finalizadas
-            </p>
+            <p className="text-xs text-gray-400 mt-2">Pedidos aprovados/exportados</p>
           </CardContent>
         </Card>
 
-        <Card className="dashboard-metric-card border-l-4 border-l-purple-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Usuários
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-purple-600">
-              {totalUsuarios}
+        {/* Alertas Críticos */}
+        <Card className={`border-l-4 ${
+          analytics?.pedidos_criticos > 0 ? 'border-l-red-500 bg-red-50/30' : 'border-l-green-500'
+        }`}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Pedidos Críticos</p>
+                <p className={`text-3xl font-bold ${
+                  analytics?.pedidos_criticos > 0 ? 'text-red-600' : 'text-green-600'
+                }`}>
+                  {analytics?.pedidos_criticos || 0}
+                </p>
+              </div>
+              <div className={`p-3 rounded-full ${
+                analytics?.pedidos_criticos > 0 ? 'bg-red-100' : 'bg-green-50'
+              }`}>
+                {analytics?.pedidos_criticos > 0 ? 
+                  <AlertTriangle className="w-6 h-6 text-red-500" /> :
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                }
+              </div>
             </div>
-            <p className="text-sm text-slate-500 mt-1">
-              Usuários cadastrados
+            <p className="text-xs text-gray-400 mt-2">
+              {analytics?.pedidos_criticos > 0 ? 'Parados há mais de 48h!' : 'Nenhum alerta'}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Status Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Gráficos Principais */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Funil de Matrículas */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Status dos Pedidos
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <ArrowRight className="w-5 h-5 text-[#004587]" />
+              Funil de Matrículas
             </CardTitle>
+            <p className="text-sm text-gray-500">Visualize onde o processo está travando</p>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { key: 'pendente', label: 'Pendente', color: 'bg-amber-500' },
-                { key: 'em_analise', label: 'Em Análise', color: 'bg-blue-500' },
-                { key: 'documentacao_pendente', label: 'Doc. Pendente', color: 'bg-orange-500' },
-                { key: 'aprovado', label: 'Aprovado', color: 'bg-emerald-500' },
-                { key: 'realizado', label: 'Realizado', color: 'bg-green-500' },
-                { key: 'exportado', label: 'Exportado', color: 'bg-purple-500' },
-                { key: 'rejeitado', label: 'Rejeitado', color: 'bg-red-500' },
-                { key: 'cancelado', label: 'Cancelado', color: 'bg-slate-400' },
-              ].map(({ key, label, color }) => (
-                <div key={key} className="flex items-center gap-4">
-                  <div className="w-24 text-sm text-slate-600">{label}</div>
-                  <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${color} rounded-full transition-all duration-500`}
-                      style={{
-                        width: `${contagem.total ? ((contagem[key] || 0) / contagem.total) * 100 : 0}%`
-                      }}
-                    />
-                  </div>
-                  <div className="w-12 text-right text-sm font-medium">
-                    {contagem[key] || 0}
-                  </div>
-                </div>
-              ))}
-            </div>
+            {analytics?.funil && analytics.funil.some(f => f.total > 0) ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={analytics.funil}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                  <XAxis type="number" />
+                  <YAxis dataKey="label" type="category" width={90} tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    formatter={(value) => [value, 'Pedidos']}
+                    contentStyle={{ borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="total" radius={[0, 4, 4, 0]}>
+                    {analytics.funil.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={FUNNEL_COLORS[entry.status] || COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[300px] text-gray-400">
+                <FileText className="w-12 h-12 mb-2" />
+                <p>Nenhum pedido cadastrado ainda</p>
+                <Button
+                  variant="link"
+                  onClick={() => navigate('/admin/novo-pedido')}
+                  className="mt-2"
+                >
+                  Criar primeiro pedido
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
+        {/* Top Empresas */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Ações Rápidas
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#004587]" />
+              Top 5 Empresas
             </CardTitle>
+            <p className="text-sm text-gray-500">Empresas com mais matrículas</p>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 gap-4">
-              <Button
-                className="w-full h-16 bg-[#E30613] hover:bg-[#b9050f] text-left justify-start"
-                onClick={() => navigate('/admin/novo-pedido')}
-                data-testid="quick-new-order"
-              >
-                <Plus className="h-6 w-6 mr-4" />
-                <div>
-                  <p className="font-semibold">Nova Matrícula</p>
-                  <p className="text-sm opacity-80">Criar novo pedido de matrícula</p>
-                </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full h-16 text-left justify-start"
-                onClick={() => navigate('/admin/pedidos')}
-                data-testid="quick-orders"
-              >
-                <FileText className="h-6 w-6 mr-4" />
-                <div>
-                  <p className="font-semibold">Gerenciar Pedidos</p>
-                  <p className="text-sm text-slate-500">Ver e gerenciar todos os pedidos</p>
-                </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full h-16 text-left justify-start"
-                onClick={() => navigate('/admin/usuarios')}
-                data-testid="quick-users"
-              >
-                <Users className="h-6 w-6 mr-4" />
-                <div>
-                  <p className="font-semibold">Gestão de Usuários</p>
-                  <p className="text-sm text-slate-500">Gerenciar usuários do sistema</p>
-                </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full h-16 text-left justify-start"
-                onClick={handleExport}
-                data-testid="quick-export"
-              >
-                <Download className="h-6 w-6 mr-4" />
-                <div>
-                  <p className="font-semibold">Exportar TOTVS</p>
-                  <p className="text-sm text-slate-500">Exportar pedidos realizados</p>
-                </div>
-              </Button>
-            </div>
+            {analytics?.top_empresas && analytics.top_empresas.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={analytics.top_empresas}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 60 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis 
+                    dataKey="nome" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={60}
+                    tick={{ fontSize: 11 }}
+                    interval={0}
+                  />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value) => [value, 'Matrículas']}
+                    contentStyle={{ borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="total" fill="#004587" radius={[4, 4, 0, 0]}>
+                    {analytics.top_empresas.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[300px] text-gray-400">
+                <Users className="w-12 h-12 mb-2" />
+                <p>Nenhuma empresa vinculada ainda</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Segunda Linha de Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Matrículas por Mês */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-[#004587]" />
+              Evolução Mensal
+            </CardTitle>
+            <p className="text-sm text-gray-500">Matrículas nos últimos 6 meses</p>
+          </CardHeader>
+          <CardContent>
+            {analytics?.matriculas_por_mes && analytics.matriculas_por_mes.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart
+                  data={analytics.matriculas_por_mes}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value) => [value, 'Matrículas']}
+                    contentStyle={{ borderRadius: '8px' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="total" 
+                    stroke="#004587" 
+                    strokeWidth={3}
+                    dot={{ fill: '#004587', strokeWidth: 2, r: 5 }}
+                    activeDot={{ r: 8 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[250px] text-gray-400">
+                <TrendingUp className="w-12 h-12 mb-2" />
+                <p>Sem dados históricos ainda</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top Projetos */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#004587]" />
+              Matrículas por Projeto
+            </CardTitle>
+            <p className="text-sm text-gray-500">Distribuição entre projetos</p>
+          </CardHeader>
+          <CardContent>
+            {analytics?.top_projetos && analytics.top_projetos.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={analytics.top_projetos}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ nome, percent }) => `${nome.substring(0,15)}${nome.length > 15 ? '...' : ''} (${(percent * 100).toFixed(0)}%)`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="total"
+                  >
+                    {analytics.top_projetos.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value, name, props) => [value, props.payload.nome]}
+                    contentStyle={{ borderRadius: '8px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[250px] text-gray-400">
+                <FileText className="w-12 h-12 mb-2" />
+                <p>Nenhum projeto vinculado ainda</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Ações Rápidas */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Ações Rápidas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-blue-50 hover:border-[#004587]"
+              onClick={() => navigate('/admin/novo-pedido')}
+            >
+              <Plus className="w-6 h-6 text-[#004587]" />
+              <span className="text-sm">Nova Matrícula</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-blue-50 hover:border-[#004587]"
+              onClick={() => navigate('/admin/pedidos')}
+            >
+              <FileText className="w-6 h-6 text-[#004587]" />
+              <span className="text-sm">Ver Pedidos</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-blue-50 hover:border-[#004587]"
+              onClick={() => navigate('/admin/usuarios')}
+            >
+              <Users className="w-6 h-6 text-[#004587]" />
+              <span className="text-sm">Usuários</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-green-50 hover:border-green-600"
+              onClick={async () => {
+                try {
+                  const token = localStorage.getItem('token');
+                  const apiUrl = process.env.REACT_APP_BACKEND_URL;
+                  const response = await fetch(`${apiUrl}/api/pedidos/exportar/totvs?formato=xlsx`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  if (!response.ok) throw new Error('Erro ao exportar');
+                  const blob = await response.blob();
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `exportacao_totvs_${new Date().toISOString().split('T')[0]}.xlsx`;
+                  document.body.appendChild(a);
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                  a.remove();
+                } catch (error) {
+                  console.error('Erro ao exportar:', error);
+                  alert('Erro ao exportar. Verifique se há pedidos realizados.');
+                }
+              }}
+            >
+              <Download className="w-6 h-6 text-green-600" />
+              <span className="text-sm">Exportar TOTVS</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Resumo de Alunos */}
+      <Card className="bg-gradient-to-r from-[#004587] to-[#0066cc] text-white">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-100">Total de Alunos Matriculados</p>
+              <p className="text-4xl font-bold mt-1">{analytics?.total_alunos || 0}</p>
+              <p className="text-blue-200 text-sm mt-2">
+                Em {analytics?.total_pedidos || 0} pedidos de matrícula
+              </p>
+            </div>
+            <div className="bg-white/10 p-4 rounded-full">
+              <Users className="w-12 h-12" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
