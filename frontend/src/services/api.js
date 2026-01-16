@@ -50,6 +50,7 @@ export const pedidosAPI = {
   buscarPorId: (id) => api.get(`/pedidos/${id}`),
   atualizarStatus: (id, data) => api.patch(`/pedidos/${id}/status`, data),
   getDashboard: () => api.get('/pedidos/dashboard'),
+  getAnalytics: () => api.get('/pedidos/analytics'),
   exportarTOTVS: (formato = 'xlsx') => api.get(`/pedidos/exportar/totvs?formato=${formato}`, {
     responseType: 'blob'
   }),
