@@ -35,16 +35,27 @@ class CriarPedidoMatriculaUseCase:
         if dto.projeto_id and dto.empresa_id:
             raise BusinessRuleException("Deve informar apenas Projeto OU Empresa")
 
-        # Verifica duplicidade de CPF no mesmo curso
+        # Verifica CPFs duplicados dentro do mesmo pedido
+        cpfs_no_pedido = []
         for aluno_dto in dto.alunos:
             cpf_limpo = CPF._limpar(aluno_dto.cpf)
-            existe = await self.pedido_repository.existe_por_cpf_curso(
-                cpf=cpf_limpo,
-                curso_id=dto.curso_id
-            )
-            if existe:
+            if cpf_limpo in cpfs_no_pedido:
                 raise DuplicidadeException(
-                    f"Já existe um pedido com o CPF {aluno_dto.cpf} para este curso"
+                    f"O CPF {aluno_dto.cpf} está duplicado neste pedido"
+                )
+            cpfs_no_pedido.append(cpf_limpo)
+
+        # Verifica se algum CPF já existe no sistema (em qualquer pedido ativo)
+        for aluno_dto in dto.alunos:
+            cpf_limpo = CPF._limpar(aluno_dto.cpf)
+            aluno_existente = await self.pedido_repository.buscar_aluno_por_cpf(cpf_limpo)
+            
+            if aluno_existente:
+                nome_existente = aluno_existente['nome']
+                curso_existente = aluno_existente['curso_nome']
+                raise DuplicidadeException(
+                    f"Já existe um aluno cadastrado com o CPF {aluno_dto.cpf}. "
+                    f"Nome: {nome_existente}, Curso: {curso_existente}"
                 )
 
         # Cria alunos
