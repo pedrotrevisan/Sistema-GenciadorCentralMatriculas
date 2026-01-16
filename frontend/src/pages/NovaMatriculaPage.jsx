@@ -183,6 +183,24 @@ const NovaMatriculaPage = () => {
     });
   };
 
+  // Formata nome quando sai do campo
+  const handleNomeBlur = (index) => {
+    setFormData(prev => {
+      const alunos = [...prev.alunos];
+      alunos[index] = { ...alunos[index], nome: formatarNomeProprio(alunos[index].nome) };
+      return { ...prev, alunos };
+    });
+  };
+
+  // Formata campos de endereço quando sai do campo
+  const handleEnderecoBlur = (index, field) => {
+    setFormData(prev => {
+      const alunos = [...prev.alunos];
+      alunos[index] = { ...alunos[index], [field]: formatarTextoTitulo(alunos[index][field]) };
+      return { ...prev, alunos };
+    });
+  };
+
   const addAluno = () => {
     setFormData(prev => ({
       ...prev,
