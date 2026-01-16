@@ -8,6 +8,7 @@ from src.domain.value_objects import CPF, Email, Telefone, StatusPedido
 from src.domain.repositories import IPedidoRepository, IAuditoriaRepository
 from src.domain.exceptions import BusinessRuleException, DuplicidadeException
 from src.application.dtos.request import CriarPedidoDTO, AlunoCreateDTO
+from src.utils.text_formatters import formatar_nome_proprio, formatar_texto_titulo
 
 
 class CriarPedidoMatriculaUseCase:
