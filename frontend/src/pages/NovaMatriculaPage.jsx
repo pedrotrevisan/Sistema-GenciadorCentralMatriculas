@@ -28,6 +28,44 @@ import {
   Loader2
 } from 'lucide-react';
 
+// Preposições que devem permanecer em minúsculo
+const PREPOSICOES = new Set(['da', 'de', 'do', 'das', 'dos', 'e', 'em', 'na', 'no', 'nas', 'nos', 'para', 'por']);
+
+/**
+ * Formata nome próprio para Title Case, mantendo preposições em minúsculo.
+ * Ex: "PEDRO HENRIQUE DA SILVA" -> "Pedro Henrique da Silva"
+ */
+const formatarNomeProprio = (nome) => {
+  if (!nome) return nome;
+  
+  return nome
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .map((palavra, index) => {
+      // Primeira palavra sempre capitalizada, preposições em minúsculo no meio
+      if (index === 0 || !PREPOSICOES.has(palavra)) {
+        return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+      }
+      return palavra;
+    })
+    .join(' ');
+};
+
+/**
+ * Formata texto para Title Case simples (todas as palavras capitalizadas)
+ */
+const formatarTextoTitulo = (texto) => {
+  if (!texto) return texto;
+  
+  return texto
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1))
+    .join(' ');
+};
+
 const ESTADOS_BR = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
   'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
