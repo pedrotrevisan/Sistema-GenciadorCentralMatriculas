@@ -285,6 +285,42 @@ class PedidoRepository(IPedidoRepository):
         count = result.scalar()
         return count > 0
 
+    async def buscar_aluno_por_cpf(self, cpf: str) -> Optional[dict]:
+        """
+        Busca se existe um aluno com o CPF informado em qualquer pedido ativo.
+        Retorna informações do aluno existente se encontrado.
+        """
+        query = select(
+            AlunoModel.nome,
+            AlunoModel.cpf,
+            PedidoModel.id.label('pedido_id'),
+            PedidoModel.curso_nome,
+            PedidoModel.status
+        ).join(
+            PedidoModel, AlunoModel.pedido_id == PedidoModel.id
+        ).where(
+            and_(
+                AlunoModel.cpf == cpf,
+                PedidoModel.status.notin_([
+                    StatusPedido.CANCELADO.value,
+                    StatusPedido.REJEITADO.value
+                ])
+            )
+        ).limit(1)
+        
+        result = await self.session.execute(query)
+        row = result.first()
+        
+        if row:
+            return {
+                "nome": row.nome,
+                "cpf": row.cpf,
+                "pedido_id": row.pedido_id,
+                "curso_nome": row.curso_nome,
+                "status": row.status
+            }
+        return None
+
     async def contar_por_status(self, consultor_id: Optional[str] = None) -> dict:
         """Conta pedidos por status"""
         contagem = {status.value: 0 for status in StatusPedido}
