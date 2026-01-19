@@ -21,7 +21,8 @@ import {
   Download,
   ChevronDown,
   User,
-  Settings
+  Settings,
+  Upload
 } from 'lucide-react';
 
 const DashboardLayout = () => {
