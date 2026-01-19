@@ -349,6 +349,7 @@ const AssistenteDashboard = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Protocolo</TableHead>
                       <TableHead>Curso</TableHead>
                       <TableHead>Consultor</TableHead>
                       <TableHead>Projeto/Empresa</TableHead>
@@ -361,6 +362,9 @@ const AssistenteDashboard = () => {
                   <TableBody>
                     {pedidos.map((pedido) => (
                       <TableRow key={pedido.id} className="table-row-hover">
+                        <TableCell className="font-mono text-sm font-semibold text-[#004587]">
+                          {pedido.numero_protocolo || '-'}
+                        </TableCell>
                         <TableCell className="font-medium">
                           {pedido.curso_nome}
                         </TableCell>
