@@ -55,6 +55,14 @@ function App() {
               <Route path="/admin/usuarios" element={<GestaoUsuariosPage />} />
               <Route path="/admin/cadastros" element={<GestaoCadastrosPage />} />
               <Route path="/admin/novo-pedido" element={<NovaMatriculaPage />} />
+              <Route path="/admin/importacao" element={<ImportacaoLotePage />} />
+            </Route>
+          </Route>
+
+          {/* Importação em Lote - Todos os perfis */}
+          <Route element={<ProtectedRoute allowedRoles={['consultor', 'assistente', 'admin']} />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/importacao" element={<ImportacaoLotePage />} />
             </Route>
           </Route>
 
