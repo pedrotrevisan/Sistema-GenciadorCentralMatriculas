@@ -157,6 +157,7 @@ class PedidoMatricula:
         
         return cls(
             id=data.get("id"),
+            numero_protocolo=data.get("numero_protocolo"),
             consultor_id=data.get("consultor_id"),
             consultor_nome=data.get("consultor_nome"),
             curso_id=data.get("curso_id"),
