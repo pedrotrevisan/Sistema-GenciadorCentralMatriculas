@@ -1047,6 +1047,351 @@ async def listar_status():
     ]
 
 
+# ==================== IMPORTAÇÃO EM LOTE ====================
+
+from src.domain.value_objects import CPF, Telefone
+from src.utils.text_formatters import formatar_nome_proprio, formatar_texto_titulo
+
+class ImportacaoResultado(BaseModel):
+    sucesso: bool
+    total_linhas: int
+    linhas_validas: int
+    linhas_com_erro: int
+    pedidos_criados: int = 0
+    erros: List[dict] = []
+    preview: List[dict] = []
+
+
+def validar_cpf(cpf: str) -> tuple[bool, str]:
+    """Valida formato do CPF"""
+    if not cpf:
+        return False, "CPF é obrigatório"
+    cpf_limpo = re.sub(r'\D', '', str(cpf))
+    if len(cpf_limpo) != 11:
+        return False, f"CPF deve ter 11 dígitos (encontrado: {len(cpf_limpo)})"
+    return True, cpf_limpo
+
+
+def validar_email(email: str) -> tuple[bool, str]:
+    """Valida formato do email"""
+    if not email:
+        return False, "Email é obrigatório"
+    if '@' not in str(email) or '.' not in str(email):
+        return False, "Email inválido"
+    return True, str(email).strip().lower()
+
+
+def validar_telefone(telefone: str) -> tuple[bool, str]:
+    """Valida formato do telefone"""
+    if not telefone:
+        return False, "Telefone é obrigatório"
+    tel_limpo = re.sub(r'\D', '', str(telefone))
+    if len(tel_limpo) < 10 or len(tel_limpo) > 11:
+        return False, f"Telefone deve ter 10 ou 11 dígitos"
+    return True, tel_limpo
+
+
+@api_router.post("/importacao/validar", response_model=ImportacaoResultado, tags=["Importação"])
+async def validar_importacao(
+    file: UploadFile = File(...),
+    curso_id: str = Query(...),
+    projeto_id: Optional[str] = Query(None),
+    empresa_id: Optional[str] = Query(None),
+    deps: tuple = Depends(require_permission("pedido:criar"))
+):
+    """Valida arquivo de importação e retorna preview com erros"""
+    import pandas as pd
+    
+    usuario, session = deps
+    
+    # Validar extensão
+    if not file.filename.endswith(('.xlsx', '.xls', '.csv')):
+        raise HTTPException(400, "Formato inválido. Use .xlsx, .xls ou .csv")
+    
+    # Ler arquivo
+    try:
+        contents = await file.read()
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(contents), dtype=str)
+        else:
+            df = pd.read_excel(io.BytesIO(contents), dtype=str)
+    except Exception as e:
+        raise HTTPException(400, f"Erro ao ler arquivo: {str(e)}")
+    
+    # Normalizar nomes das colunas
+    df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+    
+    # Colunas obrigatórias
+    colunas_obrigatorias = ['nome', 'cpf', 'email', 'telefone', 'data_nascimento', 'rg', 'cep', 'logradouro', 'numero', 'bairro', 'cidade', 'uf']
+    colunas_faltantes = [c for c in colunas_obrigatorias if c not in df.columns]
+    
+    if colunas_faltantes:
+        raise HTTPException(400, f"Colunas obrigatórias faltantes: {', '.join(colunas_faltantes)}")
+    
+    # Buscar dados auxiliares
+    from sqlalchemy import select
+    curso_result = await session.execute(select(CursoModel).where(CursoModel.id == curso_id))
+    curso = curso_result.scalar_one_or_none()
+    if not curso:
+        raise HTTPException(404, "Curso não encontrado")
+    
+    # Buscar CPFs já cadastrados
+    pedido_repo = PedidoRepository(session)
+    
+    # Validar cada linha
+    erros = []
+    preview = []
+    linhas_validas = 0
+    
+    for idx, row in df.iterrows():
+        linha_num = idx + 2  # +2 porque Excel começa em 1 e tem header
+        linha_erros = []
+        
+        # Validar nome
+        nome = str(row.get('nome', '')).strip()
+        if not nome or len(nome) < 3:
+            linha_erros.append("Nome deve ter pelo menos 3 caracteres")
+        
+        # Validar CPF
+        cpf_valido, cpf_result = validar_cpf(row.get('cpf', ''))
+        if not cpf_valido:
+            linha_erros.append(cpf_result)
+        else:
+            # Verificar duplicidade no sistema
+            aluno_existente = await pedido_repo.buscar_aluno_por_cpf(cpf_result)
+            if aluno_existente:
+                linha_erros.append(f"CPF já cadastrado ({aluno_existente['nome']})")
+        
+        # Validar email
+        email_valido, email_result = validar_email(row.get('email', ''))
+        if not email_valido:
+            linha_erros.append(email_result)
+        
+        # Validar telefone
+        tel_valido, tel_result = validar_telefone(row.get('telefone', ''))
+        if not tel_valido:
+            linha_erros.append(tel_result)
+        
+        # Validar data de nascimento
+        data_nasc = str(row.get('data_nascimento', '')).strip()
+        if not data_nasc:
+            linha_erros.append("Data de nascimento é obrigatória")
+        
+        # Validar RG
+        rg = str(row.get('rg', '')).strip()
+        if not rg:
+            linha_erros.append("RG é obrigatório")
+        
+        # Validar endereço
+        if not str(row.get('cep', '')).strip():
+            linha_erros.append("CEP é obrigatório")
+        if not str(row.get('logradouro', '')).strip():
+            linha_erros.append("Logradouro é obrigatório")
+        if not str(row.get('numero', '')).strip():
+            linha_erros.append("Número é obrigatório")
+        if not str(row.get('bairro', '')).strip():
+            linha_erros.append("Bairro é obrigatório")
+        if not str(row.get('cidade', '')).strip():
+            linha_erros.append("Cidade é obrigatória")
+        
+        uf = str(row.get('uf', '')).strip().upper()
+        if not uf or len(uf) != 2:
+            linha_erros.append("UF inválida (deve ter 2 caracteres)")
+        
+        # Montar preview
+        preview_item = {
+            "linha": linha_num,
+            "nome": formatar_nome_proprio(nome) if nome else "",
+            "cpf": cpf_result if cpf_valido else str(row.get('cpf', '')),
+            "email": email_result if email_valido else str(row.get('email', '')),
+            "telefone": tel_result if tel_valido else str(row.get('telefone', '')),
+            "valido": len(linha_erros) == 0,
+            "erros": linha_erros
+        }
+        preview.append(preview_item)
+        
+        if linha_erros:
+            erros.append({
+                "linha": linha_num,
+                "erros": linha_erros
+            })
+        else:
+            linhas_validas += 1
+    
+    return ImportacaoResultado(
+        sucesso=len(erros) == 0,
+        total_linhas=len(df),
+        linhas_validas=linhas_validas,
+        linhas_com_erro=len(erros),
+        erros=erros,
+        preview=preview[:50]  # Limitar preview a 50 linhas
+    )
+
+
+@api_router.post("/importacao/executar", tags=["Importação"])
+async def executar_importacao(
+    file: UploadFile = File(...),
+    curso_id: str = Query(...),
+    curso_nome: str = Query(...),
+    projeto_id: Optional[str] = Query(None),
+    projeto_nome: Optional[str] = Query(None),
+    empresa_id: Optional[str] = Query(None),
+    empresa_nome: Optional[str] = Query(None),
+    deps: tuple = Depends(require_permission("pedido:criar"))
+):
+    """Executa a importação em lote criando os pedidos"""
+    import pandas as pd
+    
+    usuario, session = deps
+    
+    # Validar extensão
+    if not file.filename.endswith(('.xlsx', '.xls', '.csv')):
+        raise HTTPException(400, "Formato inválido. Use .xlsx, .xls ou .csv")
+    
+    # Ler arquivo
+    try:
+        contents = await file.read()
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(contents), dtype=str)
+        else:
+            df = pd.read_excel(io.BytesIO(contents), dtype=str)
+    except Exception as e:
+        raise HTTPException(400, f"Erro ao ler arquivo: {str(e)}")
+    
+    # Normalizar nomes das colunas
+    df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+    
+    pedido_repo = PedidoRepository(session)
+    auditoria_repo = AuditoriaRepository(session)
+    
+    pedidos_criados = 0
+    erros = []
+    
+    for idx, row in df.iterrows():
+        linha_num = idx + 2
+        
+        try:
+            # Validar CPF
+            cpf_valido, cpf_result = validar_cpf(row.get('cpf', ''))
+            if not cpf_valido:
+                erros.append({"linha": linha_num, "erro": cpf_result})
+                continue
+            
+            # Verificar duplicidade
+            aluno_existente = await pedido_repo.buscar_aluno_por_cpf(cpf_result)
+            if aluno_existente:
+                erros.append({"linha": linha_num, "erro": f"CPF já cadastrado"})
+                continue
+            
+            # Preparar dados do aluno
+            from src.application.dtos.request import CriarPedidoDTO, AlunoCreateDTO
+            
+            # Formatar data de nascimento
+            data_nasc_str = str(row.get('data_nascimento', '')).strip()
+            try:
+                # Tentar diferentes formatos
+                if '/' in data_nasc_str:
+                    parts = data_nasc_str.split('/')
+                    if len(parts[2]) == 2:
+                        data_nasc_str = f"20{parts[2]}-{parts[1].zfill(2)}-{parts[0].zfill(2)}"
+                    else:
+                        data_nasc_str = f"{parts[2]}-{parts[1].zfill(2)}-{parts[0].zfill(2)}"
+                elif '-' in data_nasc_str and len(data_nasc_str) == 10:
+                    pass  # Já está no formato correto
+            except:
+                erros.append({"linha": linha_num, "erro": "Data de nascimento inválida"})
+                continue
+            
+            aluno_dto = AlunoCreateDTO(
+                nome=formatar_nome_proprio(str(row.get('nome', '')).strip()),
+                cpf=cpf_result,
+                email=str(row.get('email', '')).strip().lower(),
+                telefone=re.sub(r'\D', '', str(row.get('telefone', ''))),
+                data_nascimento=data_nasc_str,
+                rg=str(row.get('rg', '')).strip(),
+                rg_orgao_emissor=str(row.get('orgao_emissor', 'SSP')).strip().upper(),
+                rg_uf=str(row.get('rg_uf', row.get('uf', ''))).strip().upper(),
+                endereco_cep=re.sub(r'\D', '', str(row.get('cep', ''))),
+                endereco_logradouro=formatar_texto_titulo(str(row.get('logradouro', '')).strip()),
+                endereco_numero=str(row.get('numero', '')).strip(),
+                endereco_complemento=str(row.get('complemento', '')).strip() if row.get('complemento') else None,
+                endereco_bairro=formatar_texto_titulo(str(row.get('bairro', '')).strip()),
+                endereco_cidade=formatar_texto_titulo(str(row.get('cidade', '')).strip()),
+                endereco_uf=str(row.get('uf', '')).strip().upper()
+            )
+            
+            pedido_dto = CriarPedidoDTO(
+                curso_id=curso_id,
+                curso_nome=curso_nome,
+                projeto_id=projeto_id,
+                projeto_nome=projeto_nome,
+                empresa_id=empresa_id,
+                empresa_nome=empresa_nome,
+                observacoes=f"Importado em lote - Linha {linha_num}",
+                alunos=[aluno_dto]
+            )
+            
+            # Criar pedido usando use case
+            criar_pedido_uc = CriarPedidoMatriculaUseCase(pedido_repo, auditoria_repo)
+            await criar_pedido_uc.executar(pedido_dto, usuario)
+            pedidos_criados += 1
+            
+        except DuplicidadeException as e:
+            erros.append({"linha": linha_num, "erro": str(e.message)})
+        except ValidationException as e:
+            erros.append({"linha": linha_num, "erro": str(e.message)})
+        except Exception as e:
+            erros.append({"linha": linha_num, "erro": str(e)})
+    
+    return {
+        "sucesso": pedidos_criados > 0,
+        "pedidos_criados": pedidos_criados,
+        "total_linhas": len(df),
+        "erros": erros
+    }
+
+
+@api_router.get("/importacao/template", tags=["Importação"])
+async def download_template():
+    """Gera template Excel para importação"""
+    import pandas as pd
+    
+    # Criar DataFrame com exemplo
+    data = {
+        'nome': ['JOÃO CARLOS DA SILVA', 'MARIA EDUARDA DOS SANTOS'],
+        'cpf': ['123.456.789-00', '987.654.321-00'],
+        'email': ['joao.silva@email.com', 'maria.santos@email.com'],
+        'telefone': ['(71) 99999-8888', '(71) 98888-7777'],
+        'data_nascimento': ['15/03/1995', '22/07/1998'],
+        'rg': ['12345678', '87654321'],
+        'orgao_emissor': ['SSP', 'SSP'],
+        'rg_uf': ['BA', 'BA'],
+        'cep': ['41820-000', '40000-000'],
+        'logradouro': ['Rua das Flores', 'Avenida Sete de Setembro'],
+        'numero': ['123', '456'],
+        'complemento': ['Apto 101', ''],
+        'bairro': ['Pituba', 'Centro'],
+        'cidade': ['Salvador', 'Salvador'],
+        'uf': ['BA', 'BA']
+    }
+    
+    df = pd.DataFrame(data)
+    
+    # Criar arquivo Excel em memória
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Alunos')
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": "attachment; filename=template_importacao_alunos.xlsx"
+        }
+    )
+
+
 # ==================== ROOT & HEALTH ====================
 
 @api_router.get("/", tags=["Health"])
