@@ -125,6 +125,7 @@ class PedidoMatricula:
         """Converte para dicionário"""
         return {
             "id": self.id,
+            "numero_protocolo": self.numero_protocolo,
             "consultor_id": self.consultor_id,
             "consultor_nome": self.consultor_nome,
             "curso_id": self.curso_id,
