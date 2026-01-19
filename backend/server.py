@@ -1,5 +1,5 @@
 """FastAPI Backend - Sistema Central de Matrículas SENAI CIMATEC (PostgreSQL)"""
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, Query, Response
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, Query, Response, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import StreamingResponse
 from starlette.middleware.cors import CORSMiddleware
@@ -7,12 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotenv import load_dotenv
 from pathlib import Path
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from contextlib import asynccontextmanager
 import os
 import logging
 import uuid
 from datetime import datetime, timezone
+import io
+import re
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
