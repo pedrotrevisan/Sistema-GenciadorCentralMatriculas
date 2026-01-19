@@ -28,6 +28,7 @@ class AlunoResponseDTO(BaseModel):
 class PedidoResponseDTO(BaseModel):
     """DTO de resposta para pedido"""
     id: str
+    numero_protocolo: Optional[str] = None
     consultor_id: str
     consultor_nome: str
     curso_id: str
