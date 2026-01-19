@@ -208,6 +208,12 @@ const PedidoDetalhePage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            {pedido.numero_protocolo && (
+              <div>
+                <p className="text-sm text-slate-500">Número do Protocolo</p>
+                <p className="font-mono text-lg font-bold text-[#004587]">{pedido.numero_protocolo}</p>
+              </div>
+            )}
             <div>
               <p className="text-sm text-slate-500">Curso</p>
               <p className="font-medium">{pedido.curso_nome}</p>
