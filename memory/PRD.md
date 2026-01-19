@@ -44,7 +44,8 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - **CRUD de Cadastros** (Cursos, Projetos, Empresas)
 - **Formatação automática de nomes** (Title Case com preposições)
 - **Validação de CPF duplicado** no sistema
-- **Importação em Lote** via planilhas Excel/CSV (NOVO)
+- **Importação em Lote** via planilhas Excel/CSV
+- **Número de Protocolo Sequencial** (CM-YYYY-NNNN) - NOVO!
 
 ### Frontend (2026-01-19)
 - Tela de Login com identidade SENAI CIMATEC
