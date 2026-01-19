@@ -80,12 +80,47 @@ const AssistenteDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [pagina, setPagina] = useState(1);
+  const [searching, setSearching] = useState(false);
   
   // Status change modal
   const [statusModal, setStatusModal] = useState({ open: false, pedido: null });
   const [newStatus, setNewStatus] = useState('');
   const [motivo, setMotivo] = useState('');
   const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  // Detecta se é um número de protocolo (CM-YYYY-NNNN)
+  const isProtocolo = (termo) => {
+    return /^CM-\d{4}-\d+$/i.test(termo.trim());
+  };
+
+  // Busca por protocolo e redireciona
+  const handleSearchByProtocolo = async (protocolo) => {
+    setSearching(true);
+    try {
+      const response = await pedidosAPI.buscarPorProtocolo(protocolo.trim().toUpperCase());
+      if (response.data) {
+        toast.success(`Pedido ${protocolo.toUpperCase()} encontrado!`);
+        navigate(`/assistente/pedido/${response.data.id}`);
+      }
+    } catch (error) {
+      if (error.response?.status === 404) {
+        toast.error(`Protocolo ${protocolo.toUpperCase()} não encontrado`);
+      } else {
+        toast.error('Erro ao buscar protocolo');
+      }
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  // Handler do Enter no campo de busca
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter' && searchTerm.trim()) {
+      if (isProtocolo(searchTerm)) {
+        handleSearchByProtocolo(searchTerm);
+      }
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
