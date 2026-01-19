@@ -26,6 +26,7 @@ class PedidoMatricula:
     consultor_nome: str
     curso_id: str
     curso_nome: str
+    numero_protocolo: Optional[str] = None  # CM-2026-0001
     projeto_id: Optional[str] = None
     projeto_nome: Optional[str] = None
     empresa_id: Optional[str] = None
