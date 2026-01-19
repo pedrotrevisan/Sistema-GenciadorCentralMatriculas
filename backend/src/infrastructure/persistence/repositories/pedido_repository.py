@@ -198,6 +198,18 @@ class PedidoRepository(IPedidoRepository):
             return self._model_to_entity(model)
         return None
 
+    async def buscar_por_protocolo(self, numero_protocolo: str) -> Optional[PedidoMatricula]:
+        """Busca pedido por número de protocolo"""
+        result = await self.session.execute(
+            select(PedidoModel).where(PedidoModel.numero_protocolo == numero_protocolo.upper())
+        )
+        model = result.scalar_one_or_none()
+        
+        if model:
+            await self.session.refresh(model, ["alunos"])
+            return self._model_to_entity(model)
+        return None
+
     async def listar_por_consultor(
         self,
         consultor_id: str,
