@@ -137,4 +137,4 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/tests/test_importacao_api.py` - Suite de testes da Importação em Lote
 
 ## Last Updated
-2026-01-19 - Validação completa da Importação em Lote (100% testes passando)
+2026-01-19 - Implementado Número de Protocolo Sequencial (CM-YYYY-NNNN)
