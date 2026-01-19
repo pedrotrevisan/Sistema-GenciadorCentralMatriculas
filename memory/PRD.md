@@ -78,6 +78,7 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Dashboard 2.0 com Analytics
 - [x] CRUD de Cadastros (Cursos, Projetos, Empresas)
 - [x] Importação em Lote via planilhas
+- [x] Número de Protocolo Sequencial (CM-2026-0001)
 
 ### P1 (Próximos)
 - [ ] Timeline de Auditoria Visual
