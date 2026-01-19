@@ -56,7 +56,9 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - Página de Detalhes do Pedido
 - Gestão de Usuários (CRUD)
 - **Gestão de Cadastros** (Cursos, Projetos, Empresas)
-- **Importação em Lote** - Wizard 4 passos (NOVO)
+- **Importação em Lote** - Wizard 4 passos
+- **Coluna "Protocolo"** na listagem de pedidos - NOVO!
+- **Exibição do Protocolo** na página de detalhes - NOVO!
 - Toasts de feedback
 - Rotas protegidas por role
 
