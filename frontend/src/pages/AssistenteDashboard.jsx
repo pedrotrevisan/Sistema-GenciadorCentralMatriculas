@@ -345,12 +345,19 @@ const AssistenteDashboard = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Buscar por curso, consultor..."
+            placeholder="Buscar por protocolo (CM-2026-0001), curso, consultor..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
             className="pl-10"
             data-testid="search-input"
+            disabled={searching}
           />
+          {searching && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="animate-spin h-4 w-4 border-2 border-[#004587] border-t-transparent rounded-full"></div>
+            </div>
+          )}
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-48" data-testid="status-filter">
