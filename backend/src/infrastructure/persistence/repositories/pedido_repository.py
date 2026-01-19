@@ -136,8 +136,13 @@ class PedidoRepository(IPedidoRepository):
                 )
                 self.session.add(aluno_model)
         else:
+            # Gerar número de protocolo para novo pedido
+            numero_protocolo = await self.gerar_numero_protocolo()
+            pedido.numero_protocolo = numero_protocolo
+            
             pedido_model = PedidoModel(
                 id=pedido.id,
+                numero_protocolo=numero_protocolo,
                 consultor_id=pedido.consultor_id,
                 consultor_nome=pedido.consultor_nome,
                 curso_id=pedido.curso_id,
