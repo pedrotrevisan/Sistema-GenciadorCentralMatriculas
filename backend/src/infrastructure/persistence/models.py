@@ -47,6 +47,7 @@ class PedidoModel(Base):
     __tablename__ = "pedidos"
 
     id = Column(String(36), primary_key=True)
+    numero_protocolo = Column(String(20), unique=True, nullable=True, index=True)  # CM-2026-0001
     consultor_id = Column(String(36), ForeignKey("usuarios.id"), nullable=False)
     consultor_nome = Column(String(200), nullable=False)
     curso_id = Column(String(36), nullable=False)
