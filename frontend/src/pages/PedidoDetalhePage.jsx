@@ -173,10 +173,14 @@ const PedidoDetalhePage = () => {
             Voltar
           </Button>
           <h1 className="text-2xl font-bold text-slate-900 font-['Chivo']">
-            Detalhes do Pedido
+            {pedido.numero_protocolo ? (
+              <span className="text-[#004587]">{pedido.numero_protocolo}</span>
+            ) : (
+              'Detalhes do Pedido'
+            )}
           </h1>
           <p className="text-slate-500 text-sm">
-            ID: {pedido.id}
+            {pedido.numero_protocolo && 'Detalhes do Pedido • '}ID: {pedido.id.slice(0, 8)}...
           </p>
         </div>
         <div className="flex items-center gap-4">
