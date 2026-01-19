@@ -624,6 +624,27 @@ async def get_analytics(
     }
 
 
+@api_router.get("/pedidos/buscar/protocolo/{numero_protocolo}", response_model=PedidoResponseDTO, tags=["Pedidos"])
+async def buscar_por_protocolo(
+    numero_protocolo: str,
+    token: str = Depends(oauth2_scheme),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """Busca pedido por número de protocolo (ex: CM-2026-0001)"""
+    usuario = await get_current_user(token, session)
+    pedido_repo = PedidoRepository(session)
+    
+    pedido = await pedido_repo.buscar_por_protocolo(numero_protocolo)
+    if not pedido:
+        raise HTTPException(404, f"Pedido com protocolo {numero_protocolo} não encontrado")
+    
+    # Verificar permissão (consultor só vê os próprios)
+    if usuario.role == "consultor" and pedido.consultor_id != usuario.id:
+        raise HTTPException(403, "Sem permissão para visualizar este pedido")
+    
+    return PedidoResponseDTO(**pedido.to_dict())
+
+
 @api_router.get("/pedidos/{pedido_id}", response_model=PedidoResponseDTO, tags=["Pedidos"])
 async def buscar_pedido(
     pedido_id: str,
