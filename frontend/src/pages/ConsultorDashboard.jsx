@@ -209,6 +209,7 @@ const ConsultorDashboard = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Protocolo</TableHead>
                     <TableHead>Curso</TableHead>
                     <TableHead>Projeto/Empresa</TableHead>
                     <TableHead>Alunos</TableHead>
@@ -220,6 +221,9 @@ const ConsultorDashboard = () => {
                 <TableBody>
                   {pedidos.map((pedido) => (
                     <TableRow key={pedido.id} className="table-row-hover">
+                      <TableCell className="font-mono text-sm font-semibold text-[#004587]">
+                        {pedido.numero_protocolo || '-'}
+                      </TableCell>
                       <TableCell className="font-medium">
                         {pedido.curso_nome}
                       </TableCell>
