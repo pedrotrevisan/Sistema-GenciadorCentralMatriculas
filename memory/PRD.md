@@ -18,7 +18,7 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 ## User Personas
 1. **Consultor**: Cria e visualiza próprios pedidos de matrícula
 2. **Assistente**: Visualiza todos os pedidos, altera status, exporta TOTVS
-3. **Admin**: Acesso total + Gestão de Usuários
+3. **Admin**: Acesso total + Gestão de Usuários + CRUD Cadastros
 
 ## Core Requirements (Static)
 - [x] Autenticação JWT com RBAC
@@ -33,28 +33,34 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 
 ## What's Been Implemented
 
-### Backend (2026-01-10)
+### Backend (2026-01-19)
 - Domain Layer completo (Entidades, Value Objects, Exceções)
 - **Repositórios SQLAlchemy async (compatível PostgreSQL e SQLite)**
 - Use Cases: CriarPedido, AtualizarStatus, GerarExportacao, ConsultarPedidos
 - JWT Authentication com roles
 - Exportador XLSX para TOTVS (openpyxl)
 - API RESTful com tratamento de erros
-- **Migração completa de MongoDB para SQLAlchemy**
+- **Dashboard 2.0 Analytics** (`GET /api/pedidos/analytics`)
+- **CRUD de Cadastros** (Cursos, Projetos, Empresas)
+- **Formatação automática de nomes** (Title Case com preposições)
+- **Validação de CPF duplicado** no sistema
+- **Importação em Lote** via planilhas Excel/CSV (NOVO)
 
-### Frontend
+### Frontend (2026-01-19)
 - Tela de Login com identidade SENAI CIMATEC
 - Dashboard Consultor (Funil de Vendas)
 - Dashboard Assistente (Painel de Gestão)
-- Dashboard Admin (Visão Geral + Ações Rápidas)
+- **Dashboard Admin 2.0** (KPIs, Funil, Top Empresas/Projetos, Evolução Mensal)
 - Formulário Wizard Nova Matrícula (3 etapas)
 - Página de Detalhes do Pedido
 - Gestão de Usuários (CRUD)
+- **Gestão de Cadastros** (Cursos, Projetos, Empresas)
+- **Importação em Lote** - Wizard 4 passos (NOVO)
 - Toasts de feedback
 - Rotas protegidas por role
 
-### Dados Auxiliares (Mock)
-- Cursos: 8 cursos técnicos e de engenharia
+### Dados Auxiliares (Seed)
+- Cursos: 10 cursos técnicos e de engenharia
 - Projetos: 4 projetos SENAI
 - Empresas: 5 empresas parceiras
 
@@ -66,33 +72,42 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Dashboard por role
 - [x] Exportação TOTVS
 - [x] Suporte a PostgreSQL/SQLite
+- [x] Dashboard 2.0 com Analytics
+- [x] CRUD de Cadastros (Cursos, Projetos, Empresas)
+- [x] Importação em Lote via planilhas
 
 ### P1 (Próximos)
+- [ ] Timeline de Auditoria Visual
+- [ ] Refatoração do server.py (monolito > roteadores separados)
+- [ ] Refinar máquina de estados dos pedidos
 - [ ] Filtros avançados de data na listagem
-- [ ] Histórico de auditoria na UI
+
+### P2 (Futuro)
+- [ ] Central de Pendências com notificações
+- [ ] Controle Orçamentário para projetos
+- [ ] Smart Sidebar contextual no formulário
+- [ ] Integração com API de CEP (ViaCEP)
 - [ ] Notificações por email
 - [ ] Upload de documentos do aluno
 
-### P2 (Futuro)
-- [ ] Dashboard com gráficos (Recharts)
-- [ ] Relatórios em PDF
-- [ ] Integração real com TOTVS
-- [ ] API de CEP (ViaCEP)
-
 ## Tech Stack
-- Backend: Python 3.10+, FastAPI, SQLAlchemy (Async), PostgreSQL/SQLite, Pydantic, openpyxl
-- Frontend: React 19, Tailwind CSS, Shadcn/UI, React Router, Axios
+- Backend: Python 3.10+, FastAPI, SQLAlchemy (Async), PostgreSQL/SQLite, Pydantic, openpyxl, pandas
+- Frontend: React 19, Tailwind CSS, Shadcn/UI, React Router, Axios, Recharts
 - Auth: JWT (python-jose), bcrypt (passlib)
 
 ## Database Configuration
 O sistema suporta dois bancos de dados:
 
-### PostgreSQL (Produção/Local)
+### PostgreSQL (Produção)
 ```env
 DATABASE_URL=postgresql+asyncpg://usuario:senha@localhost:5432/db_central_matriculas
 ```
 
-### SQLite (Desenvolvimento)
+### SQLite (Desenvolvimento Local)
+```env
+# Comentar ou remover DATABASE_URL para usar SQLite
+# DATABASE_URL=sqlite+aiosqlite:///./matriculas.db
+```
 Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/database.db`
 
 ## Default Credentials
@@ -100,9 +115,22 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - Assistente: assistente@senai.br / assistente123
 - Consultor: consultor@senai.br / consultor123
 
-## Files Changed (2026-01-10)
-- `/app/backend/src/infrastructure/persistence/database.py` - Suporte PostgreSQL/SQLite
-- `/app/backend/src/infrastructure/persistence/repositories/*.py` - Repositórios SQLAlchemy
-- `/app/backend/.env` - Configuração do ambiente
-- `/app/backend/requirements.txt` - Dependências atualizadas
-- `/app/README.md` - Instruções de instalação atualizadas
+## Key Files
+- `/app/backend/server.py` - Arquivo principal do FastAPI (monolítico, necessita refatoração)
+- `/app/backend/src/utils/text_formatters.py` - Formatação de nomes (Title Case)
+- `/app/frontend/src/pages/ImportacaoLotePage.jsx` - Importação em Lote
+- `/app/frontend/src/pages/AdminDashboard.jsx` - Dashboard 2.0
+- `/app/frontend/src/pages/GestaoUsuariosPage.jsx` - Gestão de Usuários
+- `/app/frontend/src/components/DashboardLayout.jsx` - Layout principal
+
+## API Endpoints - Importação em Lote (NOVO)
+- `GET /api/importacao/template` - Download do template Excel
+- `POST /api/importacao/validar` - Validação de planilha
+- `POST /api/importacao/executar` - Execução da importação
+
+## Test Reports
+- `/app/test_reports/iteration_2.json` - Relatório de testes (26/26 PASS)
+- `/app/tests/test_importacao_api.py` - Suite de testes da Importação em Lote
+
+## Last Updated
+2026-01-19 - Validação completa da Importação em Lote (100% testes passando)
