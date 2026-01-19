@@ -2,7 +2,7 @@
 from typing import List, Optional, Tuple
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, update, delete, and_, or_
+from sqlalchemy import select, func, update, delete, and_, or_, extract
 
 from src.domain.repositories import IPedidoRepository
 from src.domain.entities import PedidoMatricula, Aluno
@@ -15,6 +15,30 @@ class PedidoRepository(IPedidoRepository):
 
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    async def gerar_numero_protocolo(self) -> str:
+        """Gera o próximo número de protocolo no formato CM-YYYY-NNNN"""
+        ano_atual = datetime.now().year
+        prefixo = f"CM-{ano_atual}-"
+        
+        # Busca o maior número de protocolo do ano atual
+        query = select(func.max(PedidoModel.numero_protocolo)).where(
+            PedidoModel.numero_protocolo.like(f"{prefixo}%")
+        )
+        result = await self.session.execute(query)
+        ultimo_protocolo = result.scalar()
+        
+        if ultimo_protocolo:
+            # Extrai o número sequencial do último protocolo
+            try:
+                ultimo_numero = int(ultimo_protocolo.split("-")[-1])
+                proximo_numero = ultimo_numero + 1
+            except (ValueError, IndexError):
+                proximo_numero = 1
+        else:
+            proximo_numero = 1
+        
+        return f"{prefixo}{proximo_numero:04d}"
 
     def _model_to_entity(self, model: PedidoModel) -> PedidoMatricula:
         """Converte model SQLAlchemy para entidade de domínio"""
