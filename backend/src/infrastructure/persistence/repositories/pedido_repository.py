@@ -68,6 +68,7 @@ class PedidoRepository(IPedidoRepository):
 
         return PedidoMatricula(
             id=model.id,
+            numero_protocolo=model.numero_protocolo,
             consultor_id=model.consultor_id,
             consultor_nome=model.consultor_nome,
             curso_id=model.curso_id,
