@@ -17,6 +17,7 @@ import GestaoUsuariosPage from "./pages/GestaoUsuariosPage";
 import GestaoCadastrosPage from "./pages/GestaoCadastrosPage";
 import NovaMatriculaPage from "./pages/NovaMatriculaPage";
 import PedidoDetalhePage from "./pages/PedidoDetalhePage";
+import ImportacaoLotePage from "./pages/ImportacaoLotePage";
 
 function App() {
   return (
