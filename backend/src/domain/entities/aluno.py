@@ -25,6 +25,15 @@ class Aluno:
     endereco_cidade: str
     endereco_uf: str
     endereco_complemento: Optional[str] = None
+    # Novos campos para TOTVS
+    rg_data_emissao: Optional[str] = None
+    naturalidade: Optional[str] = None
+    naturalidade_uf: Optional[str] = None
+    sexo: Optional[str] = None  # M ou F
+    cor_raca: Optional[str] = None
+    grau_instrucao: Optional[str] = None
+    nome_pai: Optional[str] = None
+    nome_mae: Optional[str] = None
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -64,6 +73,14 @@ class Aluno:
             "rg": self.rg,
             "rg_orgao_emissor": self.rg_orgao_emissor,
             "rg_uf": self.rg_uf,
+            "rg_data_emissao": self.rg_data_emissao,
+            "naturalidade": self.naturalidade,
+            "naturalidade_uf": self.naturalidade_uf,
+            "sexo": self.sexo,
+            "cor_raca": self.cor_raca,
+            "grau_instrucao": self.grau_instrucao,
+            "nome_pai": self.nome_pai,
+            "nome_mae": self.nome_mae,
             "endereco_cep": self.endereco_cep,
             "endereco_logradouro": self.endereco_logradouro,
             "endereco_numero": self.endereco_numero,
@@ -88,6 +105,14 @@ class Aluno:
             rg=data.get("rg"),
             rg_orgao_emissor=data.get("rg_orgao_emissor"),
             rg_uf=data.get("rg_uf"),
+            rg_data_emissao=data.get("rg_data_emissao"),
+            naturalidade=data.get("naturalidade"),
+            naturalidade_uf=data.get("naturalidade_uf"),
+            sexo=data.get("sexo"),
+            cor_raca=data.get("cor_raca"),
+            grau_instrucao=data.get("grau_instrucao"),
+            nome_pai=data.get("nome_pai"),
+            nome_mae=data.get("nome_mae"),
             endereco_cep=data.get("endereco_cep"),
             endereco_logradouro=data.get("endereco_logradouro"),
             endereco_numero=data.get("endereco_numero"),
