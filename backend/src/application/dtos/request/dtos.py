@@ -9,11 +9,19 @@ class AlunoCreateDTO(BaseModel):
     nome: str = Field(..., min_length=3, max_length=200)
     cpf: str = Field(..., min_length=11, max_length=14)
     email: str = Field(..., min_length=5)
-    telefone: str = Field(..., min_length=10, max_length=15)
+    telefone: str = Field(..., min_length=10, max_length=20)
     data_nascimento: str
     rg: str = Field(..., min_length=5)
     rg_orgao_emissor: str = Field(..., min_length=2)
     rg_uf: str = Field(..., min_length=2, max_length=2)
+    rg_data_emissao: Optional[str] = None  # NOVO - Emissão RG
+    naturalidade: Optional[str] = None  # NOVO - Naturalidade
+    naturalidade_uf: Optional[str] = None  # NOVO - Estado Natal/UF
+    sexo: Optional[str] = None  # NOVO - M/F
+    cor_raca: Optional[str] = None  # NOVO - Cor/Raça
+    grau_instrucao: Optional[str] = None  # NOVO - Grau de Instrução
+    nome_pai: Optional[str] = None  # NOVO - Nome do pai
+    nome_mae: Optional[str] = None  # NOVO - Nome da mãe
     endereco_cep: str = Field(..., min_length=8, max_length=9)
     endereco_logradouro: str = Field(..., min_length=3)
     endereco_numero: str = Field(..., min_length=1)
