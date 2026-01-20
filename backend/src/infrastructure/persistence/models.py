@@ -78,11 +78,19 @@ class AlunoModel(Base):
     nome = Column(String(200), nullable=False)
     cpf = Column(String(11), nullable=False, index=True)
     email = Column(String(200), nullable=False)
-    telefone = Column(String(11), nullable=False)
+    telefone = Column(String(20), nullable=False)
     data_nascimento = Column(DateTime, nullable=False)
     rg = Column(String(20), nullable=False)
     rg_orgao_emissor = Column(String(20), nullable=False)
     rg_uf = Column(String(2), nullable=False)
+    rg_data_emissao = Column(String(10), nullable=True)  # NOVO - Emissão RG
+    naturalidade = Column(String(100), nullable=True)  # NOVO - Naturalidade
+    naturalidade_uf = Column(String(2), nullable=True)  # NOVO - Estado Natal/UF
+    sexo = Column(String(1), nullable=True)  # NOVO - M/F
+    cor_raca = Column(String(20), nullable=True)  # NOVO - Cor/Raça
+    grau_instrucao = Column(String(50), nullable=True)  # NOVO - Grau de Instrução
+    nome_pai = Column(String(200), nullable=True)  # NOVO - Nome do pai
+    nome_mae = Column(String(200), nullable=True)  # NOVO - Nome da mãe
     endereco_cep = Column(String(9), nullable=False)
     endereco_logradouro = Column(String(200), nullable=False)
     endereco_numero = Column(String(20), nullable=False)
