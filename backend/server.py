@@ -1374,26 +1374,33 @@ async def executar_importacao(
 
 @api_router.get("/importacao/template", tags=["Importação"])
 async def download_template():
-    """Gera template Excel para importação"""
+    """Gera template Excel para importação - Formato compatível com TOTVS"""
     import pandas as pd
     
-    # Criar DataFrame com exemplo
+    # Criar DataFrame com exemplo - NA ORDEM DO TOTVS
     data = {
-        'nome': ['JOÃO CARLOS DA SILVA', 'MARIA EDUARDA DOS SANTOS'],
         'cpf': ['123.456.789-00', '987.654.321-00'],
-        'email': ['joao.silva@email.com', 'maria.santos@email.com'],
-        'telefone': ['(71) 99999-8888', '(71) 98888-7777'],
-        'data_nascimento': ['15/03/1995', '22/07/1998'],
         'rg': ['12345678', '87654321'],
+        'rg_data_emissao': ['10/05/2015', '15/08/2018'],
         'orgao_emissor': ['SSP', 'SSP'],
-        'rg_uf': ['BA', 'BA'],
-        'cep': ['41820-000', '40000-000'],
+        'nome': ['JOÃO CARLOS DA SILVA', 'MARIA EDUARDA DOS SANTOS'],
+        'naturalidade_uf': ['BA', 'BA'],
+        'naturalidade': ['Salvador', 'Feira de Santana'],
+        'data_nascimento': ['15/03/1995', '22/07/1998'],
+        'sexo': ['M', 'F'],
+        'cor_raca': ['Branca', 'Parda'],
+        'grau_instrucao': ['Ensino Médio Completo', 'Ensino Superior Incompleto'],
         'logradouro': ['Rua das Flores', 'Avenida Sete de Setembro'],
         'numero': ['123', '456'],
         'complemento': ['Apto 101', ''],
         'bairro': ['Pituba', 'Centro'],
         'cidade': ['Salvador', 'Salvador'],
-        'uf': ['BA', 'BA']
+        'cep': ['41820-000', '40000-000'],
+        'uf': ['BA', 'BA'],
+        'telefone': ['(71) 99999-8888', '(71) 98888-7777'],
+        'email': ['joao.silva@email.com', 'maria.santos@email.com'],
+        'nome_pai': ['José Carlos da Silva', 'Pedro Santos'],
+        'nome_mae': ['Maria Aparecida da Silva', 'Ana Paula dos Santos']
     }
     
     df = pd.DataFrame(data)
