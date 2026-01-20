@@ -72,6 +72,20 @@ const ESTADOS_BR = [
   'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ];
 
+const COR_RACA_OPTIONS = [
+  'Branca', 'Preta', 'Parda', 'Amarela', 'Indígena', 'Não declarada'
+];
+
+const GRAU_INSTRUCAO_OPTIONS = [
+  'Fundamental Incompleto',
+  'Fundamental Completo',
+  'Médio Incompleto',
+  'Médio Completo',
+  'Superior Incompleto',
+  'Superior Completo',
+  'Pós-Graduação'
+];
+
 const emptyAluno = {
   nome: '',
   cpf: '',
@@ -81,6 +95,14 @@ const emptyAluno = {
   rg: '',
   rg_orgao_emissor: '',
   rg_uf: '',
+  rg_data_emissao: '',
+  naturalidade: '',
+  naturalidade_uf: '',
+  sexo: '',
+  cor_raca: '',
+  grau_instrucao: '',
+  nome_pai: '',
+  nome_mae: '',
   endereco_cep: '',
   endereco_logradouro: '',
   endereco_numero: '',
