@@ -16,6 +16,14 @@ class AlunoResponseDTO(BaseModel):
     rg: str
     rg_orgao_emissor: str
     rg_uf: str
+    rg_data_emissao: Optional[str] = None
+    naturalidade: Optional[str] = None
+    naturalidade_uf: Optional[str] = None
+    sexo: Optional[str] = None
+    cor_raca: Optional[str] = None
+    grau_instrucao: Optional[str] = None
+    nome_pai: Optional[str] = None
+    nome_mae: Optional[str] = None
     endereco_cep: str
     endereco_logradouro: str
     endereco_numero: str
