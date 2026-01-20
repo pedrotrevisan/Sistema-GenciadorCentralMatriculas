@@ -30,7 +30,7 @@ class IExportadorArquivo(ABC):
 
 
 class ExportadorXLSXTOTVS(IExportadorArquivo):
-    """Exportador para Excel no formato TOTVS"""
+    """Exportador para Excel no formato TOTVS - ORDEM EXATA DO TOTVS"""
 
     def exportar(self, pedidos: List[PedidoMatricula]) -> BytesIO:
         """Exporta pedidos para XLSX no layout TOTVS"""
@@ -49,14 +49,33 @@ class ExportadorXLSXTOTVS(IExportadorArquivo):
             bottom=Side(style='thin')
         )
 
-        # Cabeçalhos conforme layout TOTVS
+        # Cabeçalhos na ORDEM EXATA do TOTVS
         headers = [
-            "CODIGO_PEDIDO", "DATA_PEDIDO", "CONSULTOR", "CURSO", 
-            "PROJETO", "EMPRESA", "CPF_ALUNO", "NOME_ALUNO", 
-            "EMAIL_ALUNO", "TELEFONE_ALUNO", "DATA_NASCIMENTO",
-            "RG", "ORGAO_EMISSOR", "UF_RG", "CEP", "LOGRADOURO",
-            "NUMERO", "COMPLEMENTO", "BAIRRO", "CIDADE", "UF",
-            "STATUS", "DATA_EXPORTACAO"
+            "CPF",                    # 1
+            "RG",                     # 2
+            "Emissão RG",            # 3
+            "Orgão emissor",         # 4
+            "Nome completo do aluno", # 5
+            "Estado Natal/UF",       # 6
+            "Naturalidade",          # 7
+            "Data de nascimento",    # 8
+            "Sexo",                  # 9
+            "Cor/Raça",              # 10
+            "Grau de Instrução",     # 11
+            "Endereço",              # 12
+            "Nº",                    # 13
+            "Complemento",           # 14
+            "Bairro",                # 15
+            "Cidade",                # 16
+            "Telefone",              # 17
+            "E-mail",                # 18
+            "Nome do pai",           # 19
+            "Nome da mãe",           # 20
+            # Campos extras do sistema
+            "Protocolo",             # 21
+            "Curso",                 # 22
+            "Projeto/Empresa",       # 23
+            "Consultor",             # 24
         ]
 
         # Aplica cabeçalhos
@@ -69,33 +88,35 @@ class ExportadorXLSXTOTVS(IExportadorArquivo):
 
         # Dados
         row = 2
-        data_exportacao = datetime.now().strftime("%d/%m/%Y %H:%M")
         
         for pedido in pedidos:
             for aluno in pedido.alunos:
-                ws.cell(row=row, column=1, value=pedido.id).border = thin_border
-                ws.cell(row=row, column=2, value=pedido.created_at.strftime("%d/%m/%Y")).border = thin_border
-                ws.cell(row=row, column=3, value=pedido.consultor_nome).border = thin_border
-                ws.cell(row=row, column=4, value=pedido.curso_nome).border = thin_border
-                ws.cell(row=row, column=5, value=pedido.projeto_nome or "").border = thin_border
-                ws.cell(row=row, column=6, value=pedido.empresa_nome or "").border = thin_border
-                ws.cell(row=row, column=7, value=aluno.cpf.formatado()).border = thin_border
-                ws.cell(row=row, column=8, value=aluno.nome).border = thin_border
-                ws.cell(row=row, column=9, value=aluno.email.valor).border = thin_border
-                ws.cell(row=row, column=10, value=aluno.telefone.formatado()).border = thin_border
-                ws.cell(row=row, column=11, value=aluno.data_nascimento.strftime("%d/%m/%Y")).border = thin_border
-                ws.cell(row=row, column=12, value=aluno.rg).border = thin_border
-                ws.cell(row=row, column=13, value=aluno.rg_orgao_emissor).border = thin_border
-                ws.cell(row=row, column=14, value=aluno.rg_uf).border = thin_border
-                ws.cell(row=row, column=15, value=aluno.endereco_cep).border = thin_border
-                ws.cell(row=row, column=16, value=aluno.endereco_logradouro).border = thin_border
-                ws.cell(row=row, column=17, value=aluno.endereco_numero).border = thin_border
-                ws.cell(row=row, column=18, value=aluno.endereco_complemento or "").border = thin_border
-                ws.cell(row=row, column=19, value=aluno.endereco_bairro).border = thin_border
-                ws.cell(row=row, column=20, value=aluno.endereco_cidade).border = thin_border
-                ws.cell(row=row, column=21, value=aluno.endereco_uf).border = thin_border
-                ws.cell(row=row, column=22, value=pedido.status.label).border = thin_border
-                ws.cell(row=row, column=23, value=data_exportacao).border = thin_border
+                # Dados na ORDEM EXATA do TOTVS
+                ws.cell(row=row, column=1, value=aluno.cpf.formatado()).border = thin_border
+                ws.cell(row=row, column=2, value=aluno.rg).border = thin_border
+                ws.cell(row=row, column=3, value=aluno.rg_data_emissao or "").border = thin_border
+                ws.cell(row=row, column=4, value=aluno.rg_orgao_emissor).border = thin_border
+                ws.cell(row=row, column=5, value=aluno.nome).border = thin_border
+                ws.cell(row=row, column=6, value=aluno.naturalidade_uf or "").border = thin_border
+                ws.cell(row=row, column=7, value=aluno.naturalidade or "").border = thin_border
+                ws.cell(row=row, column=8, value=aluno.data_nascimento.strftime("%d/%m/%Y")).border = thin_border
+                ws.cell(row=row, column=9, value=aluno.sexo or "").border = thin_border
+                ws.cell(row=row, column=10, value=aluno.cor_raca or "").border = thin_border
+                ws.cell(row=row, column=11, value=aluno.grau_instrucao or "").border = thin_border
+                ws.cell(row=row, column=12, value=aluno.endereco_logradouro).border = thin_border
+                ws.cell(row=row, column=13, value=aluno.endereco_numero).border = thin_border
+                ws.cell(row=row, column=14, value=aluno.endereco_complemento or "").border = thin_border
+                ws.cell(row=row, column=15, value=aluno.endereco_bairro).border = thin_border
+                ws.cell(row=row, column=16, value=aluno.endereco_cidade).border = thin_border
+                ws.cell(row=row, column=17, value=aluno.telefone.formatado()).border = thin_border
+                ws.cell(row=row, column=18, value=aluno.email.valor).border = thin_border
+                ws.cell(row=row, column=19, value=aluno.nome_pai or "").border = thin_border
+                ws.cell(row=row, column=20, value=aluno.nome_mae or "").border = thin_border
+                # Campos extras
+                ws.cell(row=row, column=21, value=pedido.numero_protocolo or pedido.id[:8]).border = thin_border
+                ws.cell(row=row, column=22, value=pedido.curso_nome).border = thin_border
+                ws.cell(row=row, column=23, value=pedido.projeto_nome or pedido.empresa_nome or "").border = thin_border
+                ws.cell(row=row, column=24, value=pedido.consultor_nome).border = thin_border
                 row += 1
 
         # Ajusta largura das colunas
@@ -125,19 +146,19 @@ class ExportadorXLSXTOTVS(IExportadorArquivo):
 
 
 class ExportadorCSVTOTVS(IExportadorArquivo):
-    """Exportador para CSV no formato TOTVS"""
+    """Exportador para CSV no formato TOTVS - ORDEM EXATA DO TOTVS"""
 
     def exportar(self, pedidos: List[PedidoMatricula]) -> BytesIO:
         """Exporta pedidos para CSV no layout TOTVS"""
         output = BytesIO()
         
+        # Cabeçalhos na ORDEM EXATA do TOTVS
         headers = [
-            "CODIGO_PEDIDO", "DATA_PEDIDO", "CONSULTOR", "CURSO",
-            "PROJETO", "EMPRESA", "CPF_ALUNO", "NOME_ALUNO",
-            "EMAIL_ALUNO", "TELEFONE_ALUNO", "DATA_NASCIMENTO",
-            "RG", "ORGAO_EMISSOR", "UF_RG", "CEP", "LOGRADOURO",
-            "NUMERO", "COMPLEMENTO", "BAIRRO", "CIDADE", "UF",
-            "STATUS", "DATA_EXPORTACAO"
+            "CPF", "RG", "Emissão RG", "Orgão emissor", "Nome completo do aluno",
+            "Estado Natal/UF", "Naturalidade", "Data de nascimento", "Sexo",
+            "Cor/Raça", "Grau de Instrução", "Endereço", "Nº", "Complemento",
+            "Bairro", "Cidade", "Telefone", "E-mail", "Nome do pai", "Nome da mãe",
+            "Protocolo", "Curso", "Projeto/Empresa", "Consultor"
         ]
         
         # Escreve em modo texto
@@ -146,34 +167,33 @@ class ExportadorCSVTOTVS(IExportadorArquivo):
         writer = csv.writer(text_output, delimiter=';', quoting=csv.QUOTE_ALL)
         writer.writerow(headers)
         
-        data_exportacao = datetime.now().strftime("%d/%m/%Y %H:%M")
-        
         for pedido in pedidos:
             for aluno in pedido.alunos:
                 writer.writerow([
-                    pedido.id,
-                    pedido.created_at.strftime("%d/%m/%Y"),
-                    pedido.consultor_nome,
-                    pedido.curso_nome,
-                    pedido.projeto_nome or "",
-                    pedido.empresa_nome or "",
                     aluno.cpf.formatado(),
-                    aluno.nome,
-                    aluno.email.valor,
-                    aluno.telefone.formatado(),
-                    aluno.data_nascimento.strftime("%d/%m/%Y"),
                     aluno.rg,
+                    aluno.rg_data_emissao or "",
                     aluno.rg_orgao_emissor,
-                    aluno.rg_uf,
-                    aluno.endereco_cep,
+                    aluno.nome,
+                    aluno.naturalidade_uf or "",
+                    aluno.naturalidade or "",
+                    aluno.data_nascimento.strftime("%d/%m/%Y"),
+                    aluno.sexo or "",
+                    aluno.cor_raca or "",
+                    aluno.grau_instrucao or "",
                     aluno.endereco_logradouro,
                     aluno.endereco_numero,
                     aluno.endereco_complemento or "",
                     aluno.endereco_bairro,
                     aluno.endereco_cidade,
-                    aluno.endereco_uf,
-                    pedido.status.label,
-                    data_exportacao
+                    aluno.telefone.formatado(),
+                    aluno.email.valor,
+                    aluno.nome_pai or "",
+                    aluno.nome_mae or "",
+                    pedido.numero_protocolo or pedido.id[:8],
+                    pedido.curso_nome,
+                    pedido.projeto_nome or pedido.empresa_nome or "",
+                    pedido.consultor_nome
                 ])
         
         # Converte para bytes
