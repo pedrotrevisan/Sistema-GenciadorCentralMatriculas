@@ -165,14 +165,16 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `POST /api/importacao/executar` - Execução da importação
 
 ## Test Reports
+- `/app/test_reports/iteration_5.json` - Módulo de Reembolsos (39/39 PASS) - 2026-01-22
 - `/app/test_reports/iteration_4.json` - Central de Pendências (24/24 PASS) - 2026-01-22
 - `/app/test_reports/iteration_3.json` - Campos TOTVS + Nomenclaturas (7/7 PASS) - 2026-01-22
 - `/app/test_reports/iteration_2.json` - Importação em Lote (26/26 PASS)
 - `/app/tests/test_importacao_api.py` - Suite de testes da Importação
-- `/app/tests/test_pendencias_api.py` - Suite de testes da Central de Pendências - NOVO!
+- `/app/tests/test_pendencias_api.py` - Suite de testes da Central de Pendências
+- `/app/tests/test_reembolsos_api.py` - Suite de testes do Módulo de Reembolsos - NOVO!
 
 ## Last Updated
-2026-01-22 - Implementada Central de Pendências Documentais
+2026-01-22 - Implementado Módulo de Reembolsos
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
