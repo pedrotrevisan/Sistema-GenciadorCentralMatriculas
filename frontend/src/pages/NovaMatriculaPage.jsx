@@ -655,7 +655,7 @@ const NovaMatriculaPage = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label>Cor/Raça</Label>
+                        <Label>Cor/Raça *</Label>
                         <Select
                           value={aluno.cor_raca}
                           onValueChange={(v) => handleAlunoChange(index, 'cor_raca', v)}
@@ -671,7 +671,7 @@ const NovaMatriculaPage = () => {
                         </Select>
                       </div>
                       <div>
-                        <Label>Grau de Instrução</Label>
+                        <Label>Grau de Instrução *</Label>
                         <Select
                           value={aluno.grau_instrucao}
                           onValueChange={(v) => handleAlunoChange(index, 'grau_instrucao', v)}
@@ -691,7 +691,7 @@ const NovaMatriculaPage = () => {
                     {/* Filiação */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label>Nome do Pai</Label>
+                        <Label>Nome do Pai *</Label>
                         <Input
                           value={aluno.nome_pai}
                           onChange={(e) => handleAlunoChange(index, 'nome_pai', e.target.value)}
@@ -707,7 +707,7 @@ const NovaMatriculaPage = () => {
                         />
                       </div>
                       <div>
-                        <Label>Nome da Mãe</Label>
+                        <Label>Nome da Mãe *</Label>
                         <Input
                           value={aluno.nome_mae}
                           onChange={(e) => handleAlunoChange(index, 'nome_mae', e.target.value)}
