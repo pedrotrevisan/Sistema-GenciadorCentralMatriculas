@@ -2233,6 +2233,87 @@ async def criar_reembolso(
     }
 
 
+@api_router.get("/reembolsos/templates-email", tags=["Reembolsos"])
+async def listar_templates_email(
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Retorna os templates de email para reembolso"""
+    return {
+        "solicitacao_dados_bancarios": {
+            "assunto": "SENAI CIMATEC - Solicitação de Dados Bancários para Reembolso",
+            "corpo": """Olá, boa tarde!
+
+Agradecemos seu contato e esperamos que esteja bem!
+
+Informamos que sua matrícula no curso [NOME_DO_CURSO] foi cancelada devido ao [MOTIVO]. Para prosseguirmos com o reembolso do valor pago, solicitamos, por gentileza, o envio dos seus dados bancários para depósito, conforme os critérios abaixo.
+
+• Candidato maior de 18 anos: informar conta bancária em seu nome;
+• Candidato menor de 18 anos: informar conta bancária do responsável financeiro, que deve estar identificado no momento da inscrição.
+
+Dados bancários solicitados:
+• Nome completo do titular da conta:
+• CPF do titular:
+• Banco:
+• Agência:
+• Conta (com dígito):
+• Tipo de conta (corrente/poupança):
+
+Informações importantes:
+• O reembolso será realizado exclusivamente para conta corrente ou poupança. Não aceitaremos: conta fácil, conta jurídica, conta salário ou conta conjunta.
+• O crédito será realizado em até 15 dias úteis após o recebimento completo das informações.
+• O reembolso não será feito via PIX, sendo efetuado apenas por crédito em conta bancária.
+
+Pedimos a gentileza de responder a este e-mail com os dados acima para que possamos dar prosseguimento ao reembolso.
+
+Agradecemos seu interesse no SENAI e nos colocamos à disposição para qualquer dúvida.
+
+[NOME_ATENDENTE]
+
+Central de Atendimento ao Candidato
+
+[EMAIL_ATENDENTE]"""
+        },
+        "confirmacao_recebimento": {
+            "assunto": "SENAI CIMATEC - Confirmação de Recebimento dos Dados Bancários",
+            "corpo": """Olá, boa tarde!
+
+Confirmamos o recebimento dos seus dados bancários para reembolso.
+
+Aluno: [NOME_ALUNO]
+Curso: [NOME_DO_CURSO]
+
+Informamos que o processo de reembolso foi encaminhado ao setor financeiro. O crédito será realizado em até 15 dias úteis.
+
+Caso tenha alguma dúvida, estamos à disposição.
+
+[NOME_ATENDENTE]
+
+Central de Atendimento ao Candidato
+
+[EMAIL_ATENDENTE]"""
+        },
+        "confirmacao_pagamento": {
+            "assunto": "SENAI CIMATEC - Reembolso Efetuado",
+            "corpo": """Olá, boa tarde!
+
+Informamos que o reembolso referente à matrícula no curso [NOME_DO_CURSO] foi efetuado com sucesso.
+
+Aluno: [NOME_ALUNO]
+Data do crédito: [DATA_PAGAMENTO]
+
+Por favor, verifique sua conta bancária.
+
+Caso tenha alguma dúvida, estamos à disposição.
+
+[NOME_ATENDENTE]
+
+Central de Atendimento ao Candidato
+
+[EMAIL_ATENDENTE]"""
+        }
+    }
+
+
 @api_router.get("/reembolsos/{reembolso_id}", tags=["Reembolsos"])
 async def buscar_reembolso(
     reembolso_id: str,
