@@ -383,7 +383,7 @@ const AssistenteDashboard = () => {
           {pedidos.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">Nenhum pedido encontrado</p>
+              <p className="text-slate-500">Nenhuma solicitação encontrada</p>
             </div>
           ) : (
             <>
