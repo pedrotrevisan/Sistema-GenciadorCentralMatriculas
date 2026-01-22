@@ -224,6 +224,49 @@ const NovaMatriculaPage = () => {
     });
   };
 
+  // Busca endereço pelo CEP usando ViaCEP
+  const buscarCep = async (index, cep) => {
+    // Remove caracteres não numéricos
+    const cepLimpo = cep.replace(/\D/g, '');
+    
+    // Valida se tem 8 dígitos
+    if (cepLimpo.length !== 8) {
+      return;
+    }
+    
+    setBuscandoCep(prev => ({ ...prev, [index]: true }));
+    
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+      const data = await response.json();
+      
+      if (data.erro) {
+        toast.error('CEP não encontrado');
+        return;
+      }
+      
+      // Preenche os campos de endereço
+      setFormData(prev => {
+        const alunos = [...prev.alunos];
+        alunos[index] = {
+          ...alunos[index],
+          endereco_logradouro: formatarTextoTitulo(data.logradouro) || '',
+          endereco_bairro: formatarTextoTitulo(data.bairro) || '',
+          endereco_cidade: formatarTextoTitulo(data.localidade) || '',
+          endereco_uf: data.uf || ''
+        };
+        return { ...prev, alunos };
+      });
+      
+      toast.success('Endereço preenchido automaticamente!');
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      toast.error('Erro ao buscar CEP. Tente novamente.');
+    } finally {
+      setBuscandoCep(prev => ({ ...prev, [index]: false }));
+    }
+  };
+
   const addAluno = () => {
     setFormData(prev => ({
       ...prev,
