@@ -243,8 +243,29 @@ Aberto → Aguardando Dados Bancários → Enviado ao Financeiro → Pago
 - `GET /api/reembolsos/motivos` - Lista motivos
 - `GET /api/reembolsos/status` - Lista status
 - `GET /api/reembolsos/dashboard` - Dashboard
+- `GET /api/reembolsos/templates-email` - Templates de email (NOVO!)
 - `GET /api/reembolsos` - Lista com filtros
 - `POST /api/reembolsos` - Cria reembolso
 - `GET /api/reembolsos/{id}` - Detalhes
 - `PUT /api/reembolsos/{id}` - Atualiza
 - `DELETE /api/reembolsos/{id}` - Exclui (admin)
+- `POST /api/reembolsos/{id}/dados-bancarios` - Registra dados bancários (NOVO!)
+- `POST /api/reembolsos/{id}/marcar-email-enviado` - Marca email enviado (NOVO!)
+
+### Melhorias v1.1 (2026-01-22) - NOVO!
+1. **Indicador de Menor de Idade**
+   - Campo `aluno_menor_idade` no formulário
+   - Badge "Menor" na listagem de reembolsos
+   - Reembolso deve ser feito para conta do responsável
+
+2. **Dados Bancários**
+   - Endpoint dedicado para registrar dados bancários
+   - Campos: titular, CPF, banco, agência, operação, conta, tipo
+   - Badge "Banco OK" indica dados recebidos
+
+3. **Templates de Email**
+   - Modal com 3 templates prontos
+   - Solicitação de dados bancários
+   - Confirmação de recebimento
+   - Confirmação de pagamento
+   - Botão "Copiar" para cada template
