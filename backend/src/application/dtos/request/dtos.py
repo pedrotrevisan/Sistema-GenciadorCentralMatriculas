@@ -39,6 +39,7 @@ class CriarPedidoDTO(BaseModel):
     projeto_nome: Optional[str] = None
     empresa_id: Optional[str] = None
     empresa_nome: Optional[str] = None
+    vinculo_tipo: Optional[str] = None  # 'projeto', 'empresa' ou 'brasil_mais_produtivo'
     alunos: List[AlunoCreateDTO]
     observacoes: Optional[str] = None
 
