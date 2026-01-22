@@ -1557,7 +1557,9 @@ async def health():
 
 # Include modular routers first
 from src.routers.reembolsos import router as reembolsos_router
+from src.routers.pendencias import router as pendencias_router
 api_router.include_router(reembolsos_router)
+api_router.include_router(pendencias_router)
 
 # Then include main router in app
 app.include_router(api_router)
