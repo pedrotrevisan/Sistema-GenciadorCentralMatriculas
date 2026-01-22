@@ -459,6 +459,200 @@ class TestReembolsosAPI:
         assert response.status_code == 404
         
         print("✓ DELETE /api/reembolsos - Only admin can delete")
+    
+    # ==================== NEW FEATURES TESTS ====================
+    
+    def test_get_templates_email(self, admin_headers):
+        """Test GET /api/reembolsos/templates-email - Get email templates"""
+        response = requests.get(f"{BASE_URL}/api/reembolsos/templates-email", headers=admin_headers)
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Verify all templates exist
+        assert "solicitacao_dados_bancarios" in data
+        assert "confirmacao_recebimento" in data
+        assert "confirmacao_pagamento" in data
+        
+        # Verify template structure
+        for template_key in ["solicitacao_dados_bancarios", "confirmacao_recebimento", "confirmacao_pagamento"]:
+            template = data[template_key]
+            assert "assunto" in template, f"Missing 'assunto' in {template_key}"
+            assert "corpo" in template, f"Missing 'corpo' in {template_key}"
+            assert len(template["assunto"]) > 0, f"Empty 'assunto' in {template_key}"
+            assert len(template["corpo"]) > 0, f"Empty 'corpo' in {template_key}"
+        
+        # Verify placeholders in templates
+        solicitacao = data["solicitacao_dados_bancarios"]["corpo"]
+        assert "[NOME_DO_CURSO]" in solicitacao
+        assert "[MOTIVO]" in solicitacao
+        assert "[NOME_ATENDENTE]" in solicitacao
+        
+        print("✓ GET /api/reembolsos/templates-email - All templates returned correctly")
+    
+    def test_create_reembolso_with_aluno_menor_idade(self, admin_headers):
+        """Test POST /api/reembolsos - Create refund with aluno_menor_idade=True"""
+        payload = {
+            "aluno_nome": "TEST_Aluno Menor Idade",
+            "aluno_cpf": "222.333.444-55",
+            "aluno_email": "menor@teste.com",
+            "aluno_telefone": "(71) 98888-7777",
+            "aluno_menor_idade": True,
+            "curso": "Técnico em Informática",
+            "turma": "T1-2026",
+            "motivo": "sem_escolaridade"
+        }
+        
+        response = requests.post(f"{BASE_URL}/api/reembolsos", json=payload, headers=admin_headers)
+        assert response.status_code == 200, f"Create failed: {response.text}"
+        data = response.json()
+        reembolso_id = data["id"]
+        
+        # Verify aluno_menor_idade was saved
+        get_response = requests.get(f"{BASE_URL}/api/reembolsos/{reembolso_id}", headers=admin_headers)
+        assert get_response.status_code == 200
+        details = get_response.json()
+        
+        assert details["aluno_menor_idade"] == True, "aluno_menor_idade should be True"
+        assert details["aluno_email"] == "menor@teste.com", "aluno_email should be saved"
+        assert details["aluno_telefone"] == "(71) 98888-7777", "aluno_telefone should be saved"
+        
+        print(f"✓ POST /api/reembolsos - Created with aluno_menor_idade=True, ID: {reembolso_id}")
+    
+    def test_create_reembolso_with_aluno_email(self, admin_headers):
+        """Test POST /api/reembolsos - Create refund with aluno_email field"""
+        payload = {
+            "aluno_nome": "TEST_Aluno Com Email",
+            "aluno_cpf": "333.444.555-66",
+            "aluno_email": "aluno.email@teste.com",
+            "curso": "Técnico em Redes",
+            "motivo": "sem_vaga"
+        }
+        
+        response = requests.post(f"{BASE_URL}/api/reembolsos", json=payload, headers=admin_headers)
+        assert response.status_code == 200, f"Create failed: {response.text}"
+        reembolso_id = response.json()["id"]
+        
+        # Verify email was saved
+        get_response = requests.get(f"{BASE_URL}/api/reembolsos/{reembolso_id}", headers=admin_headers)
+        assert get_response.status_code == 200
+        details = get_response.json()
+        
+        assert details["aluno_email"] == "aluno.email@teste.com", "aluno_email should be saved"
+        
+        print(f"✓ POST /api/reembolsos - Created with aluno_email, ID: {reembolso_id}")
+    
+    def test_register_dados_bancarios(self, admin_headers):
+        """Test POST /api/reembolsos/{id}/dados-bancarios - Register bank data"""
+        # First create a reembolso
+        payload = {
+            "aluno_nome": "TEST_Dados Bancarios",
+            "aluno_cpf": "444.555.666-77",
+            "curso": "Técnico em Mecânica",
+            "motivo": "passou_bolsista"
+        }
+        create_response = requests.post(f"{BASE_URL}/api/reembolsos", json=payload, headers=admin_headers)
+        assert create_response.status_code == 200
+        reembolso_id = create_response.json()["id"]
+        
+        # Register bank data
+        bank_data = {
+            "banco_titular_nome": "João da Silva",
+            "banco_titular_cpf": "123.456.789-00",
+            "banco_nome": "Banco do Brasil",
+            "banco_agencia": "1234-5",
+            "banco_operacao": "",
+            "banco_conta": "12345-6",
+            "banco_tipo_conta": "corrente",
+            "banco_responsavel_financeiro": False
+        }
+        
+        response = requests.post(f"{BASE_URL}/api/reembolsos/{reembolso_id}/dados-bancarios", 
+                                json=bank_data, headers=admin_headers)
+        assert response.status_code == 200, f"Register bank data failed: {response.text}"
+        
+        # Verify bank data was saved
+        get_response = requests.get(f"{BASE_URL}/api/reembolsos/{reembolso_id}", headers=admin_headers)
+        assert get_response.status_code == 200
+        details = get_response.json()
+        
+        assert details["banco_titular_nome"] == "João da Silva"
+        assert details["banco_titular_cpf"] == "123.456.789-00"
+        assert details["banco_nome"] == "Banco do Brasil"
+        assert details["banco_agencia"] == "1234-5"
+        assert details["banco_conta"] == "12345-6"
+        assert details["banco_tipo_conta"] == "corrente"
+        assert details["banco_responsavel_financeiro"] == False
+        assert details["dados_bancarios_recebidos_em"] is not None
+        
+        print(f"✓ POST /api/reembolsos/{reembolso_id}/dados-bancarios - Bank data registered")
+    
+    def test_register_dados_bancarios_responsavel(self, admin_headers):
+        """Test POST /api/reembolsos/{id}/dados-bancarios - Register bank data for minor (responsavel)"""
+        # First create a reembolso for minor
+        payload = {
+            "aluno_nome": "TEST_Menor Responsavel",
+            "aluno_cpf": "555.666.777-88",
+            "aluno_menor_idade": True,
+            "curso": "Técnico em Eletrônica",
+            "motivo": "nao_tem_vaga"
+        }
+        create_response = requests.post(f"{BASE_URL}/api/reembolsos", json=payload, headers=admin_headers)
+        assert create_response.status_code == 200
+        reembolso_id = create_response.json()["id"]
+        
+        # Register bank data for responsavel
+        bank_data = {
+            "banco_titular_nome": "Maria Responsável",
+            "banco_titular_cpf": "987.654.321-00",
+            "banco_nome": "Caixa Econômica Federal",
+            "banco_agencia": "5678",
+            "banco_operacao": "013",
+            "banco_conta": "98765-4",
+            "banco_tipo_conta": "poupanca",
+            "banco_responsavel_financeiro": True
+        }
+        
+        response = requests.post(f"{BASE_URL}/api/reembolsos/{reembolso_id}/dados-bancarios", 
+                                json=bank_data, headers=admin_headers)
+        assert response.status_code == 200
+        
+        # Verify
+        get_response = requests.get(f"{BASE_URL}/api/reembolsos/{reembolso_id}", headers=admin_headers)
+        details = get_response.json()
+        
+        assert details["aluno_menor_idade"] == True
+        assert details["banco_responsavel_financeiro"] == True
+        assert details["banco_titular_nome"] == "Maria Responsável"
+        assert details["banco_operacao"] == "013"
+        assert details["banco_tipo_conta"] == "poupanca"
+        
+        print(f"✓ POST /api/reembolsos/{reembolso_id}/dados-bancarios - Bank data for responsavel registered")
+    
+    def test_list_reembolsos_shows_tem_dados_bancarios(self, admin_headers):
+        """Test GET /api/reembolsos - List shows tem_dados_bancarios field"""
+        response = requests.get(f"{BASE_URL}/api/reembolsos", headers=admin_headers)
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Check that tem_dados_bancarios field exists in response
+        if len(data["reembolsos"]) > 0:
+            r = data["reembolsos"][0]
+            assert "tem_dados_bancarios" in r, "tem_dados_bancarios field should be in list response"
+        
+        print("✓ GET /api/reembolsos - tem_dados_bancarios field present in list")
+    
+    def test_list_reembolsos_shows_aluno_menor_idade(self, admin_headers):
+        """Test GET /api/reembolsos - List shows aluno_menor_idade field"""
+        response = requests.get(f"{BASE_URL}/api/reembolsos", headers=admin_headers)
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Check that aluno_menor_idade field exists in response
+        if len(data["reembolsos"]) > 0:
+            r = data["reembolsos"][0]
+            assert "aluno_menor_idade" in r, "aluno_menor_idade field should be in list response"
+        
+        print("✓ GET /api/reembolsos - aluno_menor_idade field present in list")
 
 
 # Cleanup function to remove test data
