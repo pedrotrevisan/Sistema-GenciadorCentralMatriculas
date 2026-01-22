@@ -205,7 +205,8 @@ Nova funcionalidade para gerenciar documentos pendentes dos alunos:
 ## Scripts de Migração
 - `/app/migracao_totvs_campos.sql` - 8 novos campos do aluno
 - `/app/migracao_simples.sql` - Versão simplificada
-- `/app/migracao_pendencias.sql` - Tabelas da Central de Pendências - NOVO!
+- `/app/migracao_pendencias.sql` - Tabelas da Central de Pendências
+- `/app/migracao_reembolsos.sql` - Tabela de Reembolsos - NOVO!
 
 ## 8 Novos Campos TOTVS (2026-01-22)
 Campos adicionados ao modelo de Aluno para compatibilidade 100% com TOTVS:
@@ -217,3 +218,33 @@ Campos adicionados ao modelo de Aluno para compatibilidade 100% com TOTVS:
 6. `grau_instrucao` - Nível de escolaridade
 7. `nome_pai` - Nome completo do pai
 8. `nome_mae` - Nome completo da mãe
+
+## Módulo de Reembolsos (2026-01-22)
+Sistema de gerenciamento de solicitações de reembolso.
+
+### Motivos de Reembolso
+| Motivo | Retém Taxa (10%)? |
+|--------|-------------------|
+| Sem Escolaridade | ❌ Não |
+| Sem Vaga 2026.1 | ❌ Não |
+| Passou como Bolsista | ❌ Não |
+| Não Tem Vaga | ❌ Não |
+| **Desistência do Aluno** | ✅ **Sim** |
+| Outros | ❌ Não |
+
+### Fluxo de Status
+```
+Aberto → Aguardando Dados Bancários → Enviado ao Financeiro → Pago
+                    ↓
+               Cancelado
+```
+
+### Endpoints do Módulo de Reembolsos
+- `GET /api/reembolsos/motivos` - Lista motivos
+- `GET /api/reembolsos/status` - Lista status
+- `GET /api/reembolsos/dashboard` - Dashboard
+- `GET /api/reembolsos` - Lista com filtros
+- `POST /api/reembolsos` - Cria reembolso
+- `GET /api/reembolsos/{id}` - Detalhes
+- `PUT /api/reembolsos/{id}` - Atualiza
+- `DELETE /api/reembolsos/{id}` - Exclui (admin)
