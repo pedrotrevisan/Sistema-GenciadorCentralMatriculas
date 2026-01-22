@@ -2352,11 +2352,176 @@ async def excluir_reembolso(
     return {"mensagem": "Reembolso excluído com sucesso"}
 
 
+@api_router.post("/reembolsos/{reembolso_id}/dados-bancarios", tags=["Reembolsos"])
+async def registrar_dados_bancarios(
+    reembolso_id: str,
+    dto: RegistrarDadosBancariosDTO,
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Registra os dados bancários recebidos do aluno"""
+    from sqlalchemy import select
+    
+    result = await session.execute(
+        select(ReembolsoModel).where(ReembolsoModel.id == reembolso_id)
+    )
+    reembolso = result.scalar_one_or_none()
+    
+    if not reembolso:
+        raise HTTPException(status_code=404, detail="Reembolso não encontrado")
+    
+    # Validar tipo de conta
+    tipos_validos = ['corrente', 'poupanca']
+    if dto.banco_tipo_conta.lower() not in tipos_validos:
+        raise HTTPException(status_code=400, detail=f"Tipo de conta inválido. Válidos: {tipos_validos}")
+    
+    # Registrar dados bancários
+    reembolso.banco_titular_nome = dto.banco_titular_nome
+    reembolso.banco_titular_cpf = dto.banco_titular_cpf
+    reembolso.banco_nome = dto.banco_nome
+    reembolso.banco_agencia = dto.banco_agencia
+    reembolso.banco_operacao = dto.banco_operacao
+    reembolso.banco_conta = dto.banco_conta
+    reembolso.banco_tipo_conta = dto.banco_tipo_conta.lower()
+    reembolso.banco_responsavel_financeiro = dto.banco_responsavel_financeiro
+    reembolso.dados_bancarios_recebidos_em = datetime.now(timezone.utc)
+    
+    # Atualizar status automaticamente para "enviado_financeiro" se estava aguardando
+    if reembolso.status == 'aguardando_dados_bancarios':
+        reembolso.status = 'enviado_financeiro'
+    
+    # Auditoria
+    reembolso.atualizado_por_id = usuario.id
+    reembolso.atualizado_por_nome = usuario.nome
+    
+    await session.commit()
+    
+    return {
+        "id": reembolso.id,
+        "mensagem": "Dados bancários registrados com sucesso",
+        "status": reembolso.status
+    }
+
+
+@api_router.post("/reembolsos/{reembolso_id}/marcar-email-enviado", tags=["Reembolsos"])
+async def marcar_email_enviado(
+    reembolso_id: str,
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Marca que o email de solicitação de dados bancários foi enviado"""
+    from sqlalchemy import select
+    
+    result = await session.execute(
+        select(ReembolsoModel).where(ReembolsoModel.id == reembolso_id)
+    )
+    reembolso = result.scalar_one_or_none()
+    
+    if not reembolso:
+        raise HTTPException(status_code=404, detail="Reembolso não encontrado")
+    
+    reembolso.data_solicitacao_dados_bancarios = datetime.now(timezone.utc)
+    reembolso.status = 'aguardando_dados_bancarios'
+    
+    # Auditoria
+    reembolso.atualizado_por_id = usuario.id
+    reembolso.atualizado_por_nome = usuario.nome
+    
+    await session.commit()
+    
+    return {
+        "id": reembolso.id,
+        "mensagem": "Email marcado como enviado",
+        "status": reembolso.status
+    }
+
+
+@api_router.get("/reembolsos/templates-email", tags=["Reembolsos"])
+async def listar_templates_email(
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Retorna os templates de email para reembolso"""
+    return {
+        "solicitacao_dados_bancarios": {
+            "assunto": "SENAI CIMATEC - Solicitação de Dados Bancários para Reembolso",
+            "corpo": """Olá, boa tarde!
+
+Agradecemos seu contato e esperamos que esteja bem!
+
+Informamos que sua matrícula no curso [NOME_DO_CURSO] foi cancelada devido ao [MOTIVO]. Para prosseguirmos com o reembolso do valor pago, solicitamos, por gentileza, o envio dos seus dados bancários para depósito, conforme os critérios abaixo.
+
+• Candidato maior de 18 anos: informar conta bancária em seu nome;
+• Candidato menor de 18 anos: informar conta bancária do responsável financeiro, que deve estar identificado no momento da inscrição.
+
+Dados bancários solicitados:
+• Nome completo do titular da conta:
+• CPF do titular:
+• Banco:
+• Agência:
+• Conta (com dígito):
+• Tipo de conta (corrente/poupança):
+
+Informações importantes:
+• O reembolso será realizado exclusivamente para conta corrente ou poupança. Não aceitaremos: conta fácil, conta jurídica, conta salário ou conta conjunta.
+• O crédito será realizado em até 15 dias úteis após o recebimento completo das informações.
+• O reembolso não será feito via PIX, sendo efetuado apenas por crédito em conta bancária.
+
+Pedimos a gentileza de responder a este e-mail com os dados acima para que possamos dar prosseguimento ao reembolso.
+
+Agradecemos seu interesse no SENAI e nos colocamos à disposição para qualquer dúvida.
+
+[NOME_ATENDENTE]
+
+Central de Atendimento ao Candidato
+
+[EMAIL_ATENDENTE]"""
+        },
+        "confirmacao_recebimento": {
+            "assunto": "SENAI CIMATEC - Confirmação de Recebimento dos Dados Bancários",
+            "corpo": """Olá, boa tarde!
+
+Confirmamos o recebimento dos seus dados bancários para reembolso.
+
+Aluno: [NOME_ALUNO]
+Curso: [NOME_DO_CURSO]
+
+Informamos que o processo de reembolso foi encaminhado ao setor financeiro. O crédito será realizado em até 15 dias úteis.
+
+Caso tenha alguma dúvida, estamos à disposição.
+
+[NOME_ATENDENTE]
+
+Central de Atendimento ao Candidato
+
+[EMAIL_ATENDENTE]"""
+        },
+        "confirmacao_pagamento": {
+            "assunto": "SENAI CIMATEC - Reembolso Efetuado",
+            "corpo": """Olá, boa tarde!
+
+Informamos que o reembolso referente à matrícula no curso [NOME_DO_CURSO] foi efetuado com sucesso.
+
+Aluno: [NOME_ALUNO]
+Data do crédito: [DATA_PAGAMENTO]
+
+Por favor, verifique sua conta bancária.
+
+Caso tenha alguma dúvida, estamos à disposição.
+
+[NOME_ATENDENTE]
+
+Central de Atendimento ao Candidato
+
+[EMAIL_ATENDENTE]"""
+        }
+    }
+
+
 # ==================== ROOT & HEALTH ====================
 
 @api_router.get("/", tags=["Health"])
 async def root():
-    return {"message": "Sistema Central de Matrículas - SENAI CIMATEC", "version": "1.2.0", "database": "PostgreSQL"}
+    return {"message": "Sistema Central de Matrículas - SENAI CIMATEC", "version": "1.3.0", "database": "PostgreSQL"}
 
 
 @api_router.get("/health", tags=["Health"])
