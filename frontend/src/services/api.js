@@ -98,4 +98,31 @@ export const empresasAPI = {
   deletar: (id) => api.delete(`/empresas/${id}`),
 };
 
+// Pendências API
+export const pendenciasAPI = {
+  listar: (params) => api.get('/pendencias', { params }),
+  getDashboard: () => api.get('/pendencias/dashboard'),
+  getTiposDocumento: () => api.get('/pendencias/tipos-documento'),
+  criar: (data) => api.post('/pendencias', data),
+  criarLote: (data) => api.post('/pendencias/lote', data),
+  buscarPorId: (id) => api.get(`/pendencias/${id}`),
+  atualizar: (id, data) => api.put(`/pendencias/${id}`, data),
+  registrarContato: (id, data) => api.post(`/pendencias/${id}/contatos`, data),
+  listarPorAluno: (alunoId) => api.get(`/pendencias/aluno/${alunoId}`),
+};
+
+// Reembolsos API
+export const reembolsosAPI = {
+  listar: (params) => api.get('/reembolsos', { params }),
+  getDashboard: () => api.get('/reembolsos/dashboard'),
+  getMotivos: () => api.get('/reembolsos/motivos'),
+  getStatus: () => api.get('/reembolsos/status'),
+  getTemplatesEmail: () => api.get('/reembolsos/templates-email'),
+  criar: (data) => api.post('/reembolsos', data),
+  buscarPorId: (id) => api.get(`/reembolsos/${id}`),
+  atualizar: (id, data) => api.put(`/reembolsos/${id}`, data),
+  registrarDadosBancarios: (id, data) => api.post(`/reembolsos/${id}/dados-bancarios`, data),
+  marcarEmailEnviado: (id) => api.post(`/reembolsos/${id}/marcar-email-enviado`),
+};
+
 export default api;
