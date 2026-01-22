@@ -47,11 +47,17 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - **Importação em Lote** via planilhas Excel/CSV
 - **Número de Protocolo Sequencial** (CM-YYYY-NNNN)
 - **8 Novos Campos TOTVS** no modelo de Aluno
-- **Central de Pendências Documentais** - NOVO! (2026-01-22)
+- **Central de Pendências Documentais** (2026-01-22)
   - CRUD completo de pendências
   - 8 tipos de documentos padronizados
   - Histórico de contatos com alunos
   - Dashboard de status
+- **Módulo de Reembolsos** - NOVO! (2026-01-22)
+  - CRUD completo de solicitações de reembolso
+  - 6 motivos: Sem Escolaridade, Sem Vaga, Passou Bolsista, Não Tem Vaga, Desistência (reter 10%), Outros
+  - Fluxo de status: Aberto → Aguardando Dados Bancários → Enviado ao Financeiro → Pago/Cancelado
+  - Integração com Nº Chamado SGC Plus
+  - Dashboard de acompanhamento
 
 ### Frontend (2026-01-22) - ATUALIZADO
 - Tela de Login com identidade SENAI CIMATEC
