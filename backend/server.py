@@ -1989,9 +1989,9 @@ async def health():
     return {"status": "healthy", "database": "PostgreSQL", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
-# Include router
-app.include_router(api_router)
-
-# Include modular routers
+# Include modular routers first
 from src.routers.reembolsos import router as reembolsos_router
 api_router.include_router(reembolsos_router)
+
+# Then include main router in app
+app.include_router(api_router)
