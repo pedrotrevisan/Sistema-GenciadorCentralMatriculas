@@ -277,29 +277,88 @@ const PedidoDetalhePage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>CPF</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Cidade/UF</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pedido.alunos.map((aluno, index) => (
-                  <TableRow key={aluno.id || index}>
-                    <TableCell className="font-medium">{aluno.nome}</TableCell>
-                    <TableCell>{aluno.cpf_formatado || aluno.cpf}</TableCell>
-                    <TableCell>{aluno.email}</TableCell>
-                    <TableCell>{aluno.telefone_formatado || aluno.telefone}</TableCell>
-                    <TableCell>{aluno.endereco_cidade}/{aluno.endereco_uf}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="space-y-4">
+            {pedido.alunos.map((aluno, index) => (
+              <Card key={aluno.id || index} className="border border-slate-200">
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-slate-500">Nome</p>
+                      <p className="font-medium">{aluno.nome}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">CPF</p>
+                      <p className="font-medium">{aluno.cpf_formatado || aluno.cpf}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Email</p>
+                      <p className="font-medium">{aluno.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Telefone</p>
+                      <p className="font-medium">{aluno.telefone_formatado || aluno.telefone}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Data de Nascimento</p>
+                      <p className="font-medium">{aluno.data_nascimento_formatada || aluno.data_nascimento}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">RG</p>
+                      <p className="font-medium">{aluno.rg} - {aluno.rg_orgao_emissor}/{aluno.rg_uf}</p>
+                    </div>
+                    {aluno.rg_data_emissao && (
+                      <div>
+                        <p className="text-sm text-slate-500">Emissão RG</p>
+                        <p className="font-medium">{aluno.rg_data_emissao}</p>
+                      </div>
+                    )}
+                    {(aluno.naturalidade || aluno.naturalidade_uf) && (
+                      <div>
+                        <p className="text-sm text-slate-500">Naturalidade</p>
+                        <p className="font-medium">{aluno.naturalidade}{aluno.naturalidade_uf ? `/${aluno.naturalidade_uf}` : ''}</p>
+                      </div>
+                    )}
+                    {aluno.sexo && (
+                      <div>
+                        <p className="text-sm text-slate-500">Sexo</p>
+                        <p className="font-medium">{aluno.sexo === 'M' ? 'Masculino' : 'Feminino'}</p>
+                      </div>
+                    )}
+                    {aluno.cor_raca && (
+                      <div>
+                        <p className="text-sm text-slate-500">Cor/Raça</p>
+                        <p className="font-medium">{aluno.cor_raca}</p>
+                      </div>
+                    )}
+                    {aluno.grau_instrucao && (
+                      <div>
+                        <p className="text-sm text-slate-500">Grau de Instrução</p>
+                        <p className="font-medium">{aluno.grau_instrucao}</p>
+                      </div>
+                    )}
+                    {aluno.nome_pai && (
+                      <div>
+                        <p className="text-sm text-slate-500">Nome do Pai</p>
+                        <p className="font-medium">{aluno.nome_pai}</p>
+                      </div>
+                    )}
+                    {aluno.nome_mae && (
+                      <div>
+                        <p className="text-sm text-slate-500">Nome da Mãe</p>
+                        <p className="font-medium">{aluno.nome_mae}</p>
+                      </div>
+                    )}
+                    <div className="md:col-span-2 lg:col-span-3">
+                      <p className="text-sm text-slate-500">Endereço</p>
+                      <p className="font-medium">
+                        {aluno.endereco_logradouro}, {aluno.endereco_numero}
+                        {aluno.endereco_complemento ? ` - ${aluno.endereco_complemento}` : ''}, {aluno.endereco_bairro}, {aluno.endereco_cidade}/{aluno.endereco_uf} - CEP: {aluno.endereco_cep}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </CardContent>
       </Card>
