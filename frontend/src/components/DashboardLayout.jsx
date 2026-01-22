@@ -22,7 +22,8 @@ import {
   ChevronDown,
   User,
   Settings,
-  Upload
+  Upload,
+  AlertCircle
 } from 'lucide-react';
 
 const DashboardLayout = () => {
@@ -77,12 +78,14 @@ const DashboardLayout = () => {
       items.push(
         { to: '/assistente', icon: LayoutDashboard, label: 'Painel de Gestão' },
         { to: '/assistente/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
+        { to: '/pendencias', icon: AlertCircle, label: 'Pendências' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' }
       );
     } else if (user?.role === 'admin') {
       items.push(
         { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
         { to: '/admin/pedidos', icon: FileText, label: 'Pedidos' },
+        { to: '/pendencias', icon: AlertCircle, label: 'Pendências' },
         { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
         { to: '/admin/cadastros', icon: Settings, label: 'Cadastros' },
         { to: '/admin/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
