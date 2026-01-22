@@ -109,11 +109,11 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Número de Protocolo Sequencial (CM-2026-0001)
 - [x] 8 Novos Campos TOTVS (compatibilidade 100%)
 - [x] Ajuste de Nomenclaturas (Solicitação vs Matrícula)
-- [x] Central de Pendências Documentais - NOVO!
+- [x] Central de Pendências Documentais
+- [x] Módulo de Reembolsos - NOVO!
 
 ### P1 (Próximos)
-- [ ] Módulo de Reembolsos (integração SGC Plus) - PRIORIDADE
-- [ ] Timeline de Auditoria Visual
+- [ ] Timeline de Auditoria Visual - histórico de cada pedido
 - [ ] Refatoração do server.py (monolito > roteadores separados)
 - [ ] Refinar máquina de estados dos pedidos
 - [ ] Filtros avançados de data na listagem
