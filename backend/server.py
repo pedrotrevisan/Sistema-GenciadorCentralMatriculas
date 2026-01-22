@@ -157,6 +157,31 @@ async def lifespan(app: FastAPI):
                 session.add(EmpresaModel(id=str(uuid.uuid4()), nome=nome))
             await session.commit()
             logger.info(f"{len(empresas_iniciais)} empresas criadas")
+        
+        # Seed Tipos de Documento para Pendências
+        from src.infrastructure.persistence.models import TipoDocumentoModel
+        tipos_doc_count = await session.execute(select(func.count(TipoDocumentoModel.id)))
+        if tipos_doc_count.scalar() == 0:
+            tipos_documentos = [
+                {"codigo": "94", "nome": "Comprovante de Residência", "obrigatorio": True, "observacoes": "PDF ou JPG – Máx. 10MB"},
+                {"codigo": "96", "nome": "Solicitação Desconto (Sindicato/CIEB/Ex-Aluno/Col. Sistema FIEB)", "obrigatorio": False, "observacoes": "Se aplicável"},
+                {"codigo": "97", "nome": "CPF/RG Responsável Legal (menor de 18 anos)", "obrigatorio": False, "observacoes": "Se aplicável"},
+                {"codigo": "131", "nome": "RG – Frente", "obrigatorio": True, "observacoes": "PDF ou JPG – Máx. 10MB"},
+                {"codigo": "132", "nome": "RG – Verso", "obrigatorio": True, "observacoes": "PDF ou JPG – Máx. 10MB"},
+                {"codigo": "136", "nome": "Comprovante de Escolaridade – Frente", "obrigatorio": True, "observacoes": "Histórico ou Atestado - PDF ou JPG – Máx. 10MB"},
+                {"codigo": "137", "nome": "Comprovante de Escolaridade – Verso", "obrigatorio": True, "observacoes": "Histórico ou Atestado - PDF ou JPG – Máx. 10MB"},
+                {"codigo": "205", "nome": "CPF", "obrigatorio": False, "observacoes": "PDF ou JPG – Máx. 10MB"},
+            ]
+            for tipo in tipos_documentos:
+                session.add(TipoDocumentoModel(
+                    id=str(uuid.uuid4()),
+                    codigo=tipo["codigo"],
+                    nome=tipo["nome"],
+                    obrigatorio=tipo["obrigatorio"],
+                    observacoes=tipo.get("observacoes")
+                ))
+            await session.commit()
+            logger.info(f"{len(tipos_documentos)} tipos de documento criados")
     
     logger.info("Database initialized successfully!")
     
