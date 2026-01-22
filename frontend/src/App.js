@@ -18,6 +18,7 @@ import GestaoCadastrosPage from "./pages/GestaoCadastrosPage";
 import NovaMatriculaPage from "./pages/NovaMatriculaPage";
 import PedidoDetalhePage from "./pages/PedidoDetalhePage";
 import ImportacaoLotePage from "./pages/ImportacaoLotePage";
+import CentralPendenciasPage from "./pages/CentralPendenciasPage";
 
 function App() {
   return (
@@ -56,6 +57,14 @@ function App() {
               <Route path="/admin/cadastros" element={<GestaoCadastrosPage />} />
               <Route path="/admin/novo-pedido" element={<NovaMatriculaPage />} />
               <Route path="/admin/importacao" element={<ImportacaoLotePage />} />
+              <Route path="/admin/pendencias" element={<CentralPendenciasPage />} />
+            </Route>
+          </Route>
+
+          {/* Central de Pendências - Assistentes e Admin */}
+          <Route element={<ProtectedRoute allowedRoles={['assistente', 'admin']} />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/pendencias" element={<CentralPendenciasPage />} />
             </Route>
           </Route>
 
