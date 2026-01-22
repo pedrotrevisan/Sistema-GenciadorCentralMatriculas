@@ -466,7 +466,7 @@ const NovaMatriculaPage = () => {
                 <RadioGroup
                   value={formData.vinculo_tipo}
                   onValueChange={handleVinculoChange}
-                  className="flex gap-4"
+                  className="flex flex-wrap gap-4"
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="projeto" id="projeto" />
@@ -475,6 +475,10 @@ const NovaMatriculaPage = () => {
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="empresa" id="empresa" />
                     <Label htmlFor="empresa" className="cursor-pointer">Empresa</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="brasil_mais_produtivo" id="brasil_mais_produtivo" />
+                    <Label htmlFor="brasil_mais_produtivo" className="cursor-pointer">Brasil Mais Produtivo</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -512,6 +516,32 @@ const NovaMatriculaPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+
+              {formData.vinculo_tipo === 'brasil_mais_produtivo' && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      <strong>Brasil Mais Produtivo:</strong> Programa de qualificação profissional. 
+                      Selecione a empresa parceira e importe a planilha dos consultores.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="empresa_bmp">Empresa Parceira *</Label>
+                    <Select value={formData.empresa_id} onValueChange={handleEmpresaChange}>
+                      <SelectTrigger data-testid="empresa-bmp-select">
+                        <SelectValue placeholder="Selecione a empresa parceira" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {empresas.map((empresa) => (
+                          <SelectItem key={empresa.id} value={empresa.id}>
+                            {empresa.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
 
