@@ -49,6 +49,7 @@ export const pedidosAPI = {
   listar: (params) => api.get('/pedidos', { params }),
   buscarPorId: (id) => api.get(`/pedidos/${id}`),
   buscarPorProtocolo: (protocolo) => api.get(`/pedidos/buscar/protocolo/${protocolo}`),
+  buscarTimeline: (id) => api.get(`/pedidos/${id}/timeline`),
   atualizarStatus: (id, data) => api.patch(`/pedidos/${id}/status`, data),
   getDashboard: () => api.get('/pedidos/dashboard'),
   getAnalytics: () => api.get('/pedidos/analytics'),
