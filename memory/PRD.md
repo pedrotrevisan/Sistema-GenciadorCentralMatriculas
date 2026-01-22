@@ -73,13 +73,20 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - **Exibição do Protocolo** na página de detalhes
 - **Nomenclatura ajustada**: "Nova Solicitação" ao invés de "Nova Matrícula"
 - **Card Resumo**: "Total de Alunos em Solicitações"
-- **Central de Pendências Documentais** - NOVO! (2026-01-22)
+- **Central de Pendências Documentais** (2026-01-22)
   - Dashboard com cards de status
   - Filtros por nome, status e documento
   - Lista de pendências com dados completos
   - Modal de detalhes com histórico
   - Registro de contatos com alunos
   - Alteração de status com fluxo detalhado
+- **Módulo de Reembolsos** - NOVO! (2026-01-22)
+  - Dashboard com cards de status (Abertos, Aguardando, No Financeiro, Pagos)
+  - Lista de reembolsos com filtros
+  - Modal de criação de nova solicitação
+  - Modal de edição (status, datas, observações)
+  - Modal de detalhes completo
+  - Badge "Reter 10%" para desistência
 - Toasts de feedback
 - Rotas protegidas por role
 
