@@ -118,6 +118,7 @@ const NovaMatriculaPage = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [buscandoCep, setBuscandoCep] = useState({}); // {alunoIndex: true/false}
 
   // Dados auxiliares
   const [cursos, setCursos] = useState([]);
