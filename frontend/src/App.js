@@ -66,6 +66,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['assistente', 'admin']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/pendencias" element={<CentralPendenciasPage />} />
+              <Route path="/reembolsos" element={<ReembolsosPage />} />
             </Route>
           </Route>
 
