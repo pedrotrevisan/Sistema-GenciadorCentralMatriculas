@@ -724,6 +724,7 @@ async def buscar_timeline_pedido(
     
     # Mapear ações para labels amigáveis
     ACOES_LABELS = {
+        "CRIACAO": {"label": "Solicitação Criada", "icon": "plus", "color": "blue"},
         "PEDIDO_CRIADO": {"label": "Solicitação Criada", "icon": "plus", "color": "blue"},
         "STATUS_ATUALIZADO": {"label": "Status Alterado", "icon": "refresh", "color": "yellow"},
         "PEDIDO_EXPORTADO": {"label": "Exportado para TOTVS", "icon": "download", "color": "green"},
