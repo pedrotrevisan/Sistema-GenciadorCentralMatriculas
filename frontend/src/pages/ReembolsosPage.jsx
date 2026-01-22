@@ -7,18 +7,20 @@ import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Textarea } from '../components/ui/textarea';
+import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import api from '../services/api';
 import {
-  DollarSign, Search, Filter, Plus, Eye, Edit, Trash2,
+  DollarSign, Search, Filter, Plus, Eye, Edit,
   Clock, CheckCircle, XCircle, Send, CreditCard,
-  ChevronLeft, ChevronRight, FileText, User, Building, Calendar
+  ChevronLeft, ChevronRight, FileText, User, Calendar,
+  Mail, Copy, Check, AlertTriangle, Phone, Building
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
   aberto: { label: 'Aberto', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  aguardando_dados_bancarios: { label: 'Aguardando Dados Bancários', color: 'bg-blue-100 text-blue-800', icon: CreditCard },
-  enviado_financeiro: { label: 'Enviado ao Financeiro', color: 'bg-purple-100 text-purple-800', icon: Send },
+  aguardando_dados_bancarios: { label: 'Aguardando Dados', color: 'bg-blue-100 text-blue-800', icon: CreditCard },
+  enviado_financeiro: { label: 'No Financeiro', color: 'bg-purple-100 text-purple-800', icon: Send },
   pago: { label: 'Pago', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   cancelado: { label: 'Cancelado', color: 'bg-red-100 text-red-800', icon: XCircle }
 };
@@ -28,6 +30,7 @@ export default function ReembolsosPage() {
   const [dashboard, setDashboard] = useState(null);
   const [reembolsos, setReembolsos] = useState([]);
   const [motivos, setMotivos] = useState([]);
+  const [templates, setTemplates] = useState(null);
   const [paginacao, setPaginacao] = useState({ pagina_atual: 1, total_paginas: 1, total_itens: 0 });
   
   // Filtros
@@ -39,11 +42,16 @@ export default function ReembolsosPage() {
   const [modalNovo, setModalNovo] = useState(false);
   const [modalDetalhes, setModalDetalhes] = useState(null);
   const [modalEditar, setModalEditar] = useState(null);
+  const [modalDadosBancarios, setModalDadosBancarios] = useState(null);
+  const [modalTemplates, setModalTemplates] = useState(null);
   
   // Formulário novo reembolso
   const [novoForm, setNovoForm] = useState({
     aluno_nome: '',
     aluno_cpf: '',
+    aluno_email: '',
+    aluno_telefone: '',
+    aluno_menor_idade: false,
     curso: '',
     turma: '',
     motivo: '',
@@ -61,6 +69,21 @@ export default function ReembolsosPage() {
     observacoes: ''
   });
 
+  // Formulário dados bancários
+  const [dadosBancariosForm, setDadosBancariosForm] = useState({
+    banco_titular_nome: '',
+    banco_titular_cpf: '',
+    banco_nome: '',
+    banco_agencia: '',
+    banco_operacao: '',
+    banco_conta: '',
+    banco_tipo_conta: 'corrente',
+    banco_responsavel_financeiro: false
+  });
+
+  // Estado para copiar
+  const [copiado, setCopiado] = useState('');
+
   useEffect(() => {
     carregarDados();
   }, []);
@@ -71,12 +94,14 @@ export default function ReembolsosPage() {
 
   const carregarDados = async () => {
     try {
-      const [dashRes, motivosRes] = await Promise.all([
+      const [dashRes, motivosRes, templatesRes] = await Promise.all([
         api.get('/reembolsos/dashboard'),
-        api.get('/reembolsos/motivos')
+        api.get('/reembolsos/motivos'),
+        api.get('/reembolsos/templates-email')
       ]);
       setDashboard(dashRes.data);
       setMotivos(motivosRes.data);
+      setTemplates(templatesRes.data);
     } catch (error) {
       toast.error('Erro ao carregar dados');
     }
@@ -124,6 +149,9 @@ export default function ReembolsosPage() {
       setNovoForm({
         aluno_nome: '',
         aluno_cpf: '',
+        aluno_email: '',
+        aluno_telefone: '',
+        aluno_menor_idade: false,
         curso: '',
         turma: '',
         motivo: '',
@@ -148,6 +176,67 @@ export default function ReembolsosPage() {
     } catch (error) {
       toast.error('Erro ao atualizar reembolso');
     }
+  };
+
+  const registrarDadosBancarios = async () => {
+    if (!dadosBancariosForm.banco_titular_nome || !dadosBancariosForm.banco_titular_cpf || 
+        !dadosBancariosForm.banco_nome || !dadosBancariosForm.banco_agencia || 
+        !dadosBancariosForm.banco_conta || !dadosBancariosForm.banco_tipo_conta) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+    
+    try {
+      await api.post(`/reembolsos/${modalDadosBancarios.id}/dados-bancarios`, dadosBancariosForm);
+      toast.success('Dados bancários registrados com sucesso');
+      setModalDadosBancarios(null);
+      setDadosBancariosForm({
+        banco_titular_nome: '',
+        banco_titular_cpf: '',
+        banco_nome: '',
+        banco_agencia: '',
+        banco_operacao: '',
+        banco_conta: '',
+        banco_tipo_conta: 'corrente',
+        banco_responsavel_financeiro: false
+      });
+      carregarReembolsos(paginacao.pagina_atual);
+      carregarDados();
+    } catch (error) {
+      toast.error('Erro ao registrar dados bancários');
+    }
+  };
+
+  const marcarEmailEnviado = async (reembolsoId) => {
+    try {
+      await api.post(`/reembolsos/${reembolsoId}/marcar-email-enviado`);
+      toast.success('Email marcado como enviado');
+      carregarReembolsos(paginacao.pagina_atual);
+      carregarDados();
+    } catch (error) {
+      toast.error('Erro ao marcar email');
+    }
+  };
+
+  const copiarParaClipboard = async (texto, identificador) => {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiado(identificador);
+      toast.success('Copiado para a área de transferência!');
+      setTimeout(() => setCopiado(''), 2000);
+    } catch (error) {
+      toast.error('Erro ao copiar');
+    }
+  };
+
+  const substituirVariaveis = (texto, reembolso) => {
+    return texto
+      .replace('[NOME_DO_CURSO]', reembolso?.curso || '[CURSO]')
+      .replace('[NOME_ALUNO]', reembolso?.aluno_nome || '[ALUNO]')
+      .replace('[MOTIVO]', reembolso?.motivo_label || '[MOTIVO]')
+      .replace('[DATA_PAGAMENTO]', reembolso?.data_pagamento ? formatarData(reembolso.data_pagamento) : '[DATA]')
+      .replace('[NOME_ATENDENTE]', '[SEU NOME]')
+      .replace('[EMAIL_ATENDENTE]', '[seu.email@fieb.org.br]');
   };
 
   const formatarData = (dataStr) => {
@@ -189,10 +278,25 @@ export default function ReembolsosPage() {
     setModalEditar(reembolso);
   };
 
+  const abrirModalDadosBancarios = (reembolso) => {
+    // Se for menor de idade, marcar automaticamente como conta de responsável
+    setDadosBancariosForm({
+      banco_titular_nome: '',
+      banco_titular_cpf: '',
+      banco_nome: '',
+      banco_agencia: '',
+      banco_operacao: '',
+      banco_conta: '',
+      banco_tipo_conta: 'corrente',
+      banco_responsavel_financeiro: reembolso.aluno_menor_idade || false
+    });
+    setModalDadosBancarios(reembolso);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 font-['Chivo']">
             Módulo de Reembolsos
@@ -201,14 +305,24 @@ export default function ReembolsosPage() {
             Gerencie solicitações de reembolso e acompanhe o status
           </p>
         </div>
-        <Button 
-          onClick={() => setModalNovo(true)}
-          className="bg-[#E30613] hover:bg-[#b9050f]"
-          data-testid="btn-novo-reembolso"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Solicitação
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => setModalTemplates(true)}
+            data-testid="btn-templates"
+          >
+            <Mail className="w-4 h-4 mr-2" />
+            Templates de Email
+          </Button>
+          <Button 
+            onClick={() => setModalNovo(true)}
+            className="bg-[#E30613] hover:bg-[#b9050f]"
+            data-testid="btn-novo-reembolso"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Solicitação
+          </Button>
+        </div>
       </div>
 
       {/* Dashboard Cards */}
@@ -275,11 +389,11 @@ export default function ReembolsosPage() {
               </div>
             </div>
             
-            <div className="w-[200px]">
+            <div className="w-[180px]">
               <Label>Status</Label>
               <Select value={filtroStatus} onValueChange={setFiltroStatus}>
                 <SelectTrigger data-testid="filtro-status">
-                  <SelectValue placeholder="Todos os status" />
+                  <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
@@ -290,11 +404,11 @@ export default function ReembolsosPage() {
               </Select>
             </div>
             
-            <div className="w-[200px]">
+            <div className="w-[180px]">
               <Label>Motivo</Label>
               <Select value={filtroMotivo} onValueChange={setFiltroMotivo}>
                 <SelectTrigger data-testid="filtro-motivo">
-                  <SelectValue placeholder="Todos os motivos" />
+                  <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
@@ -347,7 +461,6 @@ export default function ReembolsosPage() {
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Aluno</th>
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Curso</th>
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Motivo</th>
-                      <th className="text-left p-3 text-sm font-medium text-slate-600">Chamado SGC</th>
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Status</th>
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Abertura</th>
                       <th className="text-center p-3 text-sm font-medium text-slate-600">Ações</th>
@@ -358,7 +471,14 @@ export default function ReembolsosPage() {
                       <tr key={r.id} className="border-b hover:bg-slate-50" data-testid={`reembolso-row-${r.id}`}>
                         <td className="p-3">
                           <div>
-                            <p className="font-medium text-slate-900">{r.aluno_nome}</p>
+                            <p className="font-medium text-slate-900 flex items-center gap-2">
+                              {r.aluno_nome}
+                              {r.aluno_menor_idade && (
+                                <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                                  Menor
+                                </Badge>
+                              )}
+                            </p>
                             {r.aluno_cpf && <p className="text-sm text-slate-500">{r.aluno_cpf}</p>}
                           </div>
                         </td>
@@ -369,17 +489,22 @@ export default function ReembolsosPage() {
                           </div>
                         </td>
                         <td className="p-3">
-                          <div>
+                          <div className="space-y-1">
                             <p className="text-sm">{r.motivo_label}</p>
-                            {r.reter_taxa && (
-                              <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
-                                Reter 10%
-                              </Badge>
-                            )}
+                            <div className="flex gap-1 flex-wrap">
+                              {r.reter_taxa && (
+                                <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                                  Reter 10%
+                                </Badge>
+                              )}
+                              {r.tem_dados_bancarios && (
+                                <Badge variant="outline" className="text-xs text-green-600 border-green-300">
+                                  <CreditCard className="w-3 h-3 mr-1" />
+                                  Banco OK
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                        </td>
-                        <td className="p-3 text-sm text-slate-600">
-                          {r.numero_chamado_sgc || '-'}
                         </td>
                         <td className="p-3">
                           <StatusBadge status={r.status} />
@@ -398,12 +523,36 @@ export default function ReembolsosPage() {
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
+                            {r.status === 'aberto' && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => marcarEmailEnviado(r.id)}
+                                title="Marcar email enviado"
+                                className="text-blue-600"
+                                data-testid={`btn-email-${r.id}`}
+                              >
+                                <Mail className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {(r.status === 'aguardando_dados_bancarios' || r.status === 'aberto') && !r.tem_dados_bancarios && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => abrirModalDadosBancarios(r)}
+                                title="Registrar dados bancários"
+                                className="text-green-600"
+                                data-testid={`btn-dados-bancarios-${r.id}`}
+                              >
+                                <CreditCard className="w-4 h-4" />
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => abrirModalEditar(r)}
                               title="Editar"
-                              className="text-blue-600"
+                              className="text-purple-600"
                               data-testid={`btn-editar-${r.id}`}
                             >
                               <Edit className="w-4 h-4" />
@@ -449,7 +598,7 @@ export default function ReembolsosPage() {
 
       {/* Modal Novo Reembolso */}
       <Dialog open={modalNovo} onOpenChange={setModalNovo}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="w-5 h-5" />
@@ -480,12 +629,55 @@ export default function ReembolsosPage() {
               </div>
               
               <div>
+                <Label>Telefone</Label>
+                <Input
+                  value={novoForm.aluno_telefone}
+                  onChange={(e) => setNovoForm({ ...novoForm, aluno_telefone: e.target.value })}
+                  placeholder="(71) 99999-9999"
+                  data-testid="input-aluno-telefone"
+                />
+              </div>
+              
+              <div className="col-span-2">
+                <Label>Email</Label>
+                <Input
+                  value={novoForm.aluno_email}
+                  onChange={(e) => setNovoForm({ ...novoForm, aluno_email: e.target.value })}
+                  placeholder="email@exemplo.com"
+                  data-testid="input-aluno-email"
+                />
+              </div>
+
+              <div className="col-span-2 flex items-center gap-2">
+                <Checkbox
+                  id="menor_idade"
+                  checked={novoForm.aluno_menor_idade}
+                  onCheckedChange={(checked) => setNovoForm({ ...novoForm, aluno_menor_idade: checked })}
+                  data-testid="checkbox-menor-idade"
+                />
+                <Label htmlFor="menor_idade" className="text-sm cursor-pointer flex items-center gap-1">
+                  <AlertTriangle className="w-4 h-4 text-orange-500" />
+                  Aluno menor de 18 anos (reembolso para responsável)
+                </Label>
+              </div>
+              
+              <div>
                 <Label>Turma</Label>
                 <Input
                   value={novoForm.turma}
                   onChange={(e) => setNovoForm({ ...novoForm, turma: e.target.value })}
                   placeholder="Ex: T1, T2, Manhã"
                   data-testid="input-turma"
+                />
+              </div>
+              
+              <div>
+                <Label>Nº Chamado SGC Plus</Label>
+                <Input
+                  value={novoForm.numero_chamado_sgc}
+                  onChange={(e) => setNovoForm({ ...novoForm, numero_chamado_sgc: e.target.value })}
+                  placeholder="Ex: 12345"
+                  data-testid="input-chamado-sgc"
                 />
               </div>
               
@@ -532,16 +724,6 @@ export default function ReembolsosPage() {
               )}
               
               <div className="col-span-2">
-                <Label>Nº Chamado SGC Plus</Label>
-                <Input
-                  value={novoForm.numero_chamado_sgc}
-                  onChange={(e) => setNovoForm({ ...novoForm, numero_chamado_sgc: e.target.value })}
-                  placeholder="Ex: 12345"
-                  data-testid="input-chamado-sgc"
-                />
-              </div>
-              
-              <div className="col-span-2">
                 <Label>Observações</Label>
                 <Textarea
                   value={novoForm.observacoes}
@@ -567,7 +749,7 @@ export default function ReembolsosPage() {
 
       {/* Modal Detalhes */}
       <Dialog open={!!modalDetalhes} onOpenChange={() => setModalDetalhes(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <DollarSign className="w-5 h-5" />
@@ -586,11 +768,26 @@ export default function ReembolsosPage() {
                 <CardContent className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-slate-500">Nome</p>
-                    <p className="font-medium">{modalDetalhes.aluno_nome}</p>
+                    <p className="font-medium flex items-center gap-2">
+                      {modalDetalhes.aluno_nome}
+                      {modalDetalhes.aluno_menor_idade && (
+                        <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                          Menor de 18
+                        </Badge>
+                      )}
+                    </p>
                   </div>
                   <div>
                     <p className="text-slate-500">CPF</p>
                     <p className="font-medium">{modalDetalhes.aluno_cpf || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Email</p>
+                    <p className="font-medium">{modalDetalhes.aluno_email || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Telefone</p>
+                    <p className="font-medium">{modalDetalhes.aluno_telefone || '-'}</p>
                   </div>
                   <div>
                     <p className="text-slate-500">Curso</p>
@@ -622,12 +819,6 @@ export default function ReembolsosPage() {
                       <Badge className="bg-orange-100 text-orange-800">Reter Taxa de 10%</Badge>
                     </div>
                   )}
-                  {modalDetalhes.motivo_descricao && (
-                    <div>
-                      <p className="text-slate-500">Descrição</p>
-                      <p className="font-medium">{modalDetalhes.motivo_descricao}</p>
-                    </div>
-                  )}
                   <div>
                     <p className="text-slate-500">Nº Chamado SGC Plus</p>
                     <p className="font-medium">{modalDetalhes.numero_chamado_sgc || '-'}</p>
@@ -641,6 +832,54 @@ export default function ReembolsosPage() {
                 </CardContent>
               </Card>
 
+              {/* Dados Bancários */}
+              {modalDetalhes.banco_titular_nome && (
+                <Card className="border-green-200 bg-green-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-green-700">
+                      <CreditCard className="w-4 h-4" /> Dados Bancários
+                      {modalDetalhes.banco_responsavel_financeiro && (
+                        <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                          Conta do Responsável
+                        </Badge>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-slate-500">Titular</p>
+                      <p className="font-medium">{modalDetalhes.banco_titular_nome}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">CPF do Titular</p>
+                      <p className="font-medium">{modalDetalhes.banco_titular_cpf}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Banco</p>
+                      <p className="font-medium">{modalDetalhes.banco_nome}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Agência</p>
+                      <p className="font-medium">{modalDetalhes.banco_agencia}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Conta</p>
+                      <p className="font-medium">{modalDetalhes.banco_conta} ({modalDetalhes.banco_tipo_conta})</p>
+                    </div>
+                    {modalDetalhes.banco_operacao && (
+                      <div>
+                        <p className="text-slate-500">Operação</p>
+                        <p className="font-medium">{modalDetalhes.banco_operacao}</p>
+                      </div>
+                    )}
+                    <div className="col-span-2">
+                      <p className="text-slate-500">Recebido em</p>
+                      <p className="font-medium">{formatarDataHora(modalDetalhes.dados_bancarios_recebidos_em)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
@@ -651,6 +890,10 @@ export default function ReembolsosPage() {
                   <div>
                     <p className="text-slate-500">Abertura</p>
                     <p className="font-medium">{formatarDataHora(modalDetalhes.data_abertura)}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Email Enviado</p>
+                    <p className="font-medium">{formatarData(modalDetalhes.data_solicitacao_dados_bancarios)}</p>
                   </div>
                   <div>
                     <p className="text-slate-500">Retorno Financeiro</p>
@@ -764,6 +1007,248 @@ export default function ReembolsosPage() {
               Salvar Alterações
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Dados Bancários */}
+      <Dialog open={!!modalDadosBancarios} onOpenChange={() => setModalDadosBancarios(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5" />
+              Registrar Dados Bancários
+            </DialogTitle>
+          </DialogHeader>
+          
+          {modalDadosBancarios && (
+            <div className="space-y-4">
+              <div className="bg-slate-50 p-3 rounded-lg">
+                <p className="font-medium">{modalDadosBancarios.aluno_nome}</p>
+                <p className="text-sm text-slate-500">{modalDadosBancarios.curso}</p>
+                {modalDadosBancarios.aluno_menor_idade && (
+                  <Badge variant="outline" className="mt-2 text-orange-600 border-orange-300">
+                    <AlertTriangle className="w-3 h-3 mr-1" />
+                    Menor de 18 - Conta do Responsável
+                  </Badge>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <Checkbox
+                  id="resp_financeiro"
+                  checked={dadosBancariosForm.banco_responsavel_financeiro}
+                  onCheckedChange={(checked) => setDadosBancariosForm({ ...dadosBancariosForm, banco_responsavel_financeiro: checked })}
+                />
+                <Label htmlFor="resp_financeiro" className="text-sm cursor-pointer">
+                  Conta pertence ao Responsável Financeiro (não é do aluno)
+                </Label>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label>Nome do Titular da Conta *</Label>
+                  <Input
+                    value={dadosBancariosForm.banco_titular_nome}
+                    onChange={(e) => setDadosBancariosForm({ ...dadosBancariosForm, banco_titular_nome: e.target.value })}
+                    placeholder="Nome completo"
+                    data-testid="input-titular-nome"
+                  />
+                </div>
+                
+                <div className="col-span-2">
+                  <Label>CPF do Titular *</Label>
+                  <Input
+                    value={dadosBancariosForm.banco_titular_cpf}
+                    onChange={(e) => setDadosBancariosForm({ ...dadosBancariosForm, banco_titular_cpf: e.target.value })}
+                    placeholder="000.000.000-00"
+                    data-testid="input-titular-cpf"
+                  />
+                </div>
+                
+                <div className="col-span-2">
+                  <Label>Banco *</Label>
+                  <Input
+                    value={dadosBancariosForm.banco_nome}
+                    onChange={(e) => setDadosBancariosForm({ ...dadosBancariosForm, banco_nome: e.target.value })}
+                    placeholder="Ex: Caixa, Bradesco, Itaú"
+                    data-testid="input-banco-nome"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Agência *</Label>
+                  <Input
+                    value={dadosBancariosForm.banco_agencia}
+                    onChange={(e) => setDadosBancariosForm({ ...dadosBancariosForm, banco_agencia: e.target.value })}
+                    placeholder="0000"
+                    data-testid="input-banco-agencia"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Operação</Label>
+                  <Input
+                    value={dadosBancariosForm.banco_operacao}
+                    onChange={(e) => setDadosBancariosForm({ ...dadosBancariosForm, banco_operacao: e.target.value })}
+                    placeholder="Ex: 013"
+                    data-testid="input-banco-operacao"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Conta (com dígito) *</Label>
+                  <Input
+                    value={dadosBancariosForm.banco_conta}
+                    onChange={(e) => setDadosBancariosForm({ ...dadosBancariosForm, banco_conta: e.target.value })}
+                    placeholder="00000000-0"
+                    data-testid="input-banco-conta"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Tipo de Conta *</Label>
+                  <Select
+                    value={dadosBancariosForm.banco_tipo_conta}
+                    onValueChange={(v) => setDadosBancariosForm({ ...dadosBancariosForm, banco_tipo_conta: v })}
+                  >
+                    <SelectTrigger data-testid="select-tipo-conta">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="corrente">Conta Corrente</SelectItem>
+                      <SelectItem value="poupanca">Conta Poupança</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalDadosBancarios(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={registrarDadosBancarios} className="bg-green-600 hover:bg-green-700" data-testid="btn-salvar-dados-bancarios">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Registrar Dados
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Templates de Email */}
+      <Dialog open={modalTemplates} onOpenChange={setModalTemplates}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5" />
+              Templates de Email
+            </DialogTitle>
+          </DialogHeader>
+          
+          {templates && (
+            <div className="space-y-6">
+              {/* Template Solicitação */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      Solicitação de Dados Bancários
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => copiarParaClipboard(
+                        `Assunto: ${templates.solicitacao_dados_bancarios.assunto}\n\n${templates.solicitacao_dados_bancarios.corpo}`,
+                        'solicitacao'
+                      )}
+                    >
+                      {copiado === 'solicitacao' ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                      {copiado === 'solicitacao' ? 'Copiado!' : 'Copiar'}
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-slate-50 p-3 rounded-lg text-sm">
+                    <p className="font-medium text-slate-700 mb-2">Assunto: {templates.solicitacao_dados_bancarios.assunto}</p>
+                    <pre className="whitespace-pre-wrap text-slate-600 font-sans text-xs leading-relaxed">
+                      {templates.solicitacao_dados_bancarios.corpo}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Template Confirmação */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      Confirmação de Recebimento
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => copiarParaClipboard(
+                        `Assunto: ${templates.confirmacao_recebimento.assunto}\n\n${templates.confirmacao_recebimento.corpo}`,
+                        'confirmacao'
+                      )}
+                    >
+                      {copiado === 'confirmacao' ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                      {copiado === 'confirmacao' ? 'Copiado!' : 'Copiar'}
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-slate-50 p-3 rounded-lg text-sm">
+                    <p className="font-medium text-slate-700 mb-2">Assunto: {templates.confirmacao_recebimento.assunto}</p>
+                    <pre className="whitespace-pre-wrap text-slate-600 font-sans text-xs leading-relaxed">
+                      {templates.confirmacao_recebimento.corpo}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Template Pagamento */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-green-600" />
+                      Confirmação de Pagamento
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => copiarParaClipboard(
+                        `Assunto: ${templates.confirmacao_pagamento.assunto}\n\n${templates.confirmacao_pagamento.corpo}`,
+                        'pagamento'
+                      )}
+                    >
+                      {copiado === 'pagamento' ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                      {copiado === 'pagamento' ? 'Copiado!' : 'Copiar'}
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-slate-50 p-3 rounded-lg text-sm">
+                    <p className="font-medium text-slate-700 mb-2">Assunto: {templates.confirmacao_pagamento.assunto}</p>
+                    <pre className="whitespace-pre-wrap text-slate-600 font-sans text-xs leading-relaxed">
+                      {templates.confirmacao_pagamento.corpo}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 text-sm">
+                <p className="font-medium text-blue-700 mb-1">💡 Dica</p>
+                <p className="text-blue-600">
+                  Substitua os campos entre [COLCHETES] pelos dados reais do aluno antes de enviar.
+                </p>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
