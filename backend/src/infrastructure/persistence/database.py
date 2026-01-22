@@ -51,12 +51,6 @@ async def init_db():
         PendenciaModel, HistoricoContatoModel, ReembolsoModel
     )
     async with engine.begin() as conn:
-        # Drop and recreate reembolsos table to ensure schema is up to date
-        from sqlalchemy import text
-        try:
-            await conn.execute(text("DROP TABLE IF EXISTS reembolsos"))
-        except Exception:
-            pass
         await conn.run_sync(Base.metadata.create_all)
 
 
