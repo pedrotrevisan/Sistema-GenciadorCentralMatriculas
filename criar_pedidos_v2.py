@@ -1,7 +1,7 @@
 import requests
 import random
 
-API_URL = "https://matriculas-senai.preview.emergentagent.com/api"
+API_URL = "https://synapse-hub-3.preview.emergentagent.com/api"
 
 # Login como admin
 login_resp = requests.post(f"{API_URL}/auth/login", json={
