@@ -684,6 +684,94 @@ async def buscar_pedido(
     return await consultar_pedidos_uc.buscar_por_id(pedido_id, usuario)
 
 
+@api_router.get("/pedidos/{pedido_id}/timeline", tags=["Pedidos"])
+async def buscar_timeline_pedido(
+    pedido_id: str,
+    token: str = Depends(oauth2_scheme),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """Retorna timeline de auditoria de um pedido"""
+    from sqlalchemy import select
+    from src.infrastructure.persistence.models import AuditoriaModel, UsuarioModel
+    
+    usuario = await get_current_user(token, session)
+    pedido_repo = PedidoRepository(session)
+    
+    # Verificar se pedido existe e se usuário tem acesso
+    pedido = await pedido_repo.buscar_por_id(pedido_id)
+    if not pedido:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    
+    # Consultor só vê os próprios pedidos
+    if usuario.role.value == 'consultor' and pedido.consultor_id != usuario.id:
+        raise HTTPException(status_code=403, detail="Sem permissão para visualizar este pedido")
+    
+    # Buscar registros de auditoria
+    result = await session.execute(
+        select(AuditoriaModel)
+        .where(AuditoriaModel.pedido_id == pedido_id)
+        .order_by(AuditoriaModel.timestamp.asc())  # Ordem cronológica
+    )
+    auditorias = result.scalars().all()
+    
+    # Buscar nomes dos usuários
+    usuario_ids = list(set(a.usuario_id for a in auditorias))
+    usuario_repo = UsuarioRepository(session)
+    usuarios_dict = {}
+    for uid in usuario_ids:
+        u = await usuario_repo.buscar_por_id(uid)
+        if u:
+            usuarios_dict[uid] = u.nome
+    
+    # Mapear ações para labels amigáveis
+    ACOES_LABELS = {
+        "PEDIDO_CRIADO": {"label": "Solicitação Criada", "icon": "plus", "color": "blue"},
+        "STATUS_ATUALIZADO": {"label": "Status Alterado", "icon": "refresh", "color": "yellow"},
+        "PEDIDO_EXPORTADO": {"label": "Exportado para TOTVS", "icon": "download", "color": "green"},
+        "DOCUMENTACAO_SOLICITADA": {"label": "Documentação Solicitada", "icon": "file", "color": "orange"},
+        "PEDIDO_APROVADO": {"label": "Solicitação Aprovada", "icon": "check", "color": "green"},
+        "PEDIDO_REALIZADO": {"label": "Matrícula Realizada", "icon": "check-circle", "color": "green"},
+        "PEDIDO_CANCELADO": {"label": "Solicitação Cancelada", "icon": "x", "color": "red"},
+    }
+    
+    # Construir timeline
+    timeline = []
+    for audit in auditorias:
+        acao_info = ACOES_LABELS.get(audit.acao, {"label": audit.acao, "icon": "circle", "color": "gray"})
+        
+        # Extrair detalhes relevantes
+        detalhes_str = ""
+        if audit.detalhes:
+            if "status_anterior" in audit.detalhes and "status_novo" in audit.detalhes:
+                status_ant = audit.detalhes.get("status_anterior", "").replace("_", " ").title()
+                status_novo = audit.detalhes.get("status_novo", "").replace("_", " ").title()
+                detalhes_str = f"De '{status_ant}' para '{status_novo}'"
+            elif "motivo" in audit.detalhes:
+                detalhes_str = audit.detalhes.get("motivo", "")
+            elif "formato" in audit.detalhes:
+                detalhes_str = f"Formato: {audit.detalhes.get('formato', '').upper()}"
+        
+        timeline.append({
+            "id": audit.id,
+            "acao": audit.acao,
+            "acao_label": acao_info["label"],
+            "icon": acao_info["icon"],
+            "color": acao_info["color"],
+            "usuario_id": audit.usuario_id,
+            "usuario_nome": usuarios_dict.get(audit.usuario_id, "Usuário Desconhecido"),
+            "detalhes": detalhes_str,
+            "detalhes_raw": audit.detalhes,
+            "timestamp": audit.timestamp.isoformat() if audit.timestamp else None
+        })
+    
+    return {
+        "pedido_id": pedido_id,
+        "numero_protocolo": pedido.numero_protocolo,
+        "total_eventos": len(timeline),
+        "timeline": timeline
+    }
+
+
 @api_router.patch("/pedidos/{pedido_id}/status", response_model=PedidoResponseDTO, tags=["Pedidos"])
 async def atualizar_status(
     pedido_id: str,
