@@ -179,7 +179,7 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/backend/tests/test_timeline_api.py` - Suite de testes da Timeline de Auditoria - NOVO!
 
 ## Last Updated
-2026-01-22 - Implementada Timeline de Auditoria Visual
+2026-01-22 - Refatoração: Módulos de Reembolsos e Pendências movidos para routers separados (server.py reduzido para 1.565 linhas)
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
