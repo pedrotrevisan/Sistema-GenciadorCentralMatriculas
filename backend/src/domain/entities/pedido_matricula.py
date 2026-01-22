@@ -17,7 +17,7 @@ class PedidoMatricula:
     Entidade Rica que gerencia seu próprio estado e garante invariantes.
     Invariantes:
     - Um pedido deve ter pelo menos 1 aluno
-    - Um pedido deve estar vinculado a Projeto OU Empresa
+    - Um pedido deve estar vinculado a Projeto, Empresa ou Brasil Mais Produtivo
     - Transições de status devem seguir o fluxo definido
     - Pedidos exportados não podem ser editados
     """
@@ -31,6 +31,7 @@ class PedidoMatricula:
     projeto_nome: Optional[str] = None
     empresa_id: Optional[str] = None
     empresa_nome: Optional[str] = None
+    vinculo_tipo: Optional[str] = None  # projeto, empresa, brasil_mais_produtivo
     alunos: List[Aluno] = field(default_factory=list)
     status: StatusPedido = StatusPedido.PENDENTE
     observacoes: Optional[str] = None
@@ -41,17 +42,13 @@ class PedidoMatricula:
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self):
-        self._validar_projeto_ou_empresa()
+        self._validar_vinculo()
 
-    def _validar_projeto_ou_empresa(self):
-        """Valida que pedido tem Projeto OU Empresa"""
+    def _validar_vinculo(self):
+        """Valida que pedido tem vínculo válido"""
         if not self.projeto_id and not self.empresa_id:
             raise BusinessRuleException(
-                "Um pedido deve estar vinculado a um Projeto ou uma Empresa"
-            )
-        if self.projeto_id and self.empresa_id:
-            raise BusinessRuleException(
-                "Um pedido deve estar vinculado a Projeto OU Empresa, não ambos"
+                "Um pedido deve estar vinculado a um Projeto, Empresa ou Brasil Mais Produtivo"
             )
 
     def adicionar_aluno(self, aluno: Aluno) -> None:
