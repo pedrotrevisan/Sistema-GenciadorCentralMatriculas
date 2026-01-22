@@ -151,3 +151,60 @@ class EmpresaModel(Base):
     ativo = Column(Boolean, default=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+class TipoDocumentoModel(Base):
+    """SQLAlchemy model for TipoDocumento - Documentos padronizados"""
+    __tablename__ = "tipos_documento"
+
+    id = Column(String(36), primary_key=True)
+    codigo = Column(String(10), unique=True, nullable=False, index=True)  # Ex: "94", "131"
+    nome = Column(String(200), nullable=False)
+    obrigatorio = Column(Boolean, default=True)
+    observacoes = Column(Text, nullable=True)
+    ativo = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class PendenciaModel(Base):
+    """SQLAlchemy model for Pendencia Documental"""
+    __tablename__ = "pendencias"
+
+    id = Column(String(36), primary_key=True)
+    aluno_id = Column(String(36), ForeignKey("alunos.id"), nullable=False, index=True)
+    pedido_id = Column(String(36), ForeignKey("pedidos.id"), nullable=False, index=True)
+    tipo_documento_id = Column(String(36), ForeignKey("tipos_documento.id"), nullable=False)
+    documento_codigo = Column(String(10), nullable=False)  # Código do documento (ex: "94", "131")
+    documento_nome = Column(String(200), nullable=False)   # Nome do documento
+    status = Column(String(30), nullable=False, default="pendente", index=True)
+    # Status: pendente, aguardando_aluno, em_analise, aprovado, rejeitado, reenvio_necessario
+    observacoes = Column(Text, nullable=True)
+    motivo_rejeicao = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    resolved_at = Column(DateTime, nullable=True)  # Data de resolução
+
+    # Relationships
+    aluno = relationship("AlunoModel", backref="pendencias")
+    pedido = relationship("PedidoModel", backref="pendencias")
+    tipo_documento = relationship("TipoDocumentoModel")
+    historico_contatos = relationship("HistoricoContatoModel", back_populates="pendencia", cascade="all, delete-orphan")
+
+
+class HistoricoContatoModel(Base):
+    """SQLAlchemy model for Histórico de Contatos com o Aluno"""
+    __tablename__ = "historico_contatos"
+
+    id = Column(String(36), primary_key=True)
+    pendencia_id = Column(String(36), ForeignKey("pendencias.id"), nullable=False, index=True)
+    usuario_id = Column(String(36), ForeignKey("usuarios.id"), nullable=False)
+    usuario_nome = Column(String(200), nullable=False)
+    tipo_contato = Column(String(30), nullable=False)  # telefone, whatsapp, email, presencial
+    descricao = Column(Text, nullable=False)
+    resultado = Column(String(50), nullable=True)  # atendeu, nao_atendeu, retornou, sem_resposta
+    data_contato = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    pendencia = relationship("PendenciaModel", back_populates="historico_contatos")
+    usuario = relationship("UsuarioModel")
