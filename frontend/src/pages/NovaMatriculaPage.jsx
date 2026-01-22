@@ -298,6 +298,10 @@ const NovaMatriculaPage = () => {
       toast.error('Selecione uma empresa');
       return false;
     }
+    if (formData.vinculo_tipo === 'brasil_mais_produtivo' && !formData.empresa_id) {
+      toast.error('Selecione a empresa parceira do Brasil Mais Produtivo');
+      return false;
+    }
     return true;
   };
 
