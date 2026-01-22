@@ -692,7 +692,6 @@ async def buscar_timeline_pedido(
 ):
     """Retorna timeline de auditoria de um pedido"""
     from sqlalchemy import select
-    from src.infrastructure.persistence.models import AuditoriaModel, UsuarioModel
     
     usuario = await get_current_user(token, session)
     pedido_repo = PedidoRepository(session)
