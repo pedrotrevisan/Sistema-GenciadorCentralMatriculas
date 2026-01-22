@@ -33,7 +33,7 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 
 ## What's Been Implemented
 
-### Backend (2026-01-19)
+### Backend (2026-01-22) - ATUALIZADO
 - Domain Layer completo (Entidades, Value Objects, Exceções)
 - **Repositórios SQLAlchemy async (compatível PostgreSQL e SQLite)**
 - Use Cases: CriarPedido, AtualizarStatus, GerarExportacao, ConsultarPedidos
@@ -46,7 +46,12 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - **Validação de CPF duplicado** no sistema
 - **Importação em Lote** via planilhas Excel/CSV
 - **Número de Protocolo Sequencial** (CM-YYYY-NNNN)
-- **8 Novos Campos TOTVS** no modelo de Aluno - NOVO! (2026-01-22)
+- **8 Novos Campos TOTVS** no modelo de Aluno
+- **Central de Pendências Documentais** - NOVO! (2026-01-22)
+  - CRUD completo de pendências
+  - 8 tipos de documentos padronizados
+  - Histórico de contatos com alunos
+  - Dashboard de status
 
 ### Frontend (2026-01-22) - ATUALIZADO
 - Tela de Login com identidade SENAI CIMATEC
