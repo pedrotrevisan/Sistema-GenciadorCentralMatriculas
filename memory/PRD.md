@@ -45,20 +45,23 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - **Formatação automática de nomes** (Title Case com preposições)
 - **Validação de CPF duplicado** no sistema
 - **Importação em Lote** via planilhas Excel/CSV
-- **Número de Protocolo Sequencial** (CM-YYYY-NNNN) - NOVO!
+- **Número de Protocolo Sequencial** (CM-YYYY-NNNN)
+- **8 Novos Campos TOTVS** no modelo de Aluno - NOVO! (2026-01-22)
 
-### Frontend (2026-01-19)
+### Frontend (2026-01-22) - ATUALIZADO
 - Tela de Login com identidade SENAI CIMATEC
 - Dashboard Consultor (Funil de Vendas)
 - Dashboard Assistente (Painel de Gestão)
 - **Dashboard Admin 2.0** (KPIs, Funil, Top Empresas/Projetos, Evolução Mensal)
-- Formulário Wizard Nova Matrícula (3 etapas)
-- Página de Detalhes do Pedido
+- **Formulário Wizard Nova Solicitação** (3 etapas) - com 8 novos campos TOTVS
+- Página de Detalhes do Pedido (exibe todos os campos do aluno)
 - Gestão de Usuários (CRUD)
 - **Gestão de Cadastros** (Cursos, Projetos, Empresas)
 - **Importação em Lote** - Wizard 4 passos
-- **Coluna "Protocolo"** na listagem de pedidos - NOVO!
-- **Exibição do Protocolo** na página de detalhes - NOVO!
+- **Coluna "Protocolo"** na listagem de pedidos
+- **Exibição do Protocolo** na página de detalhes
+- **Nomenclatura ajustada**: "Nova Solicitação" ao invés de "Nova Matrícula" - NOVO!
+- **Card Resumo**: "Total de Alunos em Solicitações" - NOVO!
 - Toasts de feedback
 - Rotas protegidas por role
 
@@ -79,20 +82,24 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] CRUD de Cadastros (Cursos, Projetos, Empresas)
 - [x] Importação em Lote via planilhas
 - [x] Número de Protocolo Sequencial (CM-2026-0001)
+- [x] 8 Novos Campos TOTVS (compatibilidade 100%) - NOVO!
+- [x] Ajuste de Nomenclaturas (Solicitação vs Matrícula) - NOVO!
 
 ### P1 (Próximos)
 - [ ] Timeline de Auditoria Visual
+- [ ] Central de Pendências Documentais
+- [ ] Módulo de Reembolsos (integração SGC Plus)
 - [ ] Refatoração do server.py (monolito > roteadores separados)
 - [ ] Refinar máquina de estados dos pedidos
 - [ ] Filtros avançados de data na listagem
 
 ### P2 (Futuro)
-- [ ] Central de Pendências com notificações
+- [ ] Notificações automáticas por email
 - [ ] Controle Orçamentário para projetos
 - [ ] Smart Sidebar contextual no formulário
 - [ ] Integração com API de CEP (ViaCEP)
-- [ ] Notificações por email
 - [ ] Upload de documentos do aluno
+- [ ] Expansão para outros tipos de matrículas (cursos pagos, bolsistas)
 
 ## Tech Stack
 - Backend: Python 3.10+, FastAPI, SQLAlchemy (Async), PostgreSQL/SQLite, Pydantic, openpyxl, pandas
@@ -133,8 +140,20 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `POST /api/importacao/executar` - Execução da importação
 
 ## Test Reports
+- `/app/test_reports/iteration_3.json` - Relatório de testes (7/7 PASS) - 2026-01-22
 - `/app/test_reports/iteration_2.json` - Relatório de testes (26/26 PASS)
 - `/app/tests/test_importacao_api.py` - Suite de testes da Importação em Lote
 
 ## Last Updated
-2026-01-19 - Implementado Número de Protocolo Sequencial (CM-YYYY-NNNN)
+2026-01-22 - Implementados 8 novos campos TOTVS + Ajuste de nomenclaturas
+
+## 8 Novos Campos TOTVS (2026-01-22)
+Campos adicionados ao modelo de Aluno para compatibilidade 100% com TOTVS:
+1. `rg_data_emissao` - Data de emissão do RG
+2. `naturalidade` - Cidade de nascimento
+3. `naturalidade_uf` - Estado de nascimento
+4. `sexo` - M/F
+5. `cor_raca` - Conforme IBGE
+6. `grau_instrucao` - Nível de escolaridade
+7. `nome_pai` - Nome completo do pai
+8. `nome_mae` - Nome completo da mãe
