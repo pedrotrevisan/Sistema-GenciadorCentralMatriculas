@@ -598,7 +598,7 @@ const NovaMatriculaPage = () => {
                         </Select>
                       </div>
                       <div>
-                        <Label>Data de Emissão RG</Label>
+                        <Label>Data de Emissão RG *</Label>
                         <Input
                           type="date"
                           value={aluno.rg_data_emissao}
