@@ -358,8 +358,9 @@ const NovaMatriculaPage = () => {
         curso_nome: formData.curso_nome,
         projeto_id: formData.vinculo_tipo === 'projeto' ? formData.projeto_id : null,
         projeto_nome: formData.vinculo_tipo === 'projeto' ? formData.projeto_nome : null,
-        empresa_id: formData.vinculo_tipo === 'empresa' ? formData.empresa_id : null,
-        empresa_nome: formData.vinculo_tipo === 'empresa' ? formData.empresa_nome : null,
+        empresa_id: (formData.vinculo_tipo === 'empresa' || formData.vinculo_tipo === 'brasil_mais_produtivo') ? formData.empresa_id : null,
+        empresa_nome: (formData.vinculo_tipo === 'empresa' || formData.vinculo_tipo === 'brasil_mais_produtivo') ? formData.empresa_nome : null,
+        vinculo_tipo: formData.vinculo_tipo,
         observacoes: formData.observacoes || null,
         alunos: formData.alunos
       };
