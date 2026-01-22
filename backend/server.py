@@ -1977,6 +1977,368 @@ async def excluir_pendencia(
     return {"mensagem": "Pendência excluída com sucesso"}
 
 
+# ==================== MÓDULO DE REEMBOLSOS ====================
+
+# Constantes de Motivos de Reembolso
+MOTIVOS_REEMBOLSO = {
+    "sem_escolaridade": {"label": "Sem Escolaridade", "reter_taxa": False},
+    "sem_vaga": {"label": "Sem Vaga 2026.1", "reter_taxa": False},
+    "passou_bolsista": {"label": "Passou como Bolsista", "reter_taxa": False},
+    "nao_tem_vaga": {"label": "Não Tem Vaga", "reter_taxa": False},
+    "desistencia": {"label": "Desistência do Aluno", "reter_taxa": True},
+    "outros": {"label": "Outros", "reter_taxa": False}
+}
+
+STATUS_REEMBOLSO = {
+    "aberto": "Aberto",
+    "aguardando_dados_bancarios": "Aguardando Dados Bancários",
+    "enviado_financeiro": "Enviado ao Financeiro",
+    "pago": "Pago",
+    "cancelado": "Cancelado"
+}
+
+
+# DTOs para Reembolsos
+class CriarReembolsoDTO(BaseModel):
+    aluno_nome: str
+    aluno_cpf: Optional[str] = None
+    curso: str
+    turma: Optional[str] = None
+    motivo: str
+    motivo_descricao: Optional[str] = None
+    numero_chamado_sgc: Optional[str] = None
+    observacoes: Optional[str] = None
+
+class AtualizarReembolsoDTO(BaseModel):
+    status: Optional[str] = None
+    numero_chamado_sgc: Optional[str] = None
+    data_retorno_financeiro: Optional[str] = None
+    data_provisao_pagamento: Optional[str] = None
+    data_pagamento: Optional[str] = None
+    observacoes: Optional[str] = None
+
+
+@api_router.get("/reembolsos/motivos", tags=["Reembolsos"])
+async def listar_motivos_reembolso(
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Lista todos os motivos de reembolso disponíveis"""
+    return [
+        {
+            "value": key,
+            "label": config["label"],
+            "reter_taxa": config["reter_taxa"]
+        }
+        for key, config in MOTIVOS_REEMBOLSO.items()
+    ]
+
+
+@api_router.get("/reembolsos/status", tags=["Reembolsos"])
+async def listar_status_reembolso(
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Lista todos os status de reembolso disponíveis"""
+    return [
+        {"value": key, "label": label}
+        for key, label in STATUS_REEMBOLSO.items()
+    ]
+
+
+@api_router.get("/reembolsos/dashboard", tags=["Reembolsos"])
+async def dashboard_reembolsos(
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Dashboard do Módulo de Reembolsos"""
+    from sqlalchemy import select, func
+    
+    # Contagem por status
+    status_query = await session.execute(
+        select(ReembolsoModel.status, func.count(ReembolsoModel.id))
+        .group_by(ReembolsoModel.status)
+    )
+    contagem_status = {row[0]: row[1] for row in status_query.fetchall()}
+    
+    # Contagem por motivo
+    motivo_query = await session.execute(
+        select(ReembolsoModel.motivo, func.count(ReembolsoModel.id))
+        .group_by(ReembolsoModel.motivo)
+    )
+    por_motivo = [
+        {"motivo": MOTIVOS_REEMBOLSO.get(row[0], {}).get("label", row[0]), "total": row[1]} 
+        for row in motivo_query.fetchall()
+    ]
+    
+    # Total geral
+    total_query = await session.execute(select(func.count(ReembolsoModel.id)))
+    total = total_query.scalar() or 0
+    
+    # Total em aberto (não pago e não cancelado)
+    abertos_query = await session.execute(
+        select(func.count(ReembolsoModel.id))
+        .where(ReembolsoModel.status.notin_(['pago', 'cancelado']))
+    )
+    total_abertos = abertos_query.scalar() or 0
+    
+    return {
+        "contagem_status": contagem_status,
+        "por_motivo": por_motivo,
+        "total": total,
+        "total_abertos": total_abertos,
+        "total_aberto": contagem_status.get('aberto', 0),
+        "total_aguardando": contagem_status.get('aguardando_dados_bancarios', 0),
+        "total_enviado": contagem_status.get('enviado_financeiro', 0),
+        "total_pago": contagem_status.get('pago', 0),
+        "total_cancelado": contagem_status.get('cancelado', 0)
+    }
+
+
+@api_router.get("/reembolsos", tags=["Reembolsos"])
+async def listar_reembolsos(
+    status: Optional[str] = None,
+    motivo: Optional[str] = None,
+    aluno_nome: Optional[str] = None,
+    pagina: int = Query(1, ge=1),
+    por_pagina: int = Query(20, ge=1, le=100),
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Lista todos os reembolsos com filtros"""
+    from sqlalchemy import select, func
+    
+    query = select(ReembolsoModel)
+    
+    # Filtros
+    if status and status != 'todos':
+        query = query.where(ReembolsoModel.status == status)
+    if motivo and motivo != 'todos':
+        query = query.where(ReembolsoModel.motivo == motivo)
+    if aluno_nome:
+        query = query.where(ReembolsoModel.aluno_nome.ilike(f'%{aluno_nome}%'))
+    
+    # Ordenação: mais recentes primeiro
+    query = query.order_by(ReembolsoModel.created_at.desc())
+    
+    # Contagem total
+    count_query = select(func.count(ReembolsoModel.id))
+    if status and status != 'todos':
+        count_query = count_query.where(ReembolsoModel.status == status)
+    if motivo and motivo != 'todos':
+        count_query = count_query.where(ReembolsoModel.motivo == motivo)
+    if aluno_nome:
+        count_query = count_query.where(ReembolsoModel.aluno_nome.ilike(f'%{aluno_nome}%'))
+    
+    total_result = await session.execute(count_query)
+    total = total_result.scalar() or 0
+    
+    # Paginação
+    offset = (pagina - 1) * por_pagina
+    query = query.offset(offset).limit(por_pagina)
+    
+    result = await session.execute(query)
+    reembolsos = result.scalars().all()
+    
+    return {
+        "reembolsos": [
+            {
+                "id": r.id,
+                "aluno_nome": r.aluno_nome,
+                "aluno_cpf": r.aluno_cpf,
+                "curso": r.curso,
+                "turma": r.turma,
+                "motivo": r.motivo,
+                "motivo_label": MOTIVOS_REEMBOLSO.get(r.motivo, {}).get("label", r.motivo),
+                "reter_taxa": r.reter_taxa,
+                "numero_chamado_sgc": r.numero_chamado_sgc,
+                "status": r.status,
+                "status_label": STATUS_REEMBOLSO.get(r.status, r.status),
+                "data_abertura": r.data_abertura.isoformat() if r.data_abertura else None,
+                "data_retorno_financeiro": r.data_retorno_financeiro.isoformat() if r.data_retorno_financeiro else None,
+                "data_provisao_pagamento": r.data_provisao_pagamento.isoformat() if r.data_provisao_pagamento else None,
+                "data_pagamento": r.data_pagamento.isoformat() if r.data_pagamento else None,
+                "observacoes": r.observacoes,
+                "criado_por_nome": r.criado_por_nome,
+                "created_at": r.created_at.isoformat() if r.created_at else None
+            }
+            for r in reembolsos
+        ],
+        "paginacao": {
+            "pagina_atual": pagina,
+            "por_pagina": por_pagina,
+            "total_itens": total,
+            "total_paginas": (total + por_pagina - 1) // por_pagina
+        }
+    }
+
+
+@api_router.post("/reembolsos", tags=["Reembolsos"])
+async def criar_reembolso(
+    dto: CriarReembolsoDTO,
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Cria uma nova solicitação de reembolso"""
+    
+    # Validar motivo
+    if dto.motivo not in MOTIVOS_REEMBOLSO:
+        raise HTTPException(status_code=400, detail=f"Motivo inválido. Válidos: {list(MOTIVOS_REEMBOLSO.keys())}")
+    
+    # Determinar se deve reter taxa
+    reter_taxa = MOTIVOS_REEMBOLSO[dto.motivo]["reter_taxa"]
+    
+    reembolso = ReembolsoModel(
+        id=str(uuid.uuid4()),
+        aluno_nome=dto.aluno_nome,
+        aluno_cpf=dto.aluno_cpf,
+        curso=dto.curso,
+        turma=dto.turma,
+        motivo=dto.motivo,
+        motivo_descricao=dto.motivo_descricao,
+        reter_taxa=reter_taxa,
+        numero_chamado_sgc=dto.numero_chamado_sgc,
+        status="aberto",
+        observacoes=dto.observacoes,
+        criado_por_id=usuario.id,
+        criado_por_nome=usuario.nome
+    )
+    
+    session.add(reembolso)
+    await session.commit()
+    
+    return {
+        "id": reembolso.id,
+        "mensagem": "Reembolso criado com sucesso",
+        "status": reembolso.status,
+        "reter_taxa": reembolso.reter_taxa
+    }
+
+
+@api_router.get("/reembolsos/{reembolso_id}", tags=["Reembolsos"])
+async def buscar_reembolso(
+    reembolso_id: str,
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Busca detalhes de um reembolso específico"""
+    from sqlalchemy import select
+    
+    result = await session.execute(
+        select(ReembolsoModel).where(ReembolsoModel.id == reembolso_id)
+    )
+    reembolso = result.scalar_one_or_none()
+    
+    if not reembolso:
+        raise HTTPException(status_code=404, detail="Reembolso não encontrado")
+    
+    return {
+        "id": reembolso.id,
+        "aluno_nome": reembolso.aluno_nome,
+        "aluno_cpf": reembolso.aluno_cpf,
+        "curso": reembolso.curso,
+        "turma": reembolso.turma,
+        "motivo": reembolso.motivo,
+        "motivo_label": MOTIVOS_REEMBOLSO.get(reembolso.motivo, {}).get("label", reembolso.motivo),
+        "motivo_descricao": reembolso.motivo_descricao,
+        "reter_taxa": reembolso.reter_taxa,
+        "numero_chamado_sgc": reembolso.numero_chamado_sgc,
+        "status": reembolso.status,
+        "status_label": STATUS_REEMBOLSO.get(reembolso.status, reembolso.status),
+        "data_abertura": reembolso.data_abertura.isoformat() if reembolso.data_abertura else None,
+        "data_retorno_financeiro": reembolso.data_retorno_financeiro.isoformat() if reembolso.data_retorno_financeiro else None,
+        "data_provisao_pagamento": reembolso.data_provisao_pagamento.isoformat() if reembolso.data_provisao_pagamento else None,
+        "data_pagamento": reembolso.data_pagamento.isoformat() if reembolso.data_pagamento else None,
+        "observacoes": reembolso.observacoes,
+        "criado_por_nome": reembolso.criado_por_nome,
+        "atualizado_por_nome": reembolso.atualizado_por_nome,
+        "created_at": reembolso.created_at.isoformat() if reembolso.created_at else None,
+        "updated_at": reembolso.updated_at.isoformat() if reembolso.updated_at else None
+    }
+
+
+@api_router.put("/reembolsos/{reembolso_id}", tags=["Reembolsos"])
+async def atualizar_reembolso(
+    reembolso_id: str,
+    dto: AtualizarReembolsoDTO,
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Atualiza um reembolso"""
+    from sqlalchemy import select
+    from datetime import datetime
+    
+    result = await session.execute(
+        select(ReembolsoModel).where(ReembolsoModel.id == reembolso_id)
+    )
+    reembolso = result.scalar_one_or_none()
+    
+    if not reembolso:
+        raise HTTPException(status_code=404, detail="Reembolso não encontrado")
+    
+    # Validar status
+    if dto.status and dto.status not in STATUS_REEMBOLSO:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Válidos: {list(STATUS_REEMBOLSO.keys())}")
+    
+    # Atualizar campos
+    if dto.status:
+        reembolso.status = dto.status
+        # Se status for "pago", registrar data de pagamento automaticamente
+        if dto.status == 'pago' and not reembolso.data_pagamento:
+            reembolso.data_pagamento = datetime.now(timezone.utc)
+    
+    if dto.numero_chamado_sgc is not None:
+        reembolso.numero_chamado_sgc = dto.numero_chamado_sgc
+    
+    if dto.data_retorno_financeiro:
+        reembolso.data_retorno_financeiro = datetime.fromisoformat(dto.data_retorno_financeiro.replace('Z', '+00:00'))
+    
+    if dto.data_provisao_pagamento:
+        reembolso.data_provisao_pagamento = datetime.fromisoformat(dto.data_provisao_pagamento.replace('Z', '+00:00'))
+    
+    if dto.data_pagamento:
+        reembolso.data_pagamento = datetime.fromisoformat(dto.data_pagamento.replace('Z', '+00:00'))
+    
+    if dto.observacoes is not None:
+        reembolso.observacoes = dto.observacoes
+    
+    # Auditoria
+    reembolso.atualizado_por_id = usuario.id
+    reembolso.atualizado_por_nome = usuario.nome
+    
+    await session.commit()
+    
+    return {
+        "id": reembolso.id,
+        "status": reembolso.status,
+        "mensagem": "Reembolso atualizado com sucesso"
+    }
+
+
+@api_router.delete("/reembolsos/{reembolso_id}", tags=["Reembolsos"])
+async def excluir_reembolso(
+    reembolso_id: str,
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Exclui um reembolso (apenas admin)"""
+    if usuario.role.value != 'admin':
+        raise HTTPException(status_code=403, detail="Apenas administradores podem excluir reembolsos")
+    
+    from sqlalchemy import select
+    
+    result = await session.execute(
+        select(ReembolsoModel).where(ReembolsoModel.id == reembolso_id)
+    )
+    reembolso = result.scalar_one_or_none()
+    
+    if not reembolso:
+        raise HTTPException(status_code=404, detail="Reembolso não encontrado")
+    
+    await session.delete(reembolso)
+    await session.commit()
+    
+    return {"mensagem": "Reembolso excluído com sucesso"}
+
+
 # ==================== ROOT & HEALTH ====================
 
 @api_router.get("/", tags=["Health"])
