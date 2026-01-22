@@ -772,12 +772,19 @@ const NovaMatriculaPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <Label>CEP *</Label>
-                        <Input
-                          value={aluno.endereco_cep}
-                          onChange={(e) => handleAlunoChange(index, 'endereco_cep', e.target.value)}
-                          placeholder="00000-000"
-                          data-testid={`aluno-${index}-cep`}
-                        />
+                        <div className="relative">
+                          <Input
+                            value={aluno.endereco_cep}
+                            onChange={(e) => handleAlunoChange(index, 'endereco_cep', e.target.value)}
+                            onBlur={(e) => buscarCep(index, e.target.value)}
+                            placeholder="00000-000"
+                            data-testid={`aluno-${index}-cep`}
+                            className={buscandoCep[index] ? 'pr-10' : ''}
+                          />
+                          {buscandoCep[index] && (
+                            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-blue-500" />
+                          )}
+                        </div>
                       </div>
                       <div className="md:col-span-2">
                         <Label>Logradouro *</Label>
