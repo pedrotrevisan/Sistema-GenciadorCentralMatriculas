@@ -2002,6 +2002,9 @@ STATUS_REEMBOLSO = {
 class CriarReembolsoDTO(BaseModel):
     aluno_nome: str
     aluno_cpf: Optional[str] = None
+    aluno_email: Optional[str] = None
+    aluno_telefone: Optional[str] = None
+    aluno_menor_idade: Optional[bool] = False
     curso: str
     turma: Optional[str] = None
     motivo: str
@@ -2016,6 +2019,16 @@ class AtualizarReembolsoDTO(BaseModel):
     data_provisao_pagamento: Optional[str] = None
     data_pagamento: Optional[str] = None
     observacoes: Optional[str] = None
+
+class RegistrarDadosBancariosDTO(BaseModel):
+    banco_titular_nome: str
+    banco_titular_cpf: str
+    banco_nome: str
+    banco_agencia: str
+    banco_operacao: Optional[str] = None
+    banco_conta: str
+    banco_tipo_conta: str  # corrente ou poupanca
+    banco_responsavel_financeiro: Optional[bool] = False
 
 
 @api_router.get("/reembolsos/motivos", tags=["Reembolsos"])
