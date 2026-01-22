@@ -219,6 +219,9 @@ class ReembolsoModel(Base):
     # Dados do Aluno (independente de pedidos existentes)
     aluno_nome = Column(String(200), nullable=False)
     aluno_cpf = Column(String(14), nullable=True)
+    aluno_email = Column(String(200), nullable=True)
+    aluno_telefone = Column(String(20), nullable=True)
+    aluno_menor_idade = Column(Boolean, default=False)  # Se é menor de 18 anos
     curso = Column(String(200), nullable=False)
     turma = Column(String(100), nullable=True)
     
@@ -231,8 +234,20 @@ class ReembolsoModel(Base):
     # Chamado SGC Plus
     numero_chamado_sgc = Column(String(50), nullable=True)  # Número de referência
     
+    # Dados Bancários (preenchidos quando aluno responder)
+    banco_titular_nome = Column(String(200), nullable=True)
+    banco_titular_cpf = Column(String(14), nullable=True)
+    banco_nome = Column(String(100), nullable=True)  # Nome do banco (Caixa, Bradesco, etc)
+    banco_agencia = Column(String(20), nullable=True)
+    banco_operacao = Column(String(10), nullable=True)  # Operação (013 para poupança Caixa, etc)
+    banco_conta = Column(String(30), nullable=True)  # Número da conta com dígito
+    banco_tipo_conta = Column(String(20), nullable=True)  # corrente ou poupanca
+    banco_responsavel_financeiro = Column(Boolean, default=False)  # True se conta é do responsável (menor de 18)
+    dados_bancarios_recebidos_em = Column(DateTime, nullable=True)  # Data que recebeu os dados
+    
     # Datas do Fluxo
     data_abertura = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    data_solicitacao_dados_bancarios = Column(DateTime, nullable=True)  # Data que enviou email solicitando
     data_retorno_financeiro = Column(DateTime, nullable=True)
     data_provisao_pagamento = Column(DateTime, nullable=True)
     data_pagamento = Column(DateTime, nullable=True)
