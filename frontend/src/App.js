@@ -19,6 +19,7 @@ import NovaMatriculaPage from "./pages/NovaMatriculaPage";
 import PedidoDetalhePage from "./pages/PedidoDetalhePage";
 import ImportacaoLotePage from "./pages/ImportacaoLotePage";
 import CentralPendenciasPage from "./pages/CentralPendenciasPage";
+import ReembolsosPage from "./pages/ReembolsosPage";
 
 function App() {
   return (
