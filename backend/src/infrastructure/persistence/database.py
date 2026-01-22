@@ -47,9 +47,16 @@ async def init_db():
     # Import all models to ensure they are registered with Base.metadata
     from src.infrastructure.persistence.models import (
         UsuarioModel, PedidoModel, AlunoModel, AuditoriaModel,
-        CursoModel, ProjetoModel, EmpresaModel
+        CursoModel, ProjetoModel, EmpresaModel, TipoDocumentoModel,
+        PendenciaModel, HistoricoContatoModel, ReembolsoModel
     )
     async with engine.begin() as conn:
+        # Drop and recreate reembolsos table to ensure schema is up to date
+        from sqlalchemy import text
+        try:
+            await conn.execute(text("DROP TABLE IF EXISTS reembolsos"))
+        except Exception:
+            pass
         await conn.run_sync(Base.metadata.create_all)
 
 
