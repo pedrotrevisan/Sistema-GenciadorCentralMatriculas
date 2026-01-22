@@ -56,6 +56,7 @@ class PedidoModel(Base):
     projeto_nome = Column(String(200), nullable=True)
     empresa_id = Column(String(36), nullable=True)
     empresa_nome = Column(String(200), nullable=True)
+    vinculo_tipo = Column(String(30), nullable=True, default="projeto")  # projeto, empresa, brasil_mais_produtivo
     status = Column(String(30), nullable=False, default="pendente", index=True)
     observacoes = Column(Text, nullable=True)
     motivo_rejeicao = Column(Text, nullable=True)
