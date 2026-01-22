@@ -51,14 +51,6 @@ async def init_db():
         PendenciaModel, HistoricoContatoModel, ReembolsoModel
     )
     async with engine.begin() as conn:
-        # Recreate pedidos table to add vinculo_tipo column
-        from sqlalchemy import text
-        try:
-            await conn.execute(text("DROP TABLE IF EXISTS alunos"))
-            await conn.execute(text("DROP TABLE IF EXISTS auditorias"))
-            await conn.execute(text("DROP TABLE IF EXISTS pedidos"))
-        except Exception:
-            pass
         await conn.run_sync(Base.metadata.create_all)
 
 
