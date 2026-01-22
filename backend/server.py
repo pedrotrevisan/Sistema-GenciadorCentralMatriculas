@@ -2553,3 +2553,7 @@ async def health():
 
 # Include router
 app.include_router(api_router)
+
+# Include modular routers
+from src.routers.reembolsos import router as reembolsos_router
+api_router.include_router(reembolsos_router)
