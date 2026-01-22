@@ -263,7 +263,7 @@ export default function CentralPendenciasPage() {
                   <SelectValue placeholder="Todos os status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
                   {Object.entries(STATUS_CONFIG).map(([key, config]) => (
                     <SelectItem key={key} value={key}>{config.label}</SelectItem>
                   ))}
@@ -278,7 +278,7 @@ export default function CentralPendenciasPage() {
                   <SelectValue placeholder="Todos os documentos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
                   {tiposDocumento.map((tipo) => (
                     <SelectItem key={tipo.codigo} value={tipo.codigo}>
                       {tipo.codigo} - {tipo.nome}
