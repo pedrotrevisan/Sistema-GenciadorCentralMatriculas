@@ -363,6 +363,9 @@ const PedidoDetalhePage = () => {
         </CardContent>
       </Card>
 
+      {/* Timeline de Auditoria */}
+      <TimelineAuditoria pedidoId={id} />
+
       {/* Status Change Modal */}
       <Dialog open={statusModal} onOpenChange={setStatusModal}>
         <DialogContent>
