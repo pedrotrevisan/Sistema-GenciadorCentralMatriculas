@@ -98,8 +98,8 @@ export default function CentralPendenciasPage() {
       const params = new URLSearchParams();
       params.append('pagina', pagina);
       params.append('por_pagina', 15);
-      if (filtroStatus) params.append('status', filtroStatus);
-      if (filtroDocumento) params.append('documento_codigo', filtroDocumento);
+      if (filtroStatus && filtroStatus !== 'todos') params.append('status', filtroStatus);
+      if (filtroDocumento && filtroDocumento !== 'todos') params.append('documento_codigo', filtroDocumento);
       if (filtroNome) params.append('aluno_nome', filtroNome);
       
       const response = await api.get(`/api/pendencias?${params.toString()}`);
