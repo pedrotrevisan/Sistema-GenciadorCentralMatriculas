@@ -361,10 +361,10 @@ const NovaMatriculaPage = () => {
           Voltar
         </Button>
         <h1 className="text-2xl font-bold text-slate-900 font-['Chivo']">
-          Nova Matrícula
+          Nova Solicitação
         </h1>
         <p className="text-slate-500">
-          Preencha os dados para criar um novo pedido de matrícula
+          Preencha os dados para criar uma nova solicitação de matrícula
         </p>
       </div>
 
@@ -562,7 +562,7 @@ const NovaMatriculaPage = () => {
                     </div>
 
                     {/* Documento */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
                         <Label>RG *</Label>
                         <Input
@@ -582,7 +582,7 @@ const NovaMatriculaPage = () => {
                         />
                       </div>
                       <div>
-                        <Label>UF *</Label>
+                        <Label>UF do RG *</Label>
                         <Select
                           value={aluno.rg_uf}
                           onValueChange={(v) => handleAlunoChange(index, 'rg_uf', v)}
@@ -596,6 +596,131 @@ const NovaMatriculaPage = () => {
                             ))}
                           </SelectContent>
                         </Select>
+                      </div>
+                      <div>
+                        <Label>Data de Emissão RG</Label>
+                        <Input
+                          type="date"
+                          value={aluno.rg_data_emissao}
+                          onChange={(e) => handleAlunoChange(index, 'rg_data_emissao', e.target.value)}
+                          data-testid={`aluno-${index}-rg-emissao`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Dados Complementares TOTVS */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label>Naturalidade (Cidade)</Label>
+                        <Input
+                          value={aluno.naturalidade}
+                          onChange={(e) => handleAlunoChange(index, 'naturalidade', e.target.value)}
+                          onBlur={() => handleEnderecoBlur(index, 'naturalidade')}
+                          placeholder="Cidade de nascimento"
+                          data-testid={`aluno-${index}-naturalidade`}
+                        />
+                      </div>
+                      <div>
+                        <Label>Naturalidade (UF)</Label>
+                        <Select
+                          value={aluno.naturalidade_uf}
+                          onValueChange={(v) => handleAlunoChange(index, 'naturalidade_uf', v)}
+                        >
+                          <SelectTrigger data-testid={`aluno-${index}-naturalidade-uf`}>
+                            <SelectValue placeholder="UF de nascimento" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ESTADOS_BR.map((uf) => (
+                              <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Sexo</Label>
+                        <Select
+                          value={aluno.sexo}
+                          onValueChange={(v) => handleAlunoChange(index, 'sexo', v)}
+                        >
+                          <SelectTrigger data-testid={`aluno-${index}-sexo`}>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="M">Masculino</SelectItem>
+                            <SelectItem value="F">Feminino</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Cor/Raça</Label>
+                        <Select
+                          value={aluno.cor_raca}
+                          onValueChange={(v) => handleAlunoChange(index, 'cor_raca', v)}
+                        >
+                          <SelectTrigger data-testid={`aluno-${index}-cor-raca`}>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {COR_RACA_OPTIONS.map((opcao) => (
+                              <SelectItem key={opcao} value={opcao}>{opcao}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Grau de Instrução</Label>
+                        <Select
+                          value={aluno.grau_instrucao}
+                          onValueChange={(v) => handleAlunoChange(index, 'grau_instrucao', v)}
+                        >
+                          <SelectTrigger data-testid={`aluno-${index}-grau-instrucao`}>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {GRAU_INSTRUCAO_OPTIONS.map((opcao) => (
+                              <SelectItem key={opcao} value={opcao}>{opcao}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Filiação */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Nome do Pai</Label>
+                        <Input
+                          value={aluno.nome_pai}
+                          onChange={(e) => handleAlunoChange(index, 'nome_pai', e.target.value)}
+                          onBlur={() => {
+                            setFormData(prev => {
+                              const alunos = [...prev.alunos];
+                              alunos[index] = { ...alunos[index], nome_pai: formatarNomeProprio(alunos[index].nome_pai) };
+                              return { ...prev, alunos };
+                            });
+                          }}
+                          placeholder="Nome completo do pai"
+                          data-testid={`aluno-${index}-nome-pai`}
+                        />
+                      </div>
+                      <div>
+                        <Label>Nome da Mãe</Label>
+                        <Input
+                          value={aluno.nome_mae}
+                          onChange={(e) => handleAlunoChange(index, 'nome_mae', e.target.value)}
+                          onBlur={() => {
+                            setFormData(prev => {
+                              const alunos = [...prev.alunos];
+                              alunos[index] = { ...alunos[index], nome_mae: formatarNomeProprio(alunos[index].nome_mae) };
+                              return { ...prev, alunos };
+                            });
+                          }}
+                          placeholder="Nome completo da mãe"
+                          data-testid={`aluno-${index}-nome-mae`}
+                        />
                       </div>
                     </div>
 

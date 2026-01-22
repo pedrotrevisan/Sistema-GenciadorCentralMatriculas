@@ -70,13 +70,13 @@ const DashboardLayout = () => {
     if (user?.role === 'consultor') {
       items.push(
         { to: '/consultor', icon: LayoutDashboard, label: 'Meus Pedidos' },
-        { to: '/consultor/novo-pedido', icon: Plus, label: 'Nova Matrícula' },
+        { to: '/consultor/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' }
       );
     } else if (user?.role === 'assistente') {
       items.push(
         { to: '/assistente', icon: LayoutDashboard, label: 'Painel de Gestão' },
-        { to: '/assistente/novo-pedido', icon: Plus, label: 'Nova Matrícula' },
+        { to: '/assistente/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' }
       );
     } else if (user?.role === 'admin') {
@@ -85,7 +85,7 @@ const DashboardLayout = () => {
         { to: '/admin/pedidos', icon: FileText, label: 'Pedidos' },
         { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
         { to: '/admin/cadastros', icon: Settings, label: 'Cadastros' },
-        { to: '/admin/novo-pedido', icon: Plus, label: 'Nova Matrícula' },
+        { to: '/admin/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' }
       );
     }

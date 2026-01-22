@@ -127,7 +127,7 @@ const ConsultorDashboard = () => {
             data-testid="new-order-btn"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Nova Matrícula
+            Nova Solicitação
           </Button>
         </div>
       </div>

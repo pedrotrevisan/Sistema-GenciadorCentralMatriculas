@@ -116,7 +116,7 @@ const AdminDashboard = () => {
             className="bg-[#E30613] hover:bg-[#c00510]"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Nova Matrícula
+            Nova Solicitação
           </Button>
         </div>
       </div>
@@ -424,7 +424,7 @@ const AdminDashboard = () => {
               onClick={() => navigate('/admin/novo-pedido')}
             >
               <Plus className="w-6 h-6 text-[#004587]" />
-              <span className="text-sm">Nova Matrícula</span>
+              <span className="text-sm">Nova Solicitação</span>
             </Button>
             <Button
               variant="outline"
@@ -475,15 +475,15 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Resumo de Alunos */}
+      {/* Resumo de Solicitações */}
       <Card className="bg-gradient-to-r from-[#004587] to-[#0066cc] text-white">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100">Total de Alunos Matriculados</p>
+              <p className="text-blue-100">Total de Alunos em Solicitações</p>
               <p className="text-4xl font-bold mt-1">{analytics?.total_alunos || 0}</p>
               <p className="text-blue-200 text-sm mt-2">
-                Em {analytics?.total_pedidos || 0} pedidos de matrícula
+                Em {analytics?.total_pedidos || 0} solicitações registradas
               </p>
             </div>
             <div className="bg-white/10 p-4 rounded-full">
