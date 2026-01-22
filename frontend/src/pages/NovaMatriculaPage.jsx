@@ -611,7 +611,7 @@ const NovaMatriculaPage = () => {
                     {/* Dados Complementares TOTVS */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <Label>Naturalidade (Cidade)</Label>
+                        <Label>Naturalidade (Cidade) *</Label>
                         <Input
                           value={aluno.naturalidade}
                           onChange={(e) => handleAlunoChange(index, 'naturalidade', e.target.value)}
@@ -621,7 +621,7 @@ const NovaMatriculaPage = () => {
                         />
                       </div>
                       <div>
-                        <Label>Naturalidade (UF)</Label>
+                        <Label>Naturalidade (UF) *</Label>
                         <Select
                           value={aluno.naturalidade_uf}
                           onValueChange={(v) => handleAlunoChange(index, 'naturalidade_uf', v)}
@@ -637,7 +637,7 @@ const NovaMatriculaPage = () => {
                         </Select>
                       </div>
                       <div>
-                        <Label>Sexo</Label>
+                        <Label>Sexo *</Label>
                         <Select
                           value={aluno.sexo}
                           onValueChange={(v) => handleAlunoChange(index, 'sexo', v)}
