@@ -175,7 +175,7 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/tests/test_reembolsos_api.py` - Suite de testes do Módulo de Reembolsos (atualizada com 27 testes)
 
 ## Last Updated
-2026-01-22 - Melhorias v1.1 no Módulo de Reembolsos (dados bancários, menor de idade, templates de email)
+2026-01-22 - Refatoração: Módulo de Reembolsos movido para router separado (server.py reduzido de 2.555 para 1.997 linhas)
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
