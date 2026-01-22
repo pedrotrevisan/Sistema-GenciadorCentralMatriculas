@@ -208,3 +208,50 @@ class HistoricoContatoModel(Base):
     # Relationships
     pendencia = relationship("PendenciaModel", back_populates="historico_contatos")
     usuario = relationship("UsuarioModel")
+
+
+class ReembolsoModel(Base):
+    """SQLAlchemy model for Solicitação de Reembolso"""
+    __tablename__ = "reembolsos"
+
+    id = Column(String(36), primary_key=True)
+    
+    # Dados do Aluno (independente de pedidos existentes)
+    aluno_nome = Column(String(200), nullable=False)
+    aluno_cpf = Column(String(14), nullable=True)
+    curso = Column(String(200), nullable=False)
+    turma = Column(String(100), nullable=True)
+    
+    # Dados da Solicitação
+    motivo = Column(String(100), nullable=False)
+    # Motivos: sem_escolaridade, sem_vaga, passou_bolsista, nao_tem_vaga, desistencia, outros
+    motivo_descricao = Column(Text, nullable=True)  # Descrição adicional se "outros"
+    reter_taxa = Column(Boolean, default=False)  # True se deve reter 10%
+    
+    # Chamado SGC Plus
+    numero_chamado_sgc = Column(String(50), nullable=True)  # Número de referência
+    
+    # Datas do Fluxo
+    data_abertura = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    data_retorno_financeiro = Column(DateTime, nullable=True)
+    data_provisao_pagamento = Column(DateTime, nullable=True)
+    data_pagamento = Column(DateTime, nullable=True)
+    
+    # Status do Fluxo
+    status = Column(String(50), nullable=False, default="aberto", index=True)
+    # Status: aberto, aguardando_dados_bancarios, enviado_financeiro, pago, cancelado
+    
+    observacoes = Column(Text, nullable=True)
+    
+    # Auditoria
+    criado_por_id = Column(String(36), ForeignKey("usuarios.id"), nullable=False)
+    criado_por_nome = Column(String(200), nullable=False)
+    atualizado_por_id = Column(String(36), ForeignKey("usuarios.id"), nullable=True)
+    atualizado_por_nome = Column(String(200), nullable=True)
+    
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    criado_por = relationship("UsuarioModel", foreign_keys=[criado_por_id])
+    atualizado_por = relationship("UsuarioModel", foreign_keys=[atualizado_por_id])
