@@ -152,12 +152,45 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `POST /api/importacao/executar` - Execução da importação
 
 ## Test Reports
-- `/app/test_reports/iteration_3.json` - Relatório de testes (7/7 PASS) - 2026-01-22
-- `/app/test_reports/iteration_2.json` - Relatório de testes (26/26 PASS)
-- `/app/tests/test_importacao_api.py` - Suite de testes da Importação em Lote
+- `/app/test_reports/iteration_4.json` - Central de Pendências (24/24 PASS) - 2026-01-22
+- `/app/test_reports/iteration_3.json` - Campos TOTVS + Nomenclaturas (7/7 PASS) - 2026-01-22
+- `/app/test_reports/iteration_2.json` - Importação em Lote (26/26 PASS)
+- `/app/tests/test_importacao_api.py` - Suite de testes da Importação
+- `/app/tests/test_pendencias_api.py` - Suite de testes da Central de Pendências - NOVO!
 
 ## Last Updated
-2026-01-22 - Implementados 8 novos campos TOTVS + Ajuste de nomenclaturas
+2026-01-22 - Implementada Central de Pendências Documentais
+
+## Central de Pendências Documentais (2026-01-22)
+Nova funcionalidade para gerenciar documentos pendentes dos alunos:
+
+### Tipos de Documentos (Códigos)
+- 94: Comprovante de Residência (obrigatório)
+- 96: Solicitação Desconto (opcional)
+- 97: CPF/RG Responsável Legal (se menor)
+- 131: RG Frente (obrigatório)
+- 132: RG Verso (obrigatório)
+- 136: Comprovante Escolaridade Frente (obrigatório)
+- 137: Comprovante Escolaridade Verso (obrigatório)
+- 205: CPF (opcional)
+
+### Fluxo de Status
+`Pendente` → `Aguardando Aluno` → `Em Análise` → `Aprovado` / `Rejeitado` / `Reenvio Necessário`
+
+### Endpoints da Central de Pendências
+- `GET /api/pendencias/tipos-documento` - Lista tipos de documento
+- `GET /api/pendencias/dashboard` - Dashboard de status
+- `GET /api/pendencias` - Lista pendências com filtros
+- `POST /api/pendencias` - Cria pendência
+- `GET /api/pendencias/{id}` - Detalhes da pendência
+- `PUT /api/pendencias/{id}` - Atualiza status
+- `POST /api/pendencias/{id}/contatos` - Registra contato
+- `DELETE /api/pendencias/{id}` - Exclui pendência (admin)
+
+## Scripts de Migração
+- `/app/migracao_totvs_campos.sql` - 8 novos campos do aluno
+- `/app/migracao_simples.sql` - Versão simplificada
+- `/app/migracao_pendencias.sql` - Tabelas da Central de Pendências - NOVO!
 
 ## 8 Novos Campos TOTVS (2026-01-22)
 Campos adicionados ao modelo de Aluno para compatibilidade 100% com TOTVS:
