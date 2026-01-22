@@ -113,7 +113,7 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Módulo de Reembolsos - NOVO!
 
 ### P1 (Próximos)
-- [ ] Timeline de Auditoria Visual - histórico de cada pedido
+- [x] Timeline de Auditoria Visual - histórico de cada pedido ✅
 - [ ] Refatorar pendências para router separado
 - [ ] Refatorar pedidos para router separado
 - [ ] Refatorar cadastros para router separado
