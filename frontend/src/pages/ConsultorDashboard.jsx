@@ -196,12 +196,12 @@ const ConsultorDashboard = () => {
           {pedidos.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">Nenhum pedido encontrado</p>
+              <p className="text-slate-500">Nenhuma solicitação encontrada</p>
               <Button
                 className="mt-4 bg-[#E30613] hover:bg-[#b9050f]"
                 onClick={() => navigate('/consultor/novo-pedido')}
               >
-                Criar Primeiro Pedido
+                Criar Primeira Solicitação
               </Button>
             </div>
           ) : (
