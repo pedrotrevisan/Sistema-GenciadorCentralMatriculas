@@ -114,7 +114,9 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 
 ### P1 (Próximos)
 - [ ] Timeline de Auditoria Visual - histórico de cada pedido
-- [ ] Refatoração do server.py (monolito > roteadores separados)
+- [ ] Refatorar pendências para router separado
+- [ ] Refatorar pedidos para router separado
+- [ ] Refatorar cadastros para router separado
 - [ ] Refinar máquina de estados dos pedidos
 - [ ] Filtros avançados de data na listagem
 
