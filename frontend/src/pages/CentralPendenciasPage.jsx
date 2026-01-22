@@ -82,8 +82,8 @@ export default function CentralPendenciasPage() {
   const carregarDados = async () => {
     try {
       const [dashRes, tiposRes] = await Promise.all([
-        api.get('/api/pendencias/dashboard'),
-        api.get('/api/pendencias/tipos-documento')
+        api.get('/pendencias/dashboard'),
+        api.get('/pendencias/tipos-documento')
       ]);
       setDashboard(dashRes.data);
       setTiposDocumento(tiposRes.data);
@@ -102,7 +102,7 @@ export default function CentralPendenciasPage() {
       if (filtroDocumento && filtroDocumento !== 'todos') params.append('documento_codigo', filtroDocumento);
       if (filtroNome) params.append('aluno_nome', filtroNome);
       
-      const response = await api.get(`/api/pendencias?${params.toString()}`);
+      const response = await api.get(`/pendencias?${params.toString()}`);
       setPendencias(response.data.pendencias);
       setPaginacao(response.data.paginacao);
     } catch (error) {
@@ -114,7 +114,7 @@ export default function CentralPendenciasPage() {
 
   const buscarDetalhes = async (pendenciaId) => {
     try {
-      const response = await api.get(`/api/pendencias/${pendenciaId}`);
+      const response = await api.get(`/pendencias/${pendenciaId}`);
       setModalDetalhes(response.data);
     } catch (error) {
       toast.error('Erro ao carregar detalhes');
@@ -128,7 +128,7 @@ export default function CentralPendenciasPage() {
     }
     
     try {
-      await api.post(`/api/pendencias/${modalContato.id}/contatos`, contatoForm);
+      await api.post(`/pendencias/${modalContato.id}/contatos`, contatoForm);
       toast.success('Contato registrado com sucesso');
       setModalContato(null);
       setContatoForm({ tipo_contato: 'telefone', descricao: '', resultado: '' });
@@ -141,7 +141,7 @@ export default function CentralPendenciasPage() {
 
   const atualizarStatus = async () => {
     try {
-      await api.put(`/api/pendencias/${modalStatus.id}`, statusForm);
+      await api.put(`/pendencias/${modalStatus.id}`, statusForm);
       toast.success('Status atualizado com sucesso');
       setModalStatus(null);
       setStatusForm({ status: '', observacoes: '', motivo_rejeicao: '' });
