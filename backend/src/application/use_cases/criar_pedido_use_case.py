@@ -29,11 +29,15 @@ class CriarPedidoMatriculaUseCase:
         if not dto.alunos:
             raise BusinessRuleException("Um pedido deve ter pelo menos 1 aluno")
 
-        # Valida projeto OU empresa
-        if not dto.projeto_id and not dto.empresa_id:
-            raise BusinessRuleException("Deve informar Projeto ou Empresa")
-        if dto.projeto_id and dto.empresa_id:
-            raise BusinessRuleException("Deve informar apenas Projeto OU Empresa")
+        # Valida vínculo: projeto, empresa ou brasil_mais_produtivo
+        vinculo_tipo = dto.vinculo_tipo or ('projeto' if dto.projeto_id else 'empresa')
+        
+        if vinculo_tipo == 'projeto' and not dto.projeto_id:
+            raise BusinessRuleException("Deve informar um Projeto")
+        if vinculo_tipo == 'empresa' and not dto.empresa_id:
+            raise BusinessRuleException("Deve informar uma Empresa")
+        if vinculo_tipo == 'brasil_mais_produtivo' and not dto.empresa_id:
+            raise BusinessRuleException("Deve informar a Empresa parceira do Brasil Mais Produtivo")
 
         # Verifica CPFs duplicados dentro do mesmo pedido
         cpfs_no_pedido = []
