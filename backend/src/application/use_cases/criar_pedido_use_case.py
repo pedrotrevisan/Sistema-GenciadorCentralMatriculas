@@ -104,6 +104,7 @@ class CriarPedidoMatriculaUseCase:
             projeto_nome=dto.projeto_nome,
             empresa_id=dto.empresa_id,
             empresa_nome=dto.empresa_nome,
+            vinculo_tipo=vinculo_tipo,
             alunos=alunos,
             status=StatusPedido.PENDENTE,
             observacoes=dto.observacoes
