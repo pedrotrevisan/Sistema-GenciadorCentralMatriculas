@@ -73,31 +73,40 @@ chmod +x setup.sh start.sh
 
 #### Backend (Terminal 1)
 
-```powershell
+```bash
 cd backend
-python -m venv venv
-venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-Crie o arquivo `.env`:
-```env
-DATABASE_URL=postgresql+asyncpg://phtpa_user:682889@localhost:5432/db_central_matriculas
-JWT_SECRET_KEY=sua-chave-secreta-aqui
-CORS_ORIGINS=http://localhost:3000
-```
-
-Inicie o servidor:
-```powershell
 uvicorn server:app --reload --port 8001
 ```
 
-### 3. Frontend (Terminal 2)
+#### Frontend (Terminal 2)
 
-```powershell
+```bash
 cd frontend
-npm install
+yarn install  # ou npm install
+yarn dev      # ou npm run dev
 ```
+
+**Banco de dados:** SQLite é usado automaticamente (arquivo `/data/database.db`)
+
+---
+
+## 🌐 URLs do Sistema
+
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:8000
+- **Documentação Interativa:** http://localhost:8000/docs
+- **API Docs (ReDoc):** http://localhost:8000/redoc
+
+---
+
+## 🔐 Credenciais Padrão
+
+| Perfil | Email | Senha |
+|--------|-------|-------|
+| **Admin** | admin@senai.br | admin123 |
+| **Assistente** | assistente@senai.br | assistente123 |
+| **Consultor** | consultor@senai.br | consultor123 |
 
 Crie o arquivo `.env`:
 ```env
