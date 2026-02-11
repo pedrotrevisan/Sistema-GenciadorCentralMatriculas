@@ -108,6 +108,113 @@ yarn dev      # ou npm run dev
 | **Assistente** | assistente@senai.br | assistente123 |
 | **Consultor** | consultor@senai.br | consultor123 |
 
+---
+
+## 🎯 Funcionalidades Principais
+
+### 📝 Gestão de Solicitações
+- ✅ CRUD completo de pedidos de matrícula
+- ✅ Suporte a 20+ campos compatíveis com TOTVS
+- ✅ Tipos de vínculo: Projeto, Empresa, Brasil Mais Produtivo
+- ✅ Integração com ViaCEP (preenchimento automático de endereço)
+- ✅ Timeline de auditoria visual
+- ✅ Importação em lote via planilhas
+
+### 🤖 OCR Inteligente (NOVO!)
+- ✅ **Extração automática de dados** de CNH e RG
+- ✅ **100% Offline** - funciona sem internet (EasyOCR)
+- ✅ **Múltiplos engines:** EasyOCR (padrão), Tesseract (fallback), Google Vision (opcional)
+- ✅ **Suporte a:** JPG, PNG, PDF
+- ✅ **Campos extraídos:** Nome, CPF, RG, Data de Nascimento, Nome da Mãe, etc.
+- ✅ **Auto-preenchimento** do formulário de matrícula
+
+### 📋 Central de Pendências
+- ✅ Gestão de documentos faltantes
+- ✅ Histórico de contatos com alunos
+- ✅ Status e prazos de entrega
+
+### 💰 Módulo de Reembolsos
+- ✅ Gestão completa do fluxo de reembolso
+- ✅ Dados bancários e comprovantes
+- ✅ Templates de email personalizados
+
+### 📊 Dashboard Unificado
+- ✅ KPIs e visão geral de todas as operações
+- ✅ Gráficos interativos (Recharts)
+- ✅ Filtros avançados por status, data, etc.
+
+---
+
+## 🔧 Configuração do Sistema
+
+### Banco de Dados
+
+**Padrão: SQLite** (sem configuração)
+```
+Arquivo: /data/database.db
+Backup: Copiar o arquivo .db
+```
+
+**Opcional: PostgreSQL** (para produção)
+```env
+# Edite backend/.env
+DATABASE_URL="postgresql+asyncpg://user:pass@host:5432/dbname"
+```
+
+### OCR Engine
+
+**Padrão: EasyOCR** (offline, gratuito)
+```env
+# Edite backend/.env
+OCR_ENGINE="easyocr"  # Padrão
+# OCR_ENGINE="tesseract"  # Mais rápido, menos preciso
+# OCR_ENGINE="google_vision"  # Mais preciso, requer API key
+```
+
+**Google Cloud Vision** (melhor precisão):
+```env
+OCR_ENGINE="google_vision"
+GOOGLE_APPLICATION_CREDENTIALS="/path/to/credentials.json"
+GOOGLE_CLOUD_PROJECT_ID="your-project-id"
+```
+
+---
+
+## 📦 Estrutura do Projeto
+
+```
+SYNAPSE/
+├── setup.py / setup.bat / setup.sh  # Scripts de instalação
+├── start.bat / start.sh             # Scripts de inicialização
+├── backend/                         # API FastAPI
+│   ├── server.py                    # Servidor principal
+│   ├── src/
+│   │   ├── domain/                  # Entidades e regras de negócio
+│   │   ├── application/             # Casos de uso
+│   │   ├── infrastructure/          # Banco, autenticação
+│   │   ├── routers/                 # Endpoints da API
+│   │   └── services/                # Serviços (OCR, etc)
+│   └── tests/                       # Testes automatizados
+├── frontend/                        # Interface React
+│   └── src/
+│       ├── pages/                   # Páginas do sistema
+│       ├── components/              # Componentes reutilizáveis
+│       └── services/                # Chamadas API
+├── data/                            # Banco SQLite
+│   └── database.db
+└── README_INSTALL.md                # Guia detalhado
+```
+
+---
+
+## 🐛 Solução de Problemas
+
+Consulte o [Guia de Instalação Detalhado](/README_INSTALL.md) para:
+- Problemas comuns e soluções
+- Configuração avançada
+- Deploy em produção
+- Backup e restauração
+
 Crie o arquivo `.env`:
 ```env
 REACT_APP_BACKEND_URL=http://localhost:8001
