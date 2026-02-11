@@ -35,12 +35,12 @@ class StatusReservaEnum(str, enum.Enum):
     LIBERADA = "liberada"            # Vaga liberada (aluno desistiu/trancou)
 
 
-class CursoModel(Base):
+class CursoTurmaModel(Base):
     """
-    Modelo de Curso
+    Modelo de Curso (Sistema de Gestão de Vagas)
     Representa os cursos oferecidos pela instituição
     """
-    __tablename__ = "cursos"
+    __tablename__ = "cursos_turmas"
     
     id = Column(String, primary_key=True)
     nome = Column(String(200), nullable=False, unique=True)
@@ -69,7 +69,7 @@ class TurmaModel(Base):
     __tablename__ = "turmas"
     
     id = Column(String, primary_key=True)
-    curso_id = Column(String, ForeignKey("cursos.id", ondelete="CASCADE"), nullable=False)
+    curso_id = Column(String, ForeignKey("cursos_turmas.id", ondelete="CASCADE"), nullable=False)
     codigo = Column(String(50), unique=True, nullable=False, index=True)
     
     # Capacidade e controle de vagas
@@ -92,7 +92,7 @@ class TurmaModel(Base):
     atualizado_em = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relacionamentos
-    curso = relationship("CursoModel", back_populates="turmas")
+    curso = relationship("CursoTurmaModel", back_populates="turmas")
     reservas = relationship("ReservaVagaModel", back_populates="turma", cascade="all, delete-orphan")
     
     # Constraints

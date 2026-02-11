@@ -52,7 +52,7 @@ async def init_db():
     )
     # Import new turmas models
     from src.infrastructure.persistence.models_turmas import (
-        CursoModel as CursoTurmaModel,
+        CursoTurmaModel,
         TurmaModel,
         ReservaVagaModel
     )

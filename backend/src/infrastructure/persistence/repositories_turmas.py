@@ -7,7 +7,7 @@ from sqlalchemy import select, and_, or_, func
 from datetime import datetime
 
 from src.domain.entities_turmas import Curso, Turma, ReservaVaga, StatusReserva, StatusTurma
-from src.infrastructure.persistence.models_turmas import CursoModel, TurmaModel, ReservaVagaModel
+from src.infrastructure.persistence.models_turmas import CursoTurmaModel, TurmaModel, ReservaVagaModel
 
 
 class CursoRepository:
@@ -18,7 +18,7 @@ class CursoRepository:
     
     async def salvar(self, curso: Curso) -> None:
         """Salva ou atualiza um curso"""
-        curso_model = CursoModel(
+        curso_model = CursoTurmaModel(
             id=curso.id,
             nome=curso.nome,
             codigo=curso.codigo,
@@ -36,7 +36,7 @@ class CursoRepository:
     async def buscar_por_id(self, curso_id: str) -> Optional[Curso]:
         """Busca curso por ID"""
         result = await self.session.execute(
-            select(CursoModel).where(CursoModel.id == curso_id)
+            select(CursoTurmaModel).where(CursoTurmaModel.id == curso_id)
         )
         curso_model = result.scalar_one_or_none()
         
@@ -48,7 +48,7 @@ class CursoRepository:
     async def buscar_por_codigo(self, codigo: str) -> Optional[Curso]:
         """Busca curso por código"""
         result = await self.session.execute(
-            select(CursoModel).where(CursoModel.codigo == codigo)
+            select(CursoTurmaModel).where(CursoTurmaModel.codigo == codigo)
         )
         curso_model = result.scalar_one_or_none()
         
@@ -60,7 +60,7 @@ class CursoRepository:
     async def listar_ativos(self) -> List[Curso]:
         """Lista todos os cursos ativos"""
         result = await self.session.execute(
-            select(CursoModel).where(CursoModel.ativo == 1).order_by(CursoModel.nome)
+            select(CursoTurmaModel).where(CursoTurmaModel.ativo == 1).order_by(CursoTurmaModel.nome)
         )
         cursos_model = result.scalars().all()
         
@@ -69,13 +69,13 @@ class CursoRepository:
     async def listar_todos(self) -> List[Curso]:
         """Lista todos os cursos"""
         result = await self.session.execute(
-            select(CursoModel).order_by(CursoModel.nome)
+            select(CursoTurmaModel).order_by(CursoTurmaModel.nome)
         )
         cursos_model = result.scalars().all()
         
         return [self._model_to_entity(c) for c in cursos_model]
     
-    def _model_to_entity(self, model: CursoModel) -> Curso:
+    def _model_to_entity(self, model: CursoTurmaModel) -> Curso:
         """Converte model para entidade"""
         from src.domain.entities_turmas import Modalidade
         
