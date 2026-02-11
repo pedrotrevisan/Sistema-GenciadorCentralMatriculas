@@ -52,20 +52,26 @@ start.bat  # Inicia o sistema
 
 ---
 
-## Opção 1: Com PostgreSQL (Recomendado)
+## ⚡ Guia Rápido de Instalação
 
-### 1. Configurar PostgreSQL
+### Opção 1: Setup Automático (Recomendado)
 
-```sql
--- Criar banco de dados
-CREATE DATABASE db_central_matriculas;
-
--- Criar usuário (opcional)
-CREATE USER phtpa_user WITH PASSWORD '682889';
-GRANT ALL PRIVILEGES ON DATABASE db_central_matriculas TO phtpa_user;
+**Windows:**
+```batch
+setup.bat   # Instala todas as dependências
+start.bat   # Inicia backend + frontend
 ```
 
-### 2. Backend (Terminal 1)
+**Linux/Mac:**
+```bash
+chmod +x setup.sh start.sh
+./setup.sh   # Instala todas as dependências
+./start.sh   # Inicia backend + frontend
+```
+
+### Opção 2: Instalação Manual
+
+#### Backend (Terminal 1)
 
 ```powershell
 cd backend
