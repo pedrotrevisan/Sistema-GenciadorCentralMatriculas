@@ -1,16 +1,19 @@
 """Router de OCR - Extração de dados de documentos"""
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
-from PIL import Image
-import pytesseract
-import io
-import re
 from typing import Optional
 from datetime import datetime
+import logging
 
 from src.domain.entities import Usuario
 from .dependencies import get_current_user
+from src.services.ocr_service import OCRService, DocumentParser
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ocr", tags=["OCR"])
+
+# Singleton do OCR Service
+ocr_service = OCRService()
 
 
 def extrair_cpf(texto: str) -> Optional[str]:
@@ -178,97 +181,103 @@ async def extrair_dados_documento(
     usuario: Usuario = Depends(get_current_user)
 ):
     """
-    Extrai dados de um documento (CNH, RG) usando OCR.
-    Aceita imagens (JPG, PNG) e PDF.
+    🚀 Extrai dados de documentos brasileiros (CNH, RG) usando OCR inteligente.
+    
+    **Features:**
+    - 📷 Suporta: JPG, PNG, PDF
+    - 🤖 Múltiplos engines: EasyOCR (padrão), Tesseract (fallback)
+    - 🇧🇷 Otimizado para documentos brasileiros
+    - ⚡ Processamento offline (sem necessidade de API externa)
+    
+    **Tamanho máximo:** 10MB
     """
     # Validar tipo de arquivo
     tipos_aceitos = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
     if arquivo.content_type not in tipos_aceitos:
         raise HTTPException(
-            status_code=400, 
-            detail=f"Tipo de arquivo não suportado. Use: JPG, PNG ou PDF"
+            status_code=400,
+            detail=f"❌ Tipo de arquivo não suportado. Use: JPG, PNG ou PDF"
         )
     
     try:
+        inicio = datetime.now()
+        
         # Ler arquivo
         conteudo = await arquivo.read()
         
+        # Validar tamanho (10MB máximo)
+        tamanho_mb = len(conteudo) / (1024 * 1024)
+        if tamanho_mb > 10:
+            raise HTTPException(
+                status_code=400,
+                detail=f"❌ Arquivo muito grande ({tamanho_mb:.1f}MB). Máximo: 10MB"
+            )
+        
+        logger.info(f"Processando arquivo: {arquivo.filename} ({tamanho_mb:.2f}MB)")
+        
         # Converter PDF para imagem se necessário
         if arquivo.content_type == 'application/pdf':
-            from pdf2image import convert_from_bytes
-            imagens = convert_from_bytes(conteudo)
-            if not imagens:
-                raise HTTPException(status_code=400, detail="Não foi possível processar o PDF")
-            imagem = imagens[0]  # Primeira página
-        else:
-            imagem = Image.open(io.BytesIO(conteudo))
+            try:
+                from pdf2image import convert_from_bytes
+                imagens = convert_from_bytes(conteudo)
+                if not imagens:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="❌ Não foi possível processar o PDF"
+                    )
+                # Converter primeira página para bytes
+                from PIL import Image
+                import io
+                img_byte_arr = io.BytesIO()
+                imagens[0].save(img_byte_arr, format='PNG')
+                conteudo = img_byte_arr.getvalue()
+            except ImportError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="❌ Suporte a PDF não disponível. Use imagens JPG ou PNG."
+                )
         
-        # Converter para RGB se necessário
-        if imagem.mode != 'RGB':
-            imagem = imagem.convert('RGB')
-        
-        # Melhorar qualidade da imagem para OCR
-        # Aumentar contraste e tamanho
-        from PIL import ImageEnhance, ImageFilter
-        
-        # Redimensionar se muito pequena
-        largura, altura = imagem.size
-        if largura < 1000:
-            ratio = 1000 / largura
-            imagem = imagem.resize((int(largura * ratio), int(altura * ratio)), Image.Resampling.LANCZOS)
-        
-        # Aumentar contraste
-        enhancer = ImageEnhance.Contrast(imagem)
-        imagem = enhancer.enhance(1.5)
-        
-        # Aplicar nitidez
-        imagem = imagem.filter(ImageFilter.SHARPEN)
-        
-        # Executar OCR com configuração para português
-        config = '--oem 3 --psm 6 -l por'
-        texto = pytesseract.image_to_string(imagem, config=config)
+        # Extrair texto usando OCR Service
+        texto, confianca_ocr, engine_usado = ocr_service.extrair_texto(conteudo)
         
         # Detectar tipo de documento
-        tipo_documento = detectar_tipo_documento(texto)
+        tipo_documento = DocumentParser.detectar_tipo_documento(texto)
         
-        # Extrair dados
-        dados = {
-            "tipo_documento": tipo_documento,
-            "texto_bruto": texto[:500],  # Primeiros 500 chars para debug
-            "nome": extrair_nome(texto),
-            "cpf": extrair_cpf(texto),
-            "rg": extrair_rg(texto),
-            "rg_orgao_emissor": extrair_orgao_emissor(texto),
-            "rg_uf": extrair_uf(texto),
-            "data_nascimento": extrair_data_nascimento(texto),
-            "nome_pai": extrair_nome_pai(texto),
-            "nome_mae": extrair_nome_mae(texto),
-            "naturalidade": extrair_naturalidade(texto),
-            "naturalidade_uf": extrair_uf(texto),
-            "campos_extraidos": 0,
-            "confianca": "baixa"
-        }
+        # Parsear dados estruturados
+        dados = DocumentParser.parsear_documento(texto, tipo_documento)
         
-        # Contar campos extraídos
-        campos = ['nome', 'cpf', 'rg', 'data_nascimento', 'nome_pai', 'nome_mae', 'naturalidade']
-        dados["campos_extraidos"] = sum(1 for c in campos if dados.get(c))
+        # Adicionar metadados
+        tempo_processamento = (datetime.now() - inicio).total_seconds()
+        dados.update({
+            "texto_bruto": texto[:500] if len(texto) > 500 else texto,
+            "confianca_ocr": round(confianca_ocr, 2),
+            "engine_usado": engine_usado,
+            "tempo_processamento_segundos": round(tempo_processamento, 2),
+            "tamanho_arquivo_mb": round(tamanho_mb, 2)
+        })
         
-        # Calcular confiança
-        if dados["campos_extraidos"] >= 5:
-            dados["confianca"] = "alta"
-        elif dados["campos_extraidos"] >= 3:
-            dados["confianca"] = "media"
-        else:
-            dados["confianca"] = "baixa"
+        logger.info(
+            f"✅ Documento processado: {tipo_documento}, "
+            f"{dados['campos_extraidos']} campos, "
+            f"confiança: {dados['confianca']}, "
+            f"tempo: {tempo_processamento:.2f}s"
+        )
         
         return {
             "sucesso": True,
-            "mensagem": f"Documento {tipo_documento} processado. {dados['campos_extraidos']} campos extraídos.",
+            "mensagem": (
+                f"✅ Documento {tipo_documento} processado com sucesso! "
+                f"{dados['campos_extraidos']} campos extraídos "
+                f"(confiança: {dados['confianca']})"
+            ),
             "dados": dados
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"❌ Erro ao processar documento: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Erro ao processar documento: {str(e)}"
+            detail=f"❌ Erro ao processar documento: {str(e)}"
         )
