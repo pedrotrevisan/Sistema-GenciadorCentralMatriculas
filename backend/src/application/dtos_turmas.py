@@ -143,7 +143,7 @@ class DisponibilidadeResponseDTO(BaseModel):
     aceita_inscricoes: bool
 
 
-class TurmaDisponivel DTO(BaseModel):
+class TurmaDisponivelDTO(BaseModel):
     """DTO para turma disponível"""
     turma_id: str
     codigo: str
