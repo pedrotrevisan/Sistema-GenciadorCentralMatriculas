@@ -50,6 +50,12 @@ async def init_db():
         CursoModel, ProjetoModel, EmpresaModel, TipoDocumentoModel,
         PendenciaModel, HistoricoContatoModel, ReembolsoModel
     )
+    # Import new turmas models
+    from src.infrastructure.persistence.models_turmas import (
+        CursoModel as CursoTurmaModel,
+        TurmaModel,
+        ReservaVagaModel
+    )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
