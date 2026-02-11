@@ -1,21 +1,54 @@
-# Sistema Central de Matrículas - SENAI CIMATEC
+# 🚀 SYNAPSE - Sistema Central de Matrículas
 
-Sistema web para gerenciamento de matrículas com Clean Architecture, RBAC e suporte a PostgreSQL.
+## Sistema Web Portátil e Inteligente para Gestão de Matrículas SENAI CIMATEC
 
-## Arquitetura
-
-- **Backend:** FastAPI + SQLAlchemy (Async) + PostgreSQL/SQLite
-- **Frontend:** React + Tailwind CSS + Shadcn/UI
-- **Autenticação:** JWT com RBAC (Admin, Assistente, Consultor)
+[![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite)](https://sqlite.org)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/Frontend-React-61DAFB?logo=react)](https://react.dev)
+[![OCR](https://img.shields.io/badge/OCR-EasyOCR-FF6B6B?logo=python)](https://github.com/JaidedAI/EasyOCR)
 
 ---
 
-## Instalação Local
+## ✨ Novidades - Sistema Ultra Portátil!
 
-### Pré-requisitos
-- Python 3.10+
-- Node.js 18+
-- PostgreSQL 14+ (recomendado) ou SQLite (desenvolvimento)
+### 🎯 **Zero Configuração**
+- ✅ **Banco SQLite** (arquivo único - sem instalação de banco!)
+- ✅ **OCR Offline** com EasyOCR (extração de CNH/RG sem API externa)
+- ✅ **Scripts automáticos** de setup para Windows, Linux e Mac
+- ✅ **Plug & Play** - copie a pasta e execute!
+
+### 🚀 **Instalação Rápida**
+
+```bash
+# Windows
+setup.bat  # Instala tudo automaticamente
+start.bat  # Inicia o sistema
+
+# Linux/Mac
+./setup.sh   # Instala tudo automaticamente
+./start.sh   # Inicia o sistema
+```
+
+**Pronto! Acesse:** http://localhost:3000
+
+---
+
+## 🏗️ Arquitetura
+
+- **Backend:** FastAPI + SQLAlchemy (Async) + SQLite/PostgreSQL
+- **Frontend:** React + Vite + Tailwind CSS + Shadcn/UI
+- **Autenticação:** JWT com RBAC (Admin, Assistente, Consultor)
+- **OCR:** EasyOCR (offline) + Tesseract (fallback) + Google Vision (opcional)
+
+---
+
+## 📋 Pré-requisitos Mínimos
+
+- **Python 3.8+** → [Download](https://python.org)
+- **Node.js 16+** → [Download](https://nodejs.org)
+
+**Opcional** (para melhor OCR):
+- Tesseract OCR → [Instruções de instalação](/README_INSTALL.md#opcional-para-melhor-desempenho-ocr)
 
 ---
 
