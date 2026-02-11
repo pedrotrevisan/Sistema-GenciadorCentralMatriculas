@@ -3,12 +3,12 @@ fastapi
 uvicorn
 python-dotenv
 
-# Database - PostgreSQL/SQLAlchemy
+# Database - SQLite (padrão) / PostgreSQL (opcional)
 sqlalchemy[asyncio]
+aiosqlite
 asyncpg
 psycopg2-binary
 greenlet
-aiosqlite
 
 # Authentication
 python-jose[cryptography]
@@ -19,12 +19,20 @@ pydantic
 email-validator
 
 # Excel export
-openpyxl
+openpyxl==3.1.5
+pandas==2.3.3
 
 # HTTP client
 httpx
 
+# OCR - Offline e Online
+easyocr
+pytesseract
+pillow
+pdf2image
+
+# Google Cloud Vision (Opcional - para melhor precisão)
+# google-cloud-vision
+
 # Others
 python-multipart
-openpyxl==3.1.5
-pandas==2.3.3
