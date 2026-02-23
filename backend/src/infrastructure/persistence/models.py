@@ -63,11 +63,17 @@ class PedidoModel(Base):
     motivo_rejeicao = Column(Text, nullable=True)
     data_exportacao = Column(DateTime, nullable=True)
     exportado_por = Column(String(36), nullable=True)
+    
+    # Campos de atribuição
+    responsavel_id = Column(String(36), ForeignKey("usuarios.id"), nullable=True, index=True)
+    responsavel_nome = Column(String(200), nullable=True)
+    prioridade = Column(String(20), nullable=True, default="normal")  # baixa, normal, alta, urgente
+    
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
-    consultor = relationship("UsuarioModel", back_populates="pedidos")
+    consultor = relationship("UsuarioModel", back_populates="pedidos", foreign_keys=[consultor_id])
     alunos = relationship("AlunoModel", back_populates="pedido", cascade="all, delete-orphan")
 
 
