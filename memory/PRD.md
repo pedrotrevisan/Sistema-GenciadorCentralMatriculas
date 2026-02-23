@@ -185,7 +185,7 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/backend/tests/test_contatos_api.py` - Suite de testes do módulo de Contatos - NOVO!
 
 ## Last Updated
-2026-02-23 - Sistema de Alertas de Retornos implementado (banner + popover no header)
+2026-02-23 - Kanban Board interativo implementado com drag & drop (@dnd-kit)
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
