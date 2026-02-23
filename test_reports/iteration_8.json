@@ -1,0 +1,113 @@
+{
+  "summary": "Completed comprehensive testing of Fase 2 - Gestão de Pendências Documentais endpoints. All 25 backend API tests passed (100%). Fixed critical bug in repository where session.add() was used instead of session.merge() for update operations, causing UNIQUE constraint failures on document submission.",
+
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/documentos/{pendencia_id}/enviar",
+        "issue": "Repository's salvar() method used session.add() instead of session.merge() causing UNIQUE constraint failure on updates - FIXED",
+        "priority": "CRITICAL",
+        "file": "/app/backend/src/infrastructure/persistence/repositories_documentos.py",
+        "fix_applied": "Changed session.add(pendencia_model) to await self.session.merge(pendencia_model)"
+      }
+    ],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_documentos_api.py",
+    "/app/test_reports/pytest/pytest_documentos.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Repository pattern implementation had a bug - salvar() should use merge() for upsert behavior, not add()"
+  ],
+
+  "updated_files": [
+    "/app/backend/src/infrastructure/persistence/repositories_documentos.py",
+    "/app/backend/tests/test_documentos_api.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (25/25 tests passed)"
+  },
+
+  "test_credentials": {
+    "admin": "admin@senai.br / admin123",
+    "assistente": "assistente@senai.br / assistente123"
+  },
+
+  "seed_data_creation": "Test data created with TEST_ prefix for easy identification",
+
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "Fase 2 - Gestão de Pendências Documentais is fully functional. All CRUD operations, statistics, and BI dashboard endpoints working correctly.",
+
+  "tested_endpoints": {
+    "reference_endpoints": {
+      "GET /api/documentos/tipos": "PASS - Returns 17 document types with value/label",
+      "GET /api/documentos/status": "PASS - Returns 6 statuses with value/label/color",
+      "GET /api/documentos/prioridades": "PASS - Returns 4 priorities (baixa, media, alta, urgente)"
+    },
+    "statistics_endpoints": {
+      "GET /api/documentos/stats/resumo": "PASS - Returns total, pendentes, enviados, em_analise, aprovados, recusados, expirados, taxa_aprovacao, total_em_aberto",
+      "GET /api/documentos/stats/por-tipo": "PASS - Returns stats grouped by document type",
+      "GET /api/documentos/stats/vencendo": "PASS - Returns documents expiring within specified days"
+    },
+    "bi_dashboard_endpoints": {
+      "GET /api/documentos/bi/matriculas": "PASS - Returns KPIs: total_pedidos, pedidos_mes, taxa_conversao, por_status",
+      "GET /api/documentos/bi/evolucao": "PASS - Returns monthly evolution data for charts",
+      "GET /api/documentos/bi/reembolsos": "PASS - Returns reembolso KPIs: total, abertos, aguardando, no_financeiro, pagos, pendentes",
+      "GET /api/documentos/bi/pendencias": "PASS - Returns pendencias KPIs: total, pendentes, em_aberto, taxa_aprovacao",
+      "GET /api/documentos/bi/completo": "PASS - Returns complete dashboard with matriculas, evolucao_mensal, reembolsos, pendencias, resumo"
+    },
+    "crud_operations": {
+      "POST /api/documentos": "PASS - Creates new pendencia with pedido_id, tipo, obrigatorio, prioridade, prazo_dias, descricao",
+      "POST /api/documentos/padrao/{pedido_id}": "PASS - Creates 5 standard pendencias (rg_completo, cpf, comprovante_residencia, foto_3x4, historico_escolar)",
+      "GET /api/documentos/pedido/{pedido_id}": "PASS - Lists all pendencias for a pedido with total, pendentes, completo stats",
+      "GET /api/documentos/{pendencia_id}": "PASS - Returns single pendencia details",
+      "GET /api/documentos/{pendencia_id} (404)": "PASS - Returns 404 for non-existent pendencia"
+    },
+    "workflow_operations": {
+      "POST /api/documentos/{pendencia_id}/enviar": "PASS - Submits document with arquivo_url, arquivo_nome, arquivo_tamanho",
+      "POST /api/documentos/{pendencia_id}/enviar (duplicate)": "PASS - Returns 400 if already submitted",
+      "POST /api/documentos/{pendencia_id}/validar (aprovar)": "PASS - Approves document, sets status to 'aprovado'",
+      "POST /api/documentos/{pendencia_id}/validar (recusar)": "PASS - Rejects document with motivo, sets status to 'recusado'",
+      "POST /api/documentos/{pendencia_id}/validar (sem motivo)": "PASS - Returns 400 when rejecting without motivo",
+      "POST /api/documentos/{pendencia_id}/validar (não enviado)": "PASS - Returns 422 when validating non-submitted document"
+    },
+    "validation_queue": {
+      "GET /api/documentos/validacao/fila": "PASS - Returns queue of documents awaiting validation"
+    },
+    "authentication": {
+      "No auth header": "PASS - Returns 401 Unauthorized",
+      "Assistente role access": "PASS - Assistente can access all endpoints"
+    }
+  },
+
+  "fixes_applied": {
+    "repository_merge_fix": {
+      "file": "/app/backend/src/infrastructure/persistence/repositories_documentos.py",
+      "line": 47,
+      "before": "self.session.add(pendencia_model)",
+      "after": "await self.session.merge(pendencia_model)",
+      "reason": "session.add() causes UNIQUE constraint failure when updating existing records; merge() handles both insert and update"
+    }
+  },
+
+  "available_document_types": [
+    "rg_frente", "rg_verso", "rg_completo", "cpf", "certidao_nascimento", "certidao_casamento",
+    "historico_escolar", "comprovante_escolaridade", "certificado_conclusao", "declaracao_matricula",
+    "comprovante_residencia", "comprovante_renda", "foto_3x4", "foto_documento", "laudo_medico",
+    "declaracao_responsavel", "outros"
+  ]
+}
