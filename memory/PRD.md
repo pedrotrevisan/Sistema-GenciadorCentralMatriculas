@@ -123,12 +123,14 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Cadastro de Cursos melhorado (Tipo, Modalidade, Área, Carga Horária) ✅
 - [x] Refatorar cadastros para router separado (cadastros.py) ✅
 - [x] Apoio Cognitivo ("Meu Dia", Base de Conhecimento) ✅ (2026-02-23)
+- [x] Painel de Conta do Usuário (alterar senha, perfil) ✅ (2026-02-23)
+- [x] Sistema de Atribuições/Chamados (Caixa de Entrada) ✅ (2026-02-23)
 - [ ] Filtros por Data nas listagens
 - [ ] Refatorar pedidos para router separado
 - [ ] Refinar máquina de estados dos pedidos
 
 ### P2 (Futuro)
-- [ ] Notificações automáticas por email
+- [x] Notificações por email (SMTP Outlook) - ESTRUTURA PRONTA ✅ (2026-02-23)
 - [ ] Controle Orçamentário para projetos
 - [ ] Smart Sidebar contextual no formulário
 - [ ] Integração com API de CEP (ViaCEP)
