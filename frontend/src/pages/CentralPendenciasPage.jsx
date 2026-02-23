@@ -1370,6 +1370,17 @@ export default function CentralPendenciasPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Atribuição */}
+      <AtribuirResponsavelModal
+        isOpen={modalAtribuir.isOpen}
+        onClose={() => setModalAtribuir({ isOpen: false, pendencia: null })}
+        tipo="pendencia"
+        itemId={modalAtribuir.pendencia?.id}
+        itemTitulo={`${modalAtribuir.pendencia?.documento_nome || modalAtribuir.pendencia?.documento_codigo} - ${modalAtribuir.pendencia?.aluno_nome}`}
+        responsavelAtual={modalAtribuir.pendencia?.responsavel_id}
+        onSuccess={handleAtribuicaoSuccess}
+      />
     </div>
   );
 }
