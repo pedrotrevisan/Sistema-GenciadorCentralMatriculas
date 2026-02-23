@@ -196,7 +196,7 @@ class ExcluirContatoUseCase:
             contato_id: ID do contato
             usuario: Usuário que está excluindo (deve ser admin)
         """
-        if usuario.role != 'admin':
+        if usuario.role.value != 'admin':
             raise PermissionError("Apenas administradores podem excluir contatos")
         
         entity = await self.repository.buscar_por_id(contato_id)
