@@ -4,6 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { cursosAPI, projetosAPI, empresasAPI } from '../services/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
+import { Badge } from '../components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { toast } from 'sonner';
 import {
   GraduationCap,
@@ -12,10 +18,15 @@ import {
   Plus,
   Pencil,
   Trash2,
-  ArrowLeft,
   Save,
   X,
-  LayoutDashboard
+  Search,
+  Filter,
+  Clock,
+  Monitor,
+  MapPin,
+  RotateCcw,
+  CheckCircle
 } from 'lucide-react';
 
 const GestaoCadastrosPage = () => {
@@ -28,11 +39,31 @@ const GestaoCadastrosPage = () => {
   const [cursos, setCursos] = useState([]);
   const [projetos, setProjetos] = useState([]);
   const [empresas, setEmpresas] = useState([]);
+  const [opcoesCursos, setOpcoesCursos] = useState({ tipos: [], modalidades: [], areas: [] });
+  const [estatisticasCursos, setEstatisticasCursos] = useState(null);
+  
+  // Filtros
+  const [filtros, setFiltros] = useState({
+    busca: '',
+    tipo: '',
+    modalidade: '',
+    area: '',
+    ativo: true
+  });
   
   // Form states
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [formData, setFormData] = useState({ nome: '', descricao: '', cnpj: '' });
+  const [formData, setFormData] = useState({ 
+    nome: '', 
+    descricao: '', 
+    cnpj: '',
+    tipo: '',
+    modalidade: '',
+    area: '',
+    carga_horaria: '',
+    duracao: ''
+  });
 
   useEffect(() => {
     if (user?.role !== 'admin') {
@@ -40,23 +71,57 @@ const GestaoCadastrosPage = () => {
       return;
     }
     loadData();
+    loadOpcoesCursos();
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (activeTab === 'cursos') {
+      loadCursos();
+    }
+  }, [filtros, activeTab]);
+
+  const loadOpcoesCursos = async () => {
+    try {
+      const response = await cursosAPI.getOpcoes();
+      setOpcoesCursos(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar opções de cursos');
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [cursosRes, projetosRes, empresasRes] = await Promise.all([
-        cursosAPI.listar(),
+      const [cursosRes, projetosRes, empresasRes, statsRes] = await Promise.all([
+        cursosAPI.listar({ ativo: filtros.ativo }),
         projetosAPI.listar(),
-        empresasAPI.listar()
+        empresasAPI.listar(),
+        cursosAPI.getEstatisticas()
       ]);
       setCursos(cursosRes.data);
       setProjetos(projetosRes.data);
       setEmpresas(empresasRes.data);
+      setEstatisticasCursos(statsRes.data);
     } catch (error) {
       toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCursos = async () => {
+    try {
+      const params = {};
+      if (filtros.busca) params.busca = filtros.busca;
+      if (filtros.tipo) params.tipo = filtros.tipo;
+      if (filtros.modalidade) params.modalidade = filtros.modalidade;
+      if (filtros.area) params.area = filtros.area;
+      if (filtros.ativo !== null) params.ativo = filtros.ativo;
+      
+      const response = await cursosAPI.listar(params);
+      setCursos(response.data);
+    } catch (error) {
+      toast.error('Erro ao carregar cursos');
     }
   };
 
@@ -69,18 +134,18 @@ const GestaoCadastrosPage = () => {
     }
   };
 
-  const getAPI = () => {
-    switch (activeTab) {
-      case 'cursos': return cursosAPI;
-      case 'projetos': return projetosAPI;
-      case 'empresas': return empresasAPI;
-      default: return null;
-    }
-  };
-
   const handleAdd = () => {
     setEditingItem(null);
-    setFormData({ nome: '', descricao: '', cnpj: '' });
+    setFormData({ 
+      nome: '', 
+      descricao: '', 
+      cnpj: '',
+      tipo: '',
+      modalidade: '',
+      area: '',
+      carga_horaria: '',
+      duracao: ''
+    });
     setShowForm(true);
   };
 
@@ -89,7 +154,12 @@ const GestaoCadastrosPage = () => {
     setFormData({ 
       nome: item.nome, 
       descricao: item.descricao || '', 
-      cnpj: item.cnpj || '' 
+      cnpj: item.cnpj || '',
+      tipo: item.tipo || '',
+      modalidade: item.modalidade || '',
+      area: item.area || '',
+      carga_horaria: item.carga_horaria || '',
+      duracao: item.duracao || ''
     });
     setShowForm(true);
   };
@@ -98,11 +168,27 @@ const GestaoCadastrosPage = () => {
     if (!window.confirm(`Deseja desativar "${item.nome}"?`)) return;
     
     try {
-      await getAPI().deletar(item.id);
+      if (activeTab === 'cursos') {
+        await cursosAPI.deletar(item.id);
+      } else if (activeTab === 'projetos') {
+        await projetosAPI.deletar(item.id);
+      } else {
+        await empresasAPI.deletar(item.id);
+      }
       toast.success('Item desativado com sucesso');
       loadData();
     } catch (error) {
       toast.error('Erro ao desativar item');
+    }
+  };
+
+  const handleAtivar = async (item) => {
+    try {
+      await cursosAPI.ativar(item.id);
+      toast.success('Curso reativado com sucesso');
+      loadData();
+    } catch (error) {
+      toast.error('Erro ao reativar curso');
     }
   };
 
@@ -114,23 +200,41 @@ const GestaoCadastrosPage = () => {
     }
 
     try {
-      const api = getAPI();
-      const data = { nome: formData.nome };
+      let data = { nome: formData.nome };
       
-      if (activeTab === 'empresas') {
-        data.cnpj = formData.cnpj || null;
-      } else {
+      if (activeTab === 'cursos') {
+        data = {
+          ...data,
+          descricao: formData.descricao || null,
+          tipo: formData.tipo || null,
+          modalidade: formData.modalidade || null,
+          area: formData.area || null,
+          carga_horaria: formData.carga_horaria || null,
+          duracao: formData.duracao || null
+        };
+        
+        if (editingItem) {
+          await cursosAPI.atualizar(editingItem.id, data);
+        } else {
+          await cursosAPI.criar(data);
+        }
+      } else if (activeTab === 'projetos') {
         data.descricao = formData.descricao || null;
-      }
-
-      if (editingItem) {
-        await api.atualizar(editingItem.id, data);
-        toast.success('Item atualizado com sucesso');
+        if (editingItem) {
+          await projetosAPI.atualizar(editingItem.id, data);
+        } else {
+          await projetosAPI.criar(data);
+        }
       } else {
-        await api.criar(data);
-        toast.success('Item criado com sucesso');
+        data.cnpj = formData.cnpj || null;
+        if (editingItem) {
+          await empresasAPI.atualizar(editingItem.id, data);
+        } else {
+          await empresasAPI.criar(data);
+        }
       }
       
+      toast.success(editingItem ? 'Item atualizado com sucesso' : 'Item criado com sucesso');
       setShowForm(false);
       loadData();
     } catch (error) {
@@ -143,229 +247,456 @@ const GestaoCadastrosPage = () => {
   };
 
   const tabs = [
-    { id: 'cursos', label: 'Cursos', icon: GraduationCap, count: cursos.filter(c => c.ativo).length },
+    { id: 'cursos', label: 'Cursos', icon: GraduationCap, count: cursos.length },
     { id: 'projetos', label: 'Projetos', icon: FolderKanban, count: projetos.filter(p => p.ativo).length },
     { id: 'empresas', label: 'Empresas', icon: Building2, count: empresas.filter(e => e.ativo).length },
   ];
 
-  const getTitle = () => {
-    switch (activeTab) {
-      case 'cursos': return 'Cursos';
-      case 'projetos': return 'Projetos';
-      case 'empresas': return 'Empresas';
-      default: return '';
-    }
+  const getTipoColor = (tipo) => {
+    const colors = {
+      tecnico: 'bg-blue-100 text-blue-800',
+      graduacao: 'bg-green-100 text-green-800',
+      pos_graduacao: 'bg-purple-100 text-purple-800',
+      livre: 'bg-orange-100 text-orange-800',
+      capacitacao: 'bg-yellow-100 text-yellow-800'
+    };
+    return colors[tipo] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getModalidadeIcon = (modalidade) => {
+    if (modalidade === 'ead') return <Monitor className="w-3 h-3" />;
+    if (modalidade === 'presencial') return <MapPin className="w-3 h-3" />;
+    return null;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 p-6">
       {/* Header */}
-      <header className="bg-[#004587] text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/admin')}
-                className="text-white hover:bg-white/10"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Voltar
-              </Button>
-              <h1 className="text-xl font-bold">Gestão de Cadastros</h1>
-            </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 font-['Chivo']">
+          Gestão de Cadastros
+        </h1>
+        <p className="text-slate-500">
+          Gerencie cursos, projetos e empresas parceiras
+        </p>
+      </div>
+
+      {/* Estatísticas de Cursos */}
+      {activeTab === 'cursos' && estatisticasCursos && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="p-4 text-center">
+              <GraduationCap className="w-8 h-8 mx-auto text-blue-600 mb-2" />
+              <p className="text-2xl font-bold text-blue-700">{estatisticasCursos.total}</p>
+              <p className="text-sm text-blue-600">Total de Cursos</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-green-50 border-green-200">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-green-700">{estatisticasCursos.por_tipo?.tecnico || 0}</p>
+              <p className="text-sm text-green-600">Escola Técnica</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-purple-50 border-purple-200">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-purple-700">{estatisticasCursos.por_tipo?.graduacao || 0}</p>
+              <p className="text-sm text-purple-600">Graduação</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-orange-50 border-orange-200">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-orange-700">{estatisticasCursos.por_tipo?.pos_graduacao || 0}</p>
+              <p className="text-sm text-orange-600">Pós-Graduação</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b border-slate-200 pb-4">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/admin')}
-              className="text-white hover:bg-white/10"
+              key={tab.id}
+              variant={activeTab === tab.id ? 'default' : 'outline'}
+              onClick={() => setActiveTab(tab.id)}
+              className={activeTab === tab.id ? 'bg-[#004587]' : ''}
             >
-              <LayoutDashboard className="w-4 h-4 mr-2" />
-              Dashboard
+              <Icon className="w-4 h-4 mr-2" />
+              {tab.label}
+              <Badge variant="secondary" className="ml-2">{tab.count}</Badge>
             </Button>
-          </div>
-        </div>
-      </header>
+          );
+        })}
+      </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-[#004587] text-white shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                {tab.label}
-                <span className={`px-2 py-0.5 rounded-full text-xs ${
-                  activeTab === tab.id ? 'bg-white/20' : 'bg-gray-100'
-                }`}>
-                  {tab.count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Content Card */}
-        <div className="bg-white rounded-xl shadow-sm border">
-          {/* Card Header */}
-          <div className="flex items-center justify-between p-6 border-b">
-            <h2 className="text-lg font-semibold text-gray-800">
-              {getTitle()} Cadastrados
-            </h2>
-            <Button onClick={handleAdd} className="bg-[#E30613] hover:bg-[#c00510]">
-              <Plus className="w-4 h-4 mr-2" />
-              Novo {getTitle().slice(0, -1)}
-            </Button>
-          </div>
-
-          {/* Form */}
-          {showForm && (
-            <div className="p-6 bg-gray-50 border-b">
-              <form onSubmit={handleSubmit} className="flex gap-4 items-end">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nome *
-                  </label>
+      {/* Filtros para Cursos */}
+      {activeTab === 'cursos' && (
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex flex-wrap gap-4 items-end">
+              <div className="flex-1 min-w-[200px]">
+                <Label>Buscar</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
-                    value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    placeholder={`Nome do ${getTitle().slice(0, -1).toLowerCase()}`}
-                    className="w-full"
-                    autoFocus
+                    value={filtros.busca}
+                    onChange={(e) => setFiltros({ ...filtros, busca: e.target.value })}
+                    placeholder="Nome do curso..."
+                    className="pl-10"
                   />
                 </div>
-                
-                {activeTab === 'empresas' ? (
-                  <div className="w-48">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      CNPJ
-                    </label>
-                    <Input
-                      value={formData.cnpj}
-                      onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
-                      placeholder="00.000.000/0000-00"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Descrição
-                    </label>
-                    <Input
-                      value={formData.descricao}
-                      onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                      placeholder="Descrição (opcional)"
-                    />
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <Button type="submit" className="bg-[#004587] hover:bg-[#003366]">
-                    <Save className="w-4 h-4 mr-2" />
-                    {editingItem ? 'Atualizar' : 'Salvar'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowForm(false)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </form>
+              </div>
+              
+              <div className="w-[180px]">
+                <Label>Tipo</Label>
+                <Select value={filtros.tipo} onValueChange={(v) => setFiltros({ ...filtros, tipo: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {opcoesCursos.tipos.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="w-[150px]">
+                <Label>Modalidade</Label>
+                <Select value={filtros.modalidade} onValueChange={(v) => setFiltros({ ...filtros, modalidade: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas</SelectItem>
+                    {opcoesCursos.modalidades.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="w-[180px]">
+                <Label>Área</Label>
+                <Select value={filtros.area} onValueChange={(v) => setFiltros({ ...filtros, area: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas</SelectItem>
+                    {opcoesCursos.areas.map((a) => (
+                      <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="w-[130px]">
+                <Label>Status</Label>
+                <Select 
+                  value={filtros.ativo === null ? 'todos' : filtros.ativo ? 'ativos' : 'inativos'} 
+                  onValueChange={(v) => setFiltros({ ...filtros, ativo: v === 'todos' ? null : v === 'ativos' })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="ativos">Ativos</SelectItem>
+                    <SelectItem value="inativos">Inativos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <Button onClick={loadCursos} className="bg-[#004587]">
+                <Filter className="w-4 h-4 mr-2" />
+                Filtrar
+              </Button>
             </div>
-          )}
+          </CardContent>
+        </Card>
+      )}
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nome
-                  </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {activeTab === 'empresas' ? 'CNPJ' : 'Descrição'}
-                  </th>
-                  <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {loading ? (
+      {/* Botão Adicionar e Lista */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            {activeTab === 'cursos' && <GraduationCap className="w-5 h-5" />}
+            {activeTab === 'projetos' && <FolderKanban className="w-5 h-5" />}
+            {activeTab === 'empresas' && <Building2 className="w-5 h-5" />}
+            {activeTab === 'cursos' ? 'Cursos Cadastrados' : activeTab === 'projetos' ? 'Projetos' : 'Empresas'}
+          </CardTitle>
+          <Button onClick={handleAdd} className="bg-green-600 hover:bg-green-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#004587] mx-auto"></div>
+              <p className="mt-4 text-slate-500">Carregando...</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-100">
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                      Carregando...
-                    </td>
+                    <th className="text-left p-3 font-semibold text-slate-700">Nome</th>
+                    {activeTab === 'cursos' && (
+                      <>
+                        <th className="text-left p-3 font-semibold text-slate-700">Tipo</th>
+                        <th className="text-left p-3 font-semibold text-slate-700">Modalidade</th>
+                        <th className="text-left p-3 font-semibold text-slate-700">Área</th>
+                        <th className="text-left p-3 font-semibold text-slate-700">Carga Horária</th>
+                      </>
+                    )}
+                    {activeTab === 'empresas' && (
+                      <th className="text-left p-3 font-semibold text-slate-700">CNPJ</th>
+                    )}
+                    {activeTab !== 'empresas' && activeTab !== 'cursos' && (
+                      <th className="text-left p-3 font-semibold text-slate-700">Descrição</th>
+                    )}
+                    <th className="text-left p-3 font-semibold text-slate-700">Status</th>
+                    <th className="text-right p-3 font-semibold text-slate-700">Ações</th>
                   </tr>
-                ) : getActiveData().length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                      Nenhum registro encontrado
-                    </td>
-                  </tr>
-                ) : (
-                  getActiveData().map((item) => (
-                    <tr key={item.id} className={`hover:bg-gray-50 ${!item.ativo ? 'opacity-50' : ''}`}>
-                      <td className="px-6 py-4">
-                        <span className="font-medium text-gray-900">{item.nome}</span>
+                </thead>
+                <tbody>
+                  {getActiveData().map((item) => (
+                    <tr key={item.id} className={`border-b hover:bg-slate-50 ${!item.ativo ? 'opacity-50' : ''}`}>
+                      <td className="p-3">
+                        <div>
+                          <p className="font-medium text-slate-900">{item.nome}</p>
+                          {activeTab === 'cursos' && item.descricao && (
+                            <p className="text-xs text-slate-500 mt-1 line-clamp-1">{item.descricao}</p>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {activeTab === 'empresas' ? (item.cnpj || '-') : (item.descricao || '-')}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          item.ativo 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-red-100 text-red-700'
-                        }`}>
+                      {activeTab === 'cursos' && (
+                        <>
+                          <td className="p-3">
+                            {item.tipo_label && (
+                              <Badge className={getTipoColor(item.tipo)}>
+                                {item.tipo_label}
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            {item.modalidade_label && (
+                              <div className="flex items-center gap-1 text-sm text-slate-600">
+                                {getModalidadeIcon(item.modalidade)}
+                                {item.modalidade_label}
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-3 text-sm text-slate-600">
+                            {item.area_label || '-'}
+                          </td>
+                          <td className="p-3">
+                            {item.carga_horaria && (
+                              <div className="flex items-center gap-1 text-sm text-slate-600">
+                                <Clock className="w-3 h-3" />
+                                {item.carga_horaria}
+                              </div>
+                            )}
+                          </td>
+                        </>
+                      )}
+                      {activeTab === 'empresas' && (
+                        <td className="p-3 text-sm text-slate-600 font-mono">{item.cnpj || '-'}</td>
+                      )}
+                      {activeTab !== 'empresas' && activeTab !== 'cursos' && (
+                        <td className="p-3 text-sm text-slate-600 max-w-[200px] truncate">{item.descricao || '-'}</td>
+                      )}
+                      <td className="p-3">
+                        <Badge className={item.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
                           {item.ativo ? 'Ativo' : 'Inativo'}
-                        </span>
+                        </Badge>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-end gap-2">
+                      <td className="p-3 text-right">
+                        <div className="flex gap-2 justify-end">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleEdit(item)}
-                            disabled={!item.ativo}
-                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                            className="text-blue-600"
                           >
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(item)}
-                            disabled={!item.ativo}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {item.ativo ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDelete(item)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          ) : activeTab === 'cursos' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleAtivar(item)}
+                              className="text-green-600"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+                  ))}
+                  {getActiveData().length === 0 && (
+                    <tr>
+                      <td colSpan={activeTab === 'cursos' ? 7 : 4} className="p-8 text-center text-slate-500">
+                        Nenhum registro encontrado
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Modal de Formulário */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {activeTab === 'cursos' && <GraduationCap className="w-5 h-5 text-[#004587]" />}
+              {activeTab === 'projetos' && <FolderKanban className="w-5 h-5 text-[#004587]" />}
+              {activeTab === 'empresas' && <Building2 className="w-5 h-5 text-[#004587]" />}
+              {editingItem ? 'Editar' : 'Novo'} {activeTab === 'cursos' ? 'Curso' : activeTab === 'projetos' ? 'Projeto' : 'Empresa'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label>Nome *</Label>
+              <Input
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                placeholder={`Nome do ${activeTab.slice(0, -1)}`}
+              />
+            </div>
+            
+            {activeTab === 'cursos' && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Tipo de Curso</Label>
+                    <Select value={formData.tipo} onValueChange={(v) => setFormData({ ...formData, tipo: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {opcoesCursos.tipos.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Modalidade</Label>
+                    <Select value={formData.modalidade} onValueChange={(v) => setFormData({ ...formData, modalidade: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {opcoesCursos.modalidades.map((m) => (
+                          <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label>Área</Label>
+                  <Select value={formData.area} onValueChange={(v) => setFormData({ ...formData, area: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a área" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {opcoesCursos.areas.map((a) => (
+                        <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Carga Horária</Label>
+                    <Input
+                      value={formData.carga_horaria}
+                      onChange={(e) => setFormData({ ...formData, carga_horaria: e.target.value })}
+                      placeholder="Ex: 800h"
+                    />
+                  </div>
+                  <div>
+                    <Label>Duração</Label>
+                    <Input
+                      value={formData.duracao}
+                      onChange={(e) => setFormData({ ...formData, duracao: e.target.value })}
+                      placeholder="Ex: 2 anos"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label>Descrição</Label>
+                  <Textarea
+                    value={formData.descricao}
+                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    placeholder="Descrição do curso..."
+                    rows={3}
+                  />
+                </div>
+              </>
+            )}
+            
+            {activeTab === 'projetos' && (
+              <div>
+                <Label>Descrição</Label>
+                <Textarea
+                  value={formData.descricao}
+                  onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                  placeholder="Descrição do projeto..."
+                  rows={3}
+                />
+              </div>
+            )}
+            
+            {activeTab === 'empresas' && (
+              <div>
+                <Label>CNPJ</Label>
+                <Input
+                  value={formData.cnpj}
+                  onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
+                  placeholder="00.000.000/0000-00"
+                />
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                <X className="w-4 h-4 mr-2" />
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-[#004587]">
+                <Save className="w-4 h-4 mr-2" />
+                Salvar
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
