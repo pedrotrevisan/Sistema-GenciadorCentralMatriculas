@@ -175,13 +175,20 @@ class PendenciaModel(Base):
     id = Column(String(36), primary_key=True)
     aluno_id = Column(String(36), ForeignKey("alunos.id"), nullable=False, index=True)
     pedido_id = Column(String(36), ForeignKey("pedidos.id"), nullable=False, index=True)
-    tipo_documento_id = Column(String(36), ForeignKey("tipos_documento.id"), nullable=False)
+    tipo_documento_id = Column(String(36), ForeignKey("tipos_documento.id"), nullable=True)  # Nullable para pendências manuais antigas
     documento_codigo = Column(String(10), nullable=False)  # Código do documento (ex: "94", "131")
-    documento_nome = Column(String(200), nullable=False)   # Nome do documento
+    documento_nome = Column(String(200), nullable=True)   # Nome do documento
     status = Column(String(30), nullable=False, default="pendente", index=True)
     # Status: pendente, aguardando_aluno, em_analise, aprovado, rejeitado, reenvio_necessario
     observacoes = Column(Text, nullable=True)
     motivo_rejeicao = Column(Text, nullable=True)
+    
+    # Auditoria
+    criado_por_id = Column(String(36), ForeignKey("usuarios.id"), nullable=True)
+    criado_por_nome = Column(String(200), nullable=True)
+    atualizado_por_id = Column(String(36), ForeignKey("usuarios.id"), nullable=True)
+    atualizado_por_nome = Column(String(200), nullable=True)
+    
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     resolved_at = Column(DateTime, nullable=True)  # Data de resolução
