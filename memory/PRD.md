@@ -189,7 +189,7 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/backend/tests/test_contatos_api.py` - Suite de testes do módulo de Contatos - NOVO!
 
 ## Last Updated
-2026-02-23 - Importação de Pendências em Lote via planilha (Excel/CSV)
+2026-02-23 - Cadastro de Cursos com campos: Tipo, Modalidade, Área, Carga Horária, Duração
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
