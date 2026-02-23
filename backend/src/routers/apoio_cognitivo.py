@@ -143,7 +143,7 @@ async def meu_dia(
 ):
     """Retorna o resumo do dia do usuário"""
     from src.infrastructure.persistence.models import PendenciaModel, PedidoModel
-    from src.infrastructure.persistence.models_contatos import ContatoModel
+    from src.infrastructure.persistence.models_contatos import LogContatoModel
     
     hoje = date.today()
     dia_semana = str(hoje.weekday() + 1)  # 1=segunda, 7=domingo
