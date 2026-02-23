@@ -117,6 +117,7 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Refatorar pendências para router separado ✅
 - [x] Dashboard de BI com gráficos (Fase 5) ✅
 - [x] Log de Contatos (Fase 3) ✅
+- [x] Kanban Board interativo ✅
 - [ ] Refatorar pedidos para router separado
 - [ ] Refatorar cadastros para router separado
 - [ ] Refinar máquina de estados dos pedidos
