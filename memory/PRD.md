@@ -480,3 +480,72 @@ Repositório de artigos e procedimentos com:
 - `/app/test_reports/iteration_10.json` - 41/41 testes PASS (100%)
 - `/app/backend/tests/test_apoio_cognitivo.py` - Suite de testes
 
+
+## Painel de Conta do Usuário (2026-02-23) - NOVO!
+Sistema de gerenciamento de conta pessoal do usuário.
+
+### Funcionalidades
+- **Perfil:** Editar nome e email
+- **Segurança:** Alterar senha (com validação da senha atual)
+- **Atividades:** Ver histórico de ações recentes no sistema
+
+### Endpoints (/api/auth)
+- `PUT /api/auth/me/perfil` - Atualizar dados do perfil
+- `PUT /api/auth/me/senha` - Alterar senha
+- `GET /api/auth/me/atividades` - Listar atividades recentes
+
+### Página Frontend
+- `/minha-conta` - ConfiguracaoContaPage.jsx
+
+
+## Sistema de Atribuições/Chamados (2026-02-23) - NOVO!
+Sistema de atribuição de demandas para atendentes específicos, similar a um sistema de chamados.
+
+### Funcionalidades
+- **Caixa de Entrada:** Lista todas as demandas atribuídas ao usuário logado
+- **Atribuição:** Permite atribuir pedidos, pendências ou reembolsos a um responsável
+- **Prioridades:** baixa, normal, alta, urgente
+- **Filtros:** Por tipo (pedido/pendência/reembolso) e status
+- **Notificação por Email:** (quando configurado) envia email ao responsável
+
+### Campos adicionados aos modelos
+- `responsavel_id` - ID do usuário responsável
+- `responsavel_nome` - Nome do responsável
+- `prioridade` - Prioridade da demanda
+
+### Endpoints (/api/atribuicoes)
+- `GET /api/atribuicoes/minha-caixa` - Lista demandas do usuário
+- `GET /api/atribuicoes/resumo` - Resumo com contadores
+- `POST /api/atribuicoes/atribuir` - Atribuir demanda a responsável
+- `DELETE /api/atribuicoes/atribuir/{tipo}/{item_id}` - Remover atribuição
+- `GET /api/atribuicoes/responsaveis` - Lista usuários disponíveis
+
+### Página Frontend
+- `/caixa-entrada` - CaixaEntradaPage.jsx
+
+
+## Notificações por Email - SMTP Outlook (2026-02-23) - ESTRUTURA PRONTA!
+Sistema de notificações por email via SMTP do Outlook/Microsoft 365.
+
+### Configuração (.env)
+```env
+SMTP_SERVER="smtp.office365.com"
+SMTP_PORT="587"
+SMTP_USER="seu-email@fieb.org.br"
+SMTP_PASSWORD="sua-app-password"
+SMTP_FROM_NAME="SYNAPSE - Sistema de Matrículas"
+FRONTEND_URL="https://matriculas-ai.preview.emergentagent.com"
+```
+
+### Como obter App Password
+1. Acesse https://account.microsoft.com/security
+2. Vá em "Senhas de aplicativo" / "App passwords"
+3. Gere uma nova senha para "SYNAPSE"
+4. Use essa senha em SMTP_PASSWORD
+
+### Serviço de Email
+- `/app/backend/src/services/email_service.py`
+- Envia notificações de atribuição com template HTML bonito
+- Envia lembretes automáticos
+- Funciona em background (não bloqueia requisições)
+
