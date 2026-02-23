@@ -52,6 +52,7 @@ class PedidoModel(Base):
     consultor_nome = Column(String(200), nullable=False)
     curso_id = Column(String(36), nullable=False)
     curso_nome = Column(String(200), nullable=False)
+    turma_id = Column(String(36), ForeignKey("turmas.id"), nullable=True)  # NOVO - Vinculação com turma
     projeto_id = Column(String(36), nullable=True)
     projeto_nome = Column(String(200), nullable=True)
     empresa_id = Column(String(36), nullable=True)
