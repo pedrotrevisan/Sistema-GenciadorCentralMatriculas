@@ -142,7 +142,8 @@ async def meu_dia(
     usuario: Usuario = Depends(get_current_user)
 ):
     """Retorna o resumo do dia do usuário"""
-    from src.infrastructure.persistence.models import PendenciaModel, HistoricoContatoModel, PedidoModel
+    from src.infrastructure.persistence.models import PendenciaModel, PedidoModel
+    from src.infrastructure.persistence.models_contatos import ContatoModel
     
     hoje = date.today()
     dia_semana = str(hoje.weekday() + 1)  # 1=segunda, 7=domingo
@@ -185,19 +186,16 @@ async def meu_dia(
     lembretes_result = await session.execute(lembretes_query)
     lembretes = lembretes_result.scalars().all()
     
-    # Buscar retornos de contato pendentes
-    retornos_query = select(HistoricoContatoModel).where(
+    # Buscar retornos de contato pendentes (usando a tabela de contatos correta)
+    retornos_query = select(func.count(ContatoModel.id)).where(
         and_(
-            HistoricoContatoModel.retorno_necessario == True,
-            or_(
-                HistoricoContatoModel.data_retorno_previsto == None,
-                HistoricoContatoModel.data_retorno_previsto <= fim_dia
-            )
+            ContatoModel.data_retorno != None,
+            ContatoModel.retorno_realizado == False,
+            ContatoModel.data_retorno <= fim_dia
         )
-    ).order_by(HistoricoContatoModel.data_retorno_previsto)
-    
+    )
     retornos_result = await session.execute(retornos_query)
-    retornos = retornos_result.scalars().all()
+    total_retornos = retornos_result.scalar() or 0
     
     # Contagem de pendências em aberto
     pendencias_query = await session.execute(
