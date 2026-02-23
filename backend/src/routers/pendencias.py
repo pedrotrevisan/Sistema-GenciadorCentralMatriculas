@@ -143,10 +143,16 @@ async def listar_pendencias(
     usuario: Usuario = Depends(get_current_user)
 ):
     """Lista todas as pendências com filtros"""
-    # Query base com joins
+    # Query base com joins para incluir aluno e pedido (para pegar curso_nome)
     query = (
-        select(PendenciaModel, AlunoModel.nome.label('aluno_nome'), AlunoModel.cpf.label('aluno_cpf'))
+        select(
+            PendenciaModel, 
+            AlunoModel.nome.label('aluno_nome'), 
+            AlunoModel.cpf.label('aluno_cpf'),
+            PedidoModel.curso_nome.label('curso_nome')
+        )
         .join(AlunoModel, PendenciaModel.aluno_id == AlunoModel.id)
+        .outerjoin(PedidoModel, PendenciaModel.pedido_id == PedidoModel.id)
     )
     
     # Filtros
@@ -190,6 +196,7 @@ async def listar_pendencias(
         pendencia = row[0]
         aluno_nome_val = row[1]
         aluno_cpf = row[2]
+        curso_nome = row[3]
         
         # Contar tentativas de contato
         contatos_result = await session.execute(
@@ -206,6 +213,7 @@ async def listar_pendencias(
             "pedido_id": pendencia.pedido_id,
             "documento_codigo": pendencia.documento_codigo,
             "documento_nome": tipos_dict.get(pendencia.documento_codigo, pendencia.documento_codigo),
+            "curso_nome": curso_nome or pendencia.observacoes,  # Fallback para observações se for manual
             "status": pendencia.status,
             "status_label": STATUS_PENDENCIA.get(pendencia.status, pendencia.status),
             "observacoes": pendencia.observacoes,
