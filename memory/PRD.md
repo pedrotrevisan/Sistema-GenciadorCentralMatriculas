@@ -176,10 +176,12 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/tests/test_importacao_api.py` - Suite de testes da Importação
 - `/app/tests/test_pendencias_api.py` - Suite de testes da Central de Pendências
 - `/app/tests/test_reembolsos_api.py` - Suite de testes do Módulo de Reembolsos (atualizada com 27 testes)
-- `/app/backend/tests/test_timeline_api.py` - Suite de testes da Timeline de Auditoria - NOVO!
+- `/app/backend/tests/test_timeline_api.py` - Suite de testes da Timeline de Auditoria
+- `/app/test_reports/iteration_8.json` - Fase 2: Gestão de Pendências Documentais + BI Dashboard (25/25 PASS) - NOVO!
+- `/app/backend/tests/test_documentos_api.py` - Suite de testes do módulo de Documentos (Clean Architecture) - NOVO!
 
 ## Last Updated
-2026-01-22 - Refatoração: Módulos de Reembolsos e Pendências movidos para routers separados (server.py reduzido para 1.565 linhas)
+2026-02-23 - Fase 2 Concluída: Gestão de Pendências Documentais com Clean Architecture + Endpoints de BI para Dashboard
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
