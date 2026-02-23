@@ -160,7 +160,7 @@ const KanbanCard = ({ pedido, isDragging, onAtribuir }) => {
 };
 
 // Componente da Coluna do Kanban
-const KanbanColumn = ({ column, pedidos, onCardClick }) => {
+const KanbanColumn = ({ column, pedidos, onCardClick, onAtribuir }) => {
   const count = pedidos.length;
 
   return (
@@ -190,6 +190,7 @@ const KanbanColumn = ({ column, pedidos, onCardClick }) => {
               key={pedido.id} 
               pedido={pedido}
               onCardClick={onCardClick}
+              onAtribuir={onAtribuir}
             />
           ))}
         </SortableContext>
