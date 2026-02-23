@@ -356,6 +356,9 @@ const PedidoDetalhePage = () => {
         </CardContent>
       </Card>
 
+      {/* Log de Contatos */}
+      <LogContatos pedidoId={id} />
+
       {/* Timeline de Auditoria */}
       <TimelineAuditoria pedidoId={id} />
 
