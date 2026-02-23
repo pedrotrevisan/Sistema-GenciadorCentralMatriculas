@@ -21,6 +21,7 @@ import ImportacaoLotePage from "./pages/ImportacaoLotePage";
 import CentralPendenciasPage from "./pages/CentralPendenciasPage";
 import ReembolsosPage from "./pages/ReembolsosPage";
 import BIDashboardPage from "./pages/BIDashboardPage";
+import KanbanPage from "./pages/KanbanPage";
 
 function App() {
   return (
