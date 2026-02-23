@@ -8,8 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 from src.domain.entities import Usuario
-from src.infrastructure.persistence.database import get_db_session
-from .dependencies import get_current_user
+from .dependencies import get_db_session, get_current_user
 
 router = APIRouter(prefix="/apoio", tags=["Apoio Cognitivo"])
 
