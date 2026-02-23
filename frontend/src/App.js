@@ -20,6 +20,7 @@ import PedidoDetalhePage from "./pages/PedidoDetalhePage";
 import ImportacaoLotePage from "./pages/ImportacaoLotePage";
 import CentralPendenciasPage from "./pages/CentralPendenciasPage";
 import ReembolsosPage from "./pages/ReembolsosPage";
+import BIDashboardPage from "./pages/BIDashboardPage";
 
 function App() {
   return (
@@ -67,6 +68,7 @@ function App() {
             <Route element={<DashboardLayout />}>
               <Route path="/pendencias" element={<CentralPendenciasPage />} />
               <Route path="/reembolsos" element={<ReembolsosPage />} />
+              <Route path="/bi" element={<BIDashboardPage />} />
             </Route>
           </Route>
 
