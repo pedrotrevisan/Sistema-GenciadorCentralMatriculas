@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -13,7 +13,8 @@ import api from '../services/api';
 import {
   FileText, Search, Filter, Phone, Mail, MessageSquare, User,
   AlertTriangle, CheckCircle, Clock, XCircle, RefreshCw, Plus,
-  ChevronLeft, ChevronRight, Eye, Building, BookOpen, UserPlus
+  ChevronLeft, ChevronRight, Eye, Building, BookOpen, UserPlus,
+  Upload, Download, FileSpreadsheet, Loader2
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
