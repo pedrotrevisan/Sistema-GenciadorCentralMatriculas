@@ -80,6 +80,14 @@ function App() {
             </Route>
           </Route>
 
+          {/* Apoio Cognitivo - Todos os perfis */}
+          <Route element={<ProtectedRoute allowedRoles={['consultor', 'assistente', 'admin']} />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/meu-dia" element={<MeuDiaPage />} />
+              <Route path="/base-conhecimento" element={<BaseConhecimentoPage />} />
+            </Route>
+          </Route>
+
           {/* Importação em Lote - Todos os perfis */}
           <Route element={<ProtectedRoute allowedRoles={['consultor', 'assistente', 'admin']} />}>
             <Route element={<DashboardLayout />}>
