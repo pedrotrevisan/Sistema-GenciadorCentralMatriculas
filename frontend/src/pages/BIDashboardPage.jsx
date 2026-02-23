@@ -582,6 +582,172 @@ const BIDashboardPage = () => {
           </Card>
         </TabsContent>
 
+        {/* Tab Contatos */}
+        <TabsContent value="contatos" className="space-y-6">
+          {contatosData ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-6 text-center">
+                    <Phone className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                    <p className="text-3xl font-bold text-gray-900">{contatosData.total}</p>
+                    <p className="text-sm text-gray-500">Total de Contatos</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-green-200 bg-green-50/50">
+                  <CardContent className="pt-6 text-center">
+                    <CheckCircle className="h-8 w-8 mx-auto text-green-500 mb-2" />
+                    <p className="text-3xl font-bold text-green-700">{contatosData.sucesso}</p>
+                    <p className="text-sm text-green-600">Com Sucesso</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-amber-200 bg-amber-50/50">
+                  <CardContent className="pt-6 text-center">
+                    <Clock className="h-8 w-8 mx-auto text-amber-500 mb-2" />
+                    <p className="text-3xl font-bold text-amber-700">{contatosData.retornos_pendentes}</p>
+                    <p className="text-sm text-amber-600">Retornos Pendentes</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-blue-200 bg-blue-50/50">
+                  <CardContent className="pt-6 text-center">
+                    <Activity className="h-8 w-8 mx-auto text-blue-500 mb-2" />
+                    <p className="text-3xl font-bold text-blue-700">{contatosData.contatos_hoje}</p>
+                    <p className="text-sm text-blue-600">Contatos Hoje</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Gráfico por Tipo de Contato */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <PieChartIcon className="h-5 w-5 text-[#004587]" />
+                      Contatos por Tipo
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={Object.entries(contatosData.por_tipo || {}).map(([tipo, count], index) => ({
+                              name: tipo === 'ligacao' ? 'Ligação' : 
+                                    tipo === 'whatsapp' ? 'WhatsApp' :
+                                    tipo === 'email' ? 'E-mail' :
+                                    tipo === 'presencial' ? 'Presencial' :
+                                    tipo === 'sms' ? 'SMS' : 'Outro',
+                              value: count,
+                              fill: CHART_COLORS[index % CHART_COLORS.length]
+                            }))}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={50}
+                            outerRadius={80}
+                            paddingAngle={2}
+                            dataKey="value"
+                          >
+                            {Object.entries(contatosData.por_tipo || {}).map((_, index) => (
+                              <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Gráfico por Resultado */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-[#004587]" />
+                      Contatos por Resultado
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={Object.entries(contatosData.por_resultado || {}).map(([resultado, count]) => ({
+                            name: resultado === 'sucesso' ? 'Sucesso' :
+                                  resultado === 'nao_atendeu' ? 'Não Atendeu' :
+                                  resultado === 'sem_resposta' ? 'Sem Resposta' :
+                                  resultado === 'agendado' ? 'Agendado' :
+                                  resultado === 'caixa_postal' ? 'Caixa Postal' :
+                                  resultado === 'numero_errado' ? 'Nº Errado' : resultado,
+                            value: count,
+                            fill: resultado === 'sucesso' ? COLORS.success :
+                                  resultado === 'agendado' ? COLORS.purple :
+                                  resultado === 'sem_resposta' ? COLORS.warning : COLORS.secondary
+                          }))}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                          <XAxis dataKey="name" tick={{ fill: '#6B7280', fontSize: 11 }} />
+                          <YAxis tick={{ fill: '#6B7280', fontSize: 12 }} />
+                          <Tooltip />
+                          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                            {Object.entries(contatosData.por_resultado || {}).map(([resultado], index) => (
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={resultado === 'sucesso' ? COLORS.success :
+                                      resultado === 'agendado' ? COLORS.purple :
+                                      resultado === 'sem_resposta' ? COLORS.warning : COLORS.secondary}
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Taxa de Sucesso */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Taxa de Sucesso nos Contatos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative pt-1">
+                    <div className="flex mb-2 items-center justify-between">
+                      <div>
+                        <span className={`text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${
+                          contatosData.taxa_sucesso >= 50 ? 'text-green-600 bg-green-200' : 'text-amber-600 bg-amber-200'
+                        }`}>
+                          {contatosData.taxa_sucesso}% Sucesso
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs font-semibold inline-block text-gray-600">
+                          {contatosData.sucesso} de {contatosData.total} contatos
+                        </span>
+                      </div>
+                    </div>
+                    <div className="overflow-hidden h-4 text-xs flex rounded-full bg-gray-200">
+                      <div 
+                        style={{ width: `${contatosData.taxa_sucesso}%` }}
+                        className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500 ${
+                          contatosData.taxa_sucesso >= 50 ? 'bg-green-500' : 'bg-amber-500'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <MessageCircle className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-500">Nenhum dado de contatos disponível</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
         {/* Tab Documentos */}
         <TabsContent value="documentos" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
