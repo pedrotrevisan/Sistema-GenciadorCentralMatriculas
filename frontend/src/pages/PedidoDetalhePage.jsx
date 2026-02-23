@@ -179,8 +179,17 @@ const PedidoDetalhePage = () => {
             {pedido.numero_protocolo && 'Detalhes do Pedido • '}ID: {pedido.id.slice(0, 8)}...
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <IndicadorSLA createdAt={pedido.created_at} status={pedido.status} />
           <StatusBadge status={pedido.status} />
+          <BotaoFavorito 
+            pedidoId={pedido.id} 
+            pedidoInfo={{ 
+              protocolo: pedido.numero_protocolo,
+              aluno: pedido.alunos?.[0]?.nome 
+            }}
+          />
+          <CobrarZap pedido={pedido} variant="icon" />
           {hasPermission('pedido:editar_status') && pedido.pode_editar && (
             <Button
               variant="outline"
