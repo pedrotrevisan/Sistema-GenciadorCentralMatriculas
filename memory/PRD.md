@@ -209,6 +209,44 @@ Nova funcionalidade para gerenciar documentos pendentes dos alunos:
 - `POST /api/pendencias/{id}/contatos` - Registra contato
 - `DELETE /api/pendencias/{id}` - Exclui pendência (admin)
 
+## Módulo de Documentos - Clean Architecture (2026-02-23) - NOVO!
+Sistema de gestão de pendências documentais com arquitetura Clean + endpoints de BI.
+
+### Tipos de Documento (17 tipos)
+- Identidade: rg_frente, rg_verso, rg_completo, cpf, certidao_nascimento, certidao_casamento
+- Escolares: historico_escolar, comprovante_escolaridade, certificado_conclusao, declaracao_matricula
+- Comprovantes: comprovante_residencia, comprovante_renda
+- Fotos: foto_3x4, foto_documento
+- Outros: laudo_medico, declaracao_responsavel, outros
+
+### Fluxo de Status (Clean Architecture)
+`Pendente` → `Enviado` → `Em Análise` → `Aprovado` / `Recusado`
+                                      ↓
+                                  `Expirado`
+
+### Endpoints de CRUD (/api/documentos)
+- `GET /api/documentos/tipos` - Lista 17 tipos de documento
+- `GET /api/documentos/status` - Lista status com cores
+- `GET /api/documentos/prioridades` - Lista prioridades
+- `POST /api/documentos` - Cria pendência documental
+- `POST /api/documentos/padrao/{pedido_id}` - Cria 5 pendências padrão
+- `GET /api/documentos/pedido/{pedido_id}` - Lista pendências de um pedido
+- `GET /api/documentos/{id}` - Detalhes da pendência
+- `POST /api/documentos/{id}/enviar` - Enviar documento
+- `POST /api/documentos/{id}/validar` - Aprovar/Recusar documento
+- `PUT /api/documentos/{id}/observacoes` - Atualizar observações
+- `GET /api/documentos/validacao/fila` - Fila de validação
+
+### Endpoints de Estatísticas/BI (/api/documentos)
+- `GET /api/documentos/stats/resumo` - KPIs de documentos
+- `GET /api/documentos/stats/por-tipo` - Estatísticas por tipo de documento
+- `GET /api/documentos/stats/vencendo` - Documentos próximos a expirar
+- `GET /api/documentos/bi/matriculas` - KPIs de matrículas
+- `GET /api/documentos/bi/evolucao` - Evolução mensal (gráfico de linha)
+- `GET /api/documentos/bi/reembolsos` - KPIs de reembolsos
+- `GET /api/documentos/bi/pendencias` - KPIs de pendências
+- `GET /api/documentos/bi/completo` - Dashboard completo de BI
+
 ## Scripts de Migração
 - `/app/migracao_totvs_campos.sql` - 8 novos campos do aluno
 - `/app/migracao_simples.sql` - Versão simplificada
