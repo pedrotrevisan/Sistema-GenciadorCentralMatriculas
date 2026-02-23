@@ -306,6 +306,23 @@ const KanbanPage = () => {
     return pedidos.find(p => p.id === activeId);
   }, [activeId, pedidos]);
 
+  // Funções do modal de atribuição
+  const handleOpenAtribuir = (pedido) => {
+    setModalAtribuir({
+      isOpen: true,
+      pedido
+    });
+  };
+
+  const handleAtribuicaoSuccess = (data) => {
+    // Atualizar o pedido na lista local
+    setPedidos(prev => prev.map(p => 
+      p.id === modalAtribuir.pedido?.id 
+        ? { ...p, responsavel_id: data.responsavel_id, responsavel_nome: data.responsavel_nome, prioridade: data.prioridade }
+        : p
+    ));
+  };
+
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
   };
