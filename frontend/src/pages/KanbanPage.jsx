@@ -228,8 +228,8 @@ const KanbanPage = () => {
 
   const loadPedidos = async () => {
     try {
-      // Carregar todos os pedidos (sem paginação para o kanban)
-      const response = await pedidosAPI.listar({ por_pagina: 200 });
+      // Carregar pedidos (máximo 100 por requisição)
+      const response = await pedidosAPI.listar({ por_pagina: 100 });
       setPedidos(response.data.pedidos || []);
     } catch (error) {
       console.error('Erro ao carregar pedidos:', error);
