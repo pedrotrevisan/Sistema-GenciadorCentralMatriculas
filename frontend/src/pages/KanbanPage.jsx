@@ -120,15 +120,15 @@ const KanbanCard = ({ pedido, isDragging }) => {
           </div>
           
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-            <span className="flex items-center gap-1 text-xs text-gray-400">
-              <Calendar className="h-3 w-3" />
-              {formatDate(pedido.created_at)}
-            </span>
-            {pedido.alunos?.length > 1 && (
-              <Badge variant="outline" className="text-xs">
-                +{pedido.alunos.length - 1} alunos
-              </Badge>
-            )}
+            <IndicadorSLA createdAt={pedido.created_at} status={pedido.status} compact />
+            <div className="flex items-center gap-1">
+              <CobrarZap pedido={pedido} variant="icon" />
+              {pedido.alunos?.length > 1 && (
+                <Badge variant="outline" className="text-xs">
+                  +{pedido.alunos.length - 1}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       </div>
