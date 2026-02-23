@@ -116,11 +116,11 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Timeline de Auditoria Visual - histórico de cada pedido ✅
 - [x] Refatorar pendências para router separado ✅
 - [x] Dashboard de BI com gráficos (Fase 5) ✅
+- [x] Log de Contatos (Fase 3) ✅
 - [ ] Refatorar pedidos para router separado
 - [ ] Refatorar cadastros para router separado
 - [ ] Refinar máquina de estados dos pedidos
 - [ ] Filtros avançados de data na listagem
-- [ ] Iniciar Fase 3: Log de Contatos
 
 ### P2 (Futuro)
 - [ ] Notificações automáticas por email
