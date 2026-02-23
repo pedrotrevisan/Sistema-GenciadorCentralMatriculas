@@ -87,6 +87,13 @@ export default function CentralPendenciasPage() {
   const [alunoEncontrado, setAlunoEncontrado] = useState(null);
   const [salvandoPendencia, setSalvandoPendencia] = useState(false);
 
+  // Modal Importação em Lote
+  const [modalImportacao, setModalImportacao] = useState(false);
+  const [arquivoImportacao, setArquivoImportacao] = useState(null);
+  const [validacaoImportacao, setValidacaoImportacao] = useState(null);
+  const [etapaImportacao, setEtapaImportacao] = useState('upload'); // upload, validando, preview, importando, resultado
+  const fileInputRef = useRef(null);
+
   useEffect(() => {
     carregarDados();
   }, []);
