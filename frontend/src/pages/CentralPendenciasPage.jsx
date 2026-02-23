@@ -258,6 +258,118 @@ export default function CentralPendenciasPage() {
     return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7)}`;
   };
 
+  // Funções de Importação em Lote
+  const baixarTemplate = async () => {
+    try {
+      const response = await api.get('/pendencias/importacao/template', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'template_importacao_pendencias.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Template baixado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao baixar template');
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const validExtensions = ['.xlsx', '.xls', '.csv'];
+    const hasValidExtension = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+    
+    if (!hasValidExtension) {
+      toast.error('Formato inválido. Use .xlsx, .xls ou .csv');
+      return;
+    }
+    
+    setArquivoImportacao(file);
+    setValidacaoImportacao(null);
+    setEtapaImportacao('upload');
+  };
+
+  const validarImportacao = async () => {
+    if (!arquivoImportacao) {
+      toast.error('Selecione um arquivo');
+      return;
+    }
+    
+    setEtapaImportacao('validando');
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', arquivoImportacao);
+      
+      const response = await api.post('/pendencias/importacao/validar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setValidacaoImportacao(response.data);
+      setEtapaImportacao('preview');
+      
+      if (response.data.linhas_com_erro > 0) {
+        toast.warning(`${response.data.linhas_com_erro} linha(s) com erro encontrada(s)`);
+      } else {
+        toast.success('Arquivo validado com sucesso!');
+      }
+    } catch (error) {
+      const msg = error.response?.data?.detail || 'Erro ao validar arquivo';
+      toast.error(msg);
+      setEtapaImportacao('upload');
+    }
+  };
+
+  const executarImportacao = async () => {
+    if (!arquivoImportacao || !validacaoImportacao?.linhas_validas) {
+      toast.error('Arquivo não validado ou sem linhas válidas');
+      return;
+    }
+    
+    setEtapaImportacao('importando');
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', arquivoImportacao);
+      
+      const response = await api.post('/pendencias/importacao/executar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setValidacaoImportacao(prev => ({
+        ...prev,
+        pendencias_criadas: response.data.pendencias_criadas,
+        erros_importacao: response.data.erros
+      }));
+      setEtapaImportacao('resultado');
+      
+      if (response.data.pendencias_criadas > 0) {
+        toast.success(`${response.data.pendencias_criadas} pendência(s) criada(s) com sucesso!`);
+        carregarPendencias(1);
+        carregarDados();
+      } else {
+        toast.error('Nenhuma pendência foi criada');
+      }
+    } catch (error) {
+      const msg = error.response?.data?.detail || 'Erro ao executar importação';
+      toast.error(msg);
+      setEtapaImportacao('preview');
+    }
+  };
+
+  const resetarImportacao = () => {
+    setArquivoImportacao(null);
+    setValidacaoImportacao(null);
+    setEtapaImportacao('upload');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const formatarData = (dataStr) => {
     if (!dataStr) return '-';
     const data = new Date(dataStr);
