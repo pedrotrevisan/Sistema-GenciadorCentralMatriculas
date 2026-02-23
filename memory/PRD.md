@@ -122,7 +122,7 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Importação de Pendências em Lote (Excel/CSV) ✅
 - [x] Cadastro de Cursos melhorado (Tipo, Modalidade, Área, Carga Horária) ✅
 - [x] Refatorar cadastros para router separado (cadastros.py) ✅
-- [ ] Apoio Cognitivo ("Meu Dia", Base de Conhecimento)
+- [x] Apoio Cognitivo ("Meu Dia", Base de Conhecimento) ✅ (2026-02-23)
 - [ ] Filtros por Data nas listagens
 - [ ] Refatorar pedidos para router separado
 - [ ] Refinar máquina de estados dos pedidos
@@ -190,7 +190,7 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/backend/tests/test_contatos_api.py` - Suite de testes do módulo de Contatos - NOVO!
 
 ## Last Updated
-2026-02-23 - Cadastro de Cursos com campos: Tipo, Modalidade, Área, Carga Horária, Duração
+2026-02-23 - Módulo de Apoio Cognitivo ("Meu Dia" + Base de Conhecimento) implementado com sucesso
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
