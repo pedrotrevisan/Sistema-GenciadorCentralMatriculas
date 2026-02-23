@@ -13,7 +13,7 @@ import requests
 import os
 from uuid import uuid4
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://status-flow-4.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://cm-operacional.preview.emergentagent.com').rstrip('/')
 
 
 @pytest.fixture(scope="module")
