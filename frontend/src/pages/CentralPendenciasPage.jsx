@@ -832,6 +832,170 @@ export default function CentralPendenciasPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Nova Pendência Manual */}
+      <Dialog open={modalNovaPendencia} onOpenChange={(open) => {
+        setModalNovaPendencia(open);
+        if (!open) {
+          setAlunoEncontrado(null);
+          setNovaPendenciaForm({
+            aluno_nome: '',
+            aluno_cpf: '',
+            aluno_email: '',
+            aluno_telefone: '',
+            documento_codigo: '',
+            curso_nome: '',
+            observacoes: ''
+          });
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-green-600" />
+              Nova Pendência Manual
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* CPF com busca automática */}
+            <div>
+              <Label>CPF do Aluno *</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={novaPendenciaForm.aluno_cpf}
+                  onChange={(e) => {
+                    const formatted = formatarCPF(e.target.value);
+                    setNovaPendenciaForm({ ...novaPendenciaForm, aluno_cpf: formatted });
+                  }}
+                  onBlur={(e) => buscarAlunoPorCpf(e.target.value)}
+                  placeholder="000.000.000-00"
+                  className="flex-1"
+                  data-testid="input-cpf-manual"
+                />
+                {buscandoCpf && (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#004587]"></div>
+                  </div>
+                )}
+              </div>
+              {alunoEncontrado && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✓ Aluno encontrado no sistema
+                </p>
+              )}
+            </div>
+            
+            {/* Nome */}
+            <div>
+              <Label>Nome do Aluno *</Label>
+              <Input
+                value={novaPendenciaForm.aluno_nome}
+                onChange={(e) => setNovaPendenciaForm({ ...novaPendenciaForm, aluno_nome: e.target.value })}
+                placeholder="Nome completo do aluno"
+                disabled={!!alunoEncontrado}
+                data-testid="input-nome-manual"
+              />
+            </div>
+            
+            {/* Email e Telefone */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Email</Label>
+                <Input
+                  value={novaPendenciaForm.aluno_email}
+                  onChange={(e) => setNovaPendenciaForm({ ...novaPendenciaForm, aluno_email: e.target.value })}
+                  placeholder="email@exemplo.com"
+                  type="email"
+                  disabled={!!alunoEncontrado}
+                  data-testid="input-email-manual"
+                />
+              </div>
+              <div>
+                <Label>Telefone</Label>
+                <Input
+                  value={novaPendenciaForm.aluno_telefone}
+                  onChange={(e) => {
+                    const formatted = formatarTelefone(e.target.value);
+                    setNovaPendenciaForm({ ...novaPendenciaForm, aluno_telefone: formatted });
+                  }}
+                  placeholder="(00) 00000-0000"
+                  disabled={!!alunoEncontrado}
+                  data-testid="input-telefone-manual"
+                />
+              </div>
+            </div>
+            
+            {/* Curso (opcional) */}
+            <div>
+              <Label>Curso (opcional)</Label>
+              <Input
+                value={novaPendenciaForm.curso_nome}
+                onChange={(e) => setNovaPendenciaForm({ ...novaPendenciaForm, curso_nome: e.target.value })}
+                placeholder="Nome do curso do aluno"
+                disabled={!!alunoEncontrado}
+                data-testid="input-curso-manual"
+              />
+            </div>
+            
+            {/* Tipo de Documento */}
+            <div>
+              <Label>Documento Pendente *</Label>
+              <Select 
+                value={novaPendenciaForm.documento_codigo} 
+                onValueChange={(v) => setNovaPendenciaForm({ ...novaPendenciaForm, documento_codigo: v })}
+              >
+                <SelectTrigger data-testid="select-documento-manual">
+                  <SelectValue placeholder="Selecione o documento" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tiposDocumento.map((tipo) => (
+                    <SelectItem key={tipo.codigo} value={tipo.codigo}>
+                      {tipo.codigo} - {tipo.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Observações */}
+            <div>
+              <Label>Observações</Label>
+              <Textarea
+                value={novaPendenciaForm.observacoes}
+                onChange={(e) => setNovaPendenciaForm({ ...novaPendenciaForm, observacoes: e.target.value })}
+                placeholder="Informações adicionais sobre a pendência..."
+                rows={2}
+                data-testid="input-observacoes-manual"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalNovaPendencia(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={criarPendenciaManual} 
+              className="bg-green-600 hover:bg-green-700"
+              disabled={salvandoPendencia}
+              data-testid="btn-salvar-pendencia-manual"
+            >
+              {salvandoPendencia ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Criar Pendência
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
