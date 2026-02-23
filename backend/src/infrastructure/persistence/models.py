@@ -39,7 +39,7 @@ class UsuarioModel(Base):
     ultimo_acesso = Column(DateTime, nullable=True)
 
     # Relationships
-    pedidos = relationship("PedidoModel", back_populates="consultor")
+    pedidos = relationship("PedidoModel", back_populates="consultor", foreign_keys="PedidoModel.consultor_id")
 
 
 class PedidoModel(Base):
