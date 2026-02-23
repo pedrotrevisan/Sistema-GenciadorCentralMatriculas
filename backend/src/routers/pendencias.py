@@ -127,6 +127,8 @@ async def dashboard_pendencias(
     usuario: Usuario = Depends(get_current_user)
 ):
     """Dashboard da Central de Pendências"""
+    from datetime import timedelta
+    
     # Contagem por status
     status_query = await session.execute(
         select(PendenciaModel.status, func.count(PendenciaModel.id))
@@ -152,6 +154,19 @@ async def dashboard_pendencias(
     )
     total_abertos = abertos_query.scalar() or 0
     
+    # Total críticas (pendências abertas há mais de 7 dias)
+    limite_7_dias = datetime.now(timezone.utc) - timedelta(days=7)
+    criticas_query = await session.execute(
+        select(func.count(PendenciaModel.id))
+        .where(
+            and_(
+                PendenciaModel.created_at < limite_7_dias,
+                PendenciaModel.status.notin_(['aprovado', 'rejeitado'])
+            )
+        )
+    )
+    total_criticas = criticas_query.scalar() or 0
+    
     return {
         "contagem_status": contagem_status,
         "por_tipo": por_tipo,
@@ -162,7 +177,8 @@ async def dashboard_pendencias(
         "total_em_analise": contagem_status.get('em_analise', 0),
         "total_aprovado": contagem_status.get('aprovado', 0),
         "total_rejeitado": contagem_status.get('rejeitado', 0),
-        "total_reenvio": contagem_status.get('reenvio_necessario', 0)
+        "total_reenvio": contagem_status.get('reenvio_necessario', 0),
+        "total_criticas": total_criticas
     }
 
 
