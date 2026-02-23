@@ -27,6 +27,7 @@ import {
   DollarSign,
   BarChart3
 } from 'lucide-react';
+import AlertaRetornos from './AlertaRetornos';
 
 const DashboardLayout = () => {
   const { user, logout, hasPermission } = useAuth();
