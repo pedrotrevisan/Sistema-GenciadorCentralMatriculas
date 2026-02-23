@@ -24,7 +24,8 @@ import {
   Settings,
   Upload,
   AlertCircle,
-  DollarSign
+  DollarSign,
+  BarChart3
 } from 'lucide-react';
 
 const DashboardLayout = () => {
@@ -78,6 +79,7 @@ const DashboardLayout = () => {
     } else if (user?.role === 'assistente') {
       items.push(
         { to: '/assistente', icon: LayoutDashboard, label: 'Painel de Gestão' },
+        { to: '/bi', icon: BarChart3, label: 'Dashboard BI' },
         { to: '/assistente/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
         { to: '/pendencias', icon: AlertCircle, label: 'Pendências' },
         { to: '/reembolsos', icon: DollarSign, label: 'Reembolsos' },
@@ -86,6 +88,7 @@ const DashboardLayout = () => {
     } else if (user?.role === 'admin') {
       items.push(
         { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+        { to: '/bi', icon: BarChart3, label: 'Dashboard BI' },
         { to: '/admin/pedidos', icon: FileText, label: 'Pedidos' },
         { to: '/pendencias', icon: AlertCircle, label: 'Pendências' },
         { to: '/reembolsos', icon: DollarSign, label: 'Reembolsos' },
