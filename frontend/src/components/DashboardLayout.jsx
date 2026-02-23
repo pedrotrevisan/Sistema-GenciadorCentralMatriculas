@@ -78,6 +78,7 @@ const DashboardLayout = () => {
     if (user?.role === 'consultor') {
       items.push(
         { to: '/meu-dia', icon: Sun, label: 'Meu Dia' },
+        { to: '/caixa-entrada', icon: Inbox, label: 'Caixa de Entrada' },
         { to: '/consultor', icon: LayoutDashboard, label: 'Meus Pedidos' },
         { to: '/consultor/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' },
@@ -86,6 +87,7 @@ const DashboardLayout = () => {
     } else if (user?.role === 'assistente') {
       items.push(
         { to: '/meu-dia', icon: Sun, label: 'Meu Dia' },
+        { to: '/caixa-entrada', icon: Inbox, label: 'Caixa de Entrada' },
         { to: '/assistente', icon: LayoutDashboard, label: 'Painel de Gestão' },
         { to: '/bi', icon: BarChart3, label: 'Dashboard BI' },
         { to: '/kanban', icon: LayoutGrid, label: 'Kanban' },
@@ -98,6 +100,7 @@ const DashboardLayout = () => {
     } else if (user?.role === 'admin') {
       items.push(
         { to: '/meu-dia', icon: Sun, label: 'Meu Dia' },
+        { to: '/caixa-entrada', icon: Inbox, label: 'Caixa de Entrada' },
         { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
         { to: '/bi', icon: BarChart3, label: 'Dashboard BI' },
         { to: '/kanban', icon: LayoutGrid, label: 'Kanban' },
