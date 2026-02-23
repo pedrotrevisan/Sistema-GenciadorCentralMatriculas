@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.infrastructure.persistence.database import get_session
 from src.infrastructure.persistence.repositories_transicoes import TransicaoStatusRepository
 from src.infrastructure.persistence.repositories_turmas import TurmaRepository, ReservaVagaRepository
-from src.domain.repositories import PedidoRepository
+from src.infrastructure.persistence.repositories import PedidoRepository
 from src.application.use_cases_transicoes import (
     TransicionarStatusUseCase,
     ConsultarHistoricoStatusUseCase,
