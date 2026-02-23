@@ -51,7 +51,7 @@ const KANBAN_COLUMNS = [
 ];
 
 // Componente do Card arrastável
-const KanbanCard = ({ pedido, isDragging }) => {
+const KanbanCard = ({ pedido, isDragging, onAtribuir }) => {
   const navigate = useNavigate();
   
   const {
@@ -122,9 +122,29 @@ const KanbanCard = ({ pedido, isDragging }) => {
             </span>
           </div>
           
+          {/* Responsável */}
+          {pedido.responsavel_nome && (
+            <div className="flex items-center gap-1 mt-2 text-xs">
+              <User className="h-3 w-3 text-green-600" />
+              <span className="text-green-700 font-medium truncate">{pedido.responsavel_nome}</span>
+            </div>
+          )}
+          
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
             <IndicadorSLA createdAt={pedido.created_at} status={pedido.status} compact />
             <div className="flex items-center gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAtribuir(pedido);
+                }}
+                className={`p-1 rounded hover:bg-gray-100 transition-colors ${
+                  pedido.responsavel_id ? 'text-green-600' : 'text-gray-400'
+                }`}
+                title={pedido.responsavel_nome ? `Atribuído: ${pedido.responsavel_nome}` : 'Atribuir responsável'}
+              >
+                <UserPlus className="h-4 w-4" />
+              </button>
               <CobrarZap pedido={pedido} variant="icon" />
               {pedido.alunos?.length > 1 && (
                 <Badge variant="outline" className="text-xs">
