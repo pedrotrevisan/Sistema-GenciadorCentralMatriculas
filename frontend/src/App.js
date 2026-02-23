@@ -70,6 +70,7 @@ function App() {
               <Route path="/pendencias" element={<CentralPendenciasPage />} />
               <Route path="/reembolsos" element={<ReembolsosPage />} />
               <Route path="/bi" element={<BIDashboardPage />} />
+              <Route path="/kanban" element={<KanbanPage />} />
             </Route>
           </Route>
 
