@@ -8,6 +8,9 @@ import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
 import TimelineAuditoria from '../components/TimelineAuditoria';
 import LogContatos from '../components/LogContatos';
+import CobrarZap from '../components/CobrarZap';
+import IndicadorSLA from '../components/IndicadorSLA';
+import BotaoFavorito from '../components/BotaoFavorito';
 import {
   Select,
   SelectContent,
