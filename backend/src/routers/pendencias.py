@@ -734,3 +734,343 @@ async def deletar_pendencia(
     await session.commit()
     
     return {"mensagem": "Pendência excluída com sucesso"}
+
+
+# ==================== IMPORTAÇÃO EM LOTE ====================
+
+class ImportacaoPendenciasResultado(BaseModel):
+    sucesso: bool
+    total_linhas: int
+    linhas_validas: int
+    linhas_com_erro: int
+    pendencias_criadas: int = 0
+    erros: List[dict] = []
+    preview: List[dict] = []
+
+
+def validar_cpf_pendencia(cpf: str) -> tuple:
+    """Valida formato do CPF"""
+    if not cpf:
+        return False, "CPF é obrigatório", ""
+    cpf_limpo = re.sub(r'\D', '', str(cpf))
+    if len(cpf_limpo) != 11:
+        return False, f"CPF deve ter 11 dígitos (encontrado: {len(cpf_limpo)})", ""
+    return True, "", cpf_limpo
+
+
+@router.get("/importacao/template")
+async def download_template_pendencias():
+    """Gera template Excel para importação de pendências em lote"""
+    import pandas as pd
+    
+    # Criar DataFrame com exemplos
+    data = {
+        'cpf': ['123.456.789-00', '987.654.321-00', '111.222.333-44'],
+        'nome': ['JOÃO CARLOS DA SILVA', 'MARIA EDUARDA DOS SANTOS', 'PEDRO HENRIQUE OLIVEIRA'],
+        'email': ['joao.silva@email.com', 'maria.santos@email.com', 'pedro.oliveira@email.com'],
+        'telefone': ['(71) 99999-8888', '(71) 98888-7777', '(71) 97777-6666'],
+        'curso': ['Técnico em Mecatrônica', 'Técnico em Automação Industrial', 'Engenharia de Produção'],
+        'documento_codigo': ['131', '94', '136'],
+        'observacoes': ['RG Frente pendente', 'Comprovante de residência', 'Comprovante de escolaridade']
+    }
+    
+    df = pd.DataFrame(data)
+    
+    # Criar arquivo Excel em memória com duas abas
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Pendencias')
+        
+        # Adicionar aba de referência com códigos de documentos
+        docs_data = {
+            'codigo': ['94', '96', '97', '131', '132', '136', '137', '205'],
+            'documento': [
+                'Comprovante de Residência',
+                'Solicitação Desconto (Sindicato/CIEB/Ex-Aluno)',
+                'CPF/RG Responsável Legal (menor de 18 anos)',
+                'RG – Frente',
+                'RG – Verso',
+                'Comprovante de Escolaridade – Frente',
+                'Comprovante de Escolaridade – Verso',
+                'CPF'
+            ],
+            'obrigatorio': ['Sim', 'Não', 'Se menor', 'Sim', 'Sim', 'Sim', 'Sim', 'Não']
+        }
+        df_docs = pd.DataFrame(docs_data)
+        df_docs.to_excel(writer, index=False, sheet_name='Codigos_Documentos')
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": "attachment; filename=template_importacao_pendencias.xlsx"
+        }
+    )
+
+
+@router.post("/importacao/validar", response_model=ImportacaoPendenciasResultado)
+async def validar_importacao_pendencias(
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Valida arquivo de importação de pendências e retorna preview com erros"""
+    import pandas as pd
+    
+    # Validar extensão
+    if not file.filename.endswith(('.xlsx', '.xls', '.csv')):
+        raise HTTPException(400, "Formato inválido. Use .xlsx, .xls ou .csv")
+    
+    # Ler arquivo
+    try:
+        contents = await file.read()
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(contents), dtype=str)
+        else:
+            df = pd.read_excel(io.BytesIO(contents), dtype=str, sheet_name=0)
+    except Exception as e:
+        raise HTTPException(400, f"Erro ao ler arquivo: {str(e)}")
+    
+    # Normalizar nomes das colunas
+    df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+    
+    # Colunas obrigatórias
+    colunas_obrigatorias = ['cpf', 'nome', 'documento_codigo']
+    colunas_faltantes = [c for c in colunas_obrigatorias if c not in df.columns]
+    
+    if colunas_faltantes:
+        raise HTTPException(400, f"Colunas obrigatórias faltantes: {', '.join(colunas_faltantes)}")
+    
+    # Buscar tipos de documento válidos
+    tipos_result = await session.execute(select(TipoDocumentoModel))
+    tipos_validos = {t.codigo: t.nome for t in tipos_result.scalars().all()}
+    
+    # Validar cada linha
+    erros = []
+    preview = []
+    linhas_validas = 0
+    
+    for idx, row in df.iterrows():
+        linha_num = idx + 2  # +2 porque Excel começa em 1 e tem header
+        linha_erros = []
+        
+        # Validar nome
+        nome = str(row.get('nome', '')).strip()
+        if not nome or len(nome) < 3:
+            linha_erros.append("Nome deve ter pelo menos 3 caracteres")
+        
+        # Validar CPF
+        cpf_valido, cpf_erro, cpf_limpo = validar_cpf_pendencia(row.get('cpf', ''))
+        if not cpf_valido:
+            linha_erros.append(cpf_erro)
+        
+        # Validar código do documento
+        doc_codigo = str(row.get('documento_codigo', '')).strip()
+        if not doc_codigo:
+            linha_erros.append("Código do documento é obrigatório")
+        elif doc_codigo not in tipos_validos:
+            linha_erros.append(f"Código de documento inválido: {doc_codigo}. Use: {', '.join(tipos_validos.keys())}")
+        
+        # Verificar se já existe pendência para este CPF/documento
+        if cpf_valido and doc_codigo in tipos_validos:
+            aluno_result = await session.execute(
+                select(AlunoModel).where(AlunoModel.cpf == cpf_limpo)
+            )
+            aluno = aluno_result.scalar_one_or_none()
+            
+            if aluno:
+                pendencia_existente = await session.execute(
+                    select(PendenciaModel).where(
+                        and_(
+                            PendenciaModel.aluno_id == aluno.id,
+                            PendenciaModel.documento_codigo == doc_codigo,
+                            PendenciaModel.status.notin_(['aprovado', 'rejeitado'])
+                        )
+                    )
+                )
+                if pendencia_existente.scalar_one_or_none():
+                    linha_erros.append(f"Já existe pendência aberta para este documento")
+        
+        # Montar preview
+        preview_item = {
+            "linha": linha_num,
+            "nome": nome.title() if nome else "",
+            "cpf": cpf_limpo if cpf_valido else str(row.get('cpf', '')),
+            "documento_codigo": doc_codigo,
+            "documento_nome": tipos_validos.get(doc_codigo, "Desconhecido"),
+            "curso": str(row.get('curso', '')).strip(),
+            "valido": len(linha_erros) == 0,
+            "erros": linha_erros
+        }
+        preview.append(preview_item)
+        
+        if linha_erros:
+            erros.append({
+                "linha": linha_num,
+                "erros": linha_erros
+            })
+        else:
+            linhas_validas += 1
+    
+    return ImportacaoPendenciasResultado(
+        sucesso=len(erros) == 0,
+        total_linhas=len(df),
+        linhas_validas=linhas_validas,
+        linhas_com_erro=len(erros),
+        erros=erros,
+        preview=preview[:100]  # Limitar preview a 100 linhas
+    )
+
+
+@router.post("/importacao/executar")
+async def executar_importacao_pendencias(
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Executa a importação em lote criando as pendências"""
+    import pandas as pd
+    
+    # Validar extensão
+    if not file.filename.endswith(('.xlsx', '.xls', '.csv')):
+        raise HTTPException(400, "Formato inválido. Use .xlsx, .xls ou .csv")
+    
+    # Ler arquivo
+    try:
+        contents = await file.read()
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(contents), dtype=str)
+        else:
+            df = pd.read_excel(io.BytesIO(contents), dtype=str, sheet_name=0)
+    except Exception as e:
+        raise HTTPException(400, f"Erro ao ler arquivo: {str(e)}")
+    
+    # Normalizar nomes das colunas
+    df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+    
+    # Buscar tipos de documento válidos
+    tipos_result = await session.execute(select(TipoDocumentoModel))
+    tipos_validos = {t.codigo: t for t in tipos_result.scalars().all()}
+    
+    pendencias_criadas = 0
+    erros = []
+    
+    for idx, row in df.iterrows():
+        linha_num = idx + 2
+        
+        try:
+            # Validar CPF
+            cpf_valido, cpf_erro, cpf_limpo = validar_cpf_pendencia(row.get('cpf', ''))
+            if not cpf_valido:
+                erros.append({"linha": linha_num, "erro": cpf_erro})
+                continue
+            
+            # Validar documento
+            doc_codigo = str(row.get('documento_codigo', '')).strip()
+            if doc_codigo not in tipos_validos:
+                erros.append({"linha": linha_num, "erro": f"Código de documento inválido: {doc_codigo}"})
+                continue
+            
+            tipo_doc = tipos_validos[doc_codigo]
+            nome = str(row.get('nome', '')).strip().title()
+            email = str(row.get('email', '')).strip().lower() if row.get('email') else "pendencia@importacao.com"
+            telefone = re.sub(r'\D', '', str(row.get('telefone', ''))) if row.get('telefone') else "00000000000"
+            curso = str(row.get('curso', '')).strip() if row.get('curso') else "Importação em Lote"
+            observacoes = str(row.get('observacoes', '')).strip() if row.get('observacoes') else ""
+            
+            # Verificar se aluno já existe
+            aluno_result = await session.execute(
+                select(AlunoModel).where(AlunoModel.cpf == cpf_limpo)
+            )
+            aluno = aluno_result.scalar_one_or_none()
+            
+            if aluno:
+                # Verificar duplicidade de pendência
+                pendencia_existente = await session.execute(
+                    select(PendenciaModel).where(
+                        and_(
+                            PendenciaModel.aluno_id == aluno.id,
+                            PendenciaModel.documento_codigo == doc_codigo,
+                            PendenciaModel.status.notin_(['aprovado', 'rejeitado'])
+                        )
+                    )
+                )
+                if pendencia_existente.scalar_one_or_none():
+                    erros.append({"linha": linha_num, "erro": "Pendência já existe para este documento"})
+                    continue
+                
+                pedido_id = aluno.pedido_id
+            else:
+                # Criar novo aluno e pedido
+                pedido_id = str(uuid.uuid4())
+                aluno_id = str(uuid.uuid4())
+                
+                # Gerar número de protocolo
+                count_result = await session.execute(select(func.count(PedidoModel.id)))
+                count = count_result.scalar() or 0
+                ano = datetime.now(timezone.utc).year
+                numero_protocolo = f"CM-{ano}-{(count + 1):04d}"
+                
+                pedido = PedidoModel(
+                    id=pedido_id,
+                    numero_protocolo=numero_protocolo,
+                    consultor_id=usuario.id,
+                    consultor_nome=usuario.nome,
+                    curso_id="importacao",
+                    curso_nome=curso,
+                    status="documentacao_pendente",
+                    observacoes=f"Importação em lote - Linha {linha_num}"
+                )
+                session.add(pedido)
+                
+                aluno = AlunoModel(
+                    id=aluno_id,
+                    pedido_id=pedido_id,
+                    nome=nome,
+                    cpf=cpf_limpo,
+                    email=email,
+                    telefone=telefone,
+                    data_nascimento=datetime(2000, 1, 1, tzinfo=timezone.utc),
+                    rg="000000000",
+                    rg_orgao_emissor="SSP",
+                    rg_uf="BA",
+                    endereco_cep="00000000",
+                    endereco_logradouro="Não informado",
+                    endereco_numero="0",
+                    endereco_bairro="Não informado",
+                    endereco_cidade="Não informado",
+                    endereco_uf="BA"
+                )
+                session.add(aluno)
+                await session.flush()
+            
+            # Criar pendência
+            pendencia = PendenciaModel(
+                id=str(uuid.uuid4()),
+                aluno_id=aluno.id,
+                pedido_id=pedido_id if not hasattr(aluno, 'pedido_id') or not aluno.pedido_id else aluno.pedido_id,
+                tipo_documento_id=tipo_doc.id,
+                documento_codigo=doc_codigo,
+                documento_nome=tipo_doc.nome,
+                status="pendente",
+                observacoes=f"{curso} - {observacoes}".strip(" -") if observacoes else curso,
+                criado_por_id=usuario.id,
+                criado_por_nome=usuario.nome
+            )
+            session.add(pendencia)
+            pendencias_criadas += 1
+            
+        except Exception as e:
+            erros.append({"linha": linha_num, "erro": str(e)})
+    
+    await session.commit()
+    
+    return {
+        "sucesso": pendencias_criadas > 0,
+        "pendencias_criadas": pendencias_criadas,
+        "total_linhas": len(df),
+        "erros": erros
+    }
+
