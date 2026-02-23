@@ -26,7 +26,9 @@ import {
   AlertCircle,
   DollarSign,
   BarChart3,
-  LayoutGrid
+  LayoutGrid,
+  Sun,
+  BookOpen
 } from 'lucide-react';
 import AlertaRetornos from './AlertaRetornos';
 
