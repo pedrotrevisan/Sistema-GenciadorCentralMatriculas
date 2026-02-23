@@ -155,4 +155,24 @@ export const documentosAPI = {
   getFilaValidacao: (limite = 20) => api.get('/documentos/validacao/fila', { params: { limite } }),
 };
 
+// Log de Contatos API (Fase 3)
+export const contatosAPI = {
+  // Referência
+  getTipos: () => api.get('/contatos/tipos'),
+  getResultados: () => api.get('/contatos/resultados'),
+  getMotivos: () => api.get('/contatos/motivos'),
+  
+  // Estatísticas
+  getStats: () => api.get('/contatos/stats'),
+  getRetornos: (limite = 50) => api.get('/contatos/retornos', { params: { limite } }),
+  
+  // CRUD
+  registrar: (data) => api.post('/contatos', data),
+  listarPorPedido: (pedidoId, params) => api.get(`/contatos/pedido/${pedidoId}`, { params }),
+  buscarPorId: (id) => api.get(`/contatos/${id}`),
+  atualizar: (id, data) => api.put(`/contatos/${id}`, data),
+  marcarRetorno: (id) => api.post(`/contatos/${id}/marcar-retorno`),
+  excluir: (id) => api.delete(`/contatos/${id}`),
+};
+
 export default api;
