@@ -16,7 +16,7 @@ from src.domain.status_matricula import (
 )
 from src.domain.exceptions import BusinessRuleException, NotFoundException
 from src.infrastructure.persistence.repositories_transicoes import TransicaoStatusRepository
-from src.domain.repositories import IPedidoRepository
+from src.infrastructure.persistence.repositories import PedidoRepository as IPedidoRepository
 from src.application.use_cases_integracao_vagas import GerenciarReservaPedidoUseCase
 from src.infrastructure.persistence.repositories_turmas import TurmaRepository, ReservaVagaRepository
 
