@@ -26,6 +26,8 @@ import BIDashboardPage from "./pages/BIDashboardPage";
 import KanbanPage from "./pages/KanbanPage";
 import MeuDiaPage from "./pages/MeuDiaPage";
 import BaseConhecimentoPage from "./pages/BaseConhecimentoPage";
+import ConfiguracaoContaPage from "./pages/ConfiguracaoContaPage";
+import CaixaEntradaPage from "./pages/CaixaEntradaPage";
 
 function App() {
   return (
