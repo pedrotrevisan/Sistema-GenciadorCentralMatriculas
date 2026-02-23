@@ -237,6 +237,12 @@ const KanbanPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeId, setActiveId] = useState(null);
   const [updating, setUpdating] = useState(false);
+  
+  // Estado para modal de atribuição
+  const [modalAtribuir, setModalAtribuir] = useState({
+    isOpen: false,
+    pedido: null
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
