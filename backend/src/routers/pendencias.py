@@ -1,11 +1,14 @@
 """Router do Módulo de Pendências Documentais"""
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timezone
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
+import re
+import io
 
 from src.domain.entities import Usuario
 from src.infrastructure.persistence.models import (
