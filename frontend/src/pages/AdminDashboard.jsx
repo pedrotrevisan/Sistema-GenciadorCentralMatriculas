@@ -5,6 +5,7 @@ import { pedidosAPI, pendenciasAPI, reembolsosAPI } from '../services/api';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import AlertaRetornos from '../components/AlertaRetornos';
 import {
   BarChart,
   Bar,
