@@ -63,6 +63,41 @@ STATUS_PENDENCIA = {
 }
 
 
+@router.get("/buscar-aluno/{cpf}")
+async def buscar_aluno_por_cpf(
+    cpf: str,
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Busca aluno existente pelo CPF"""
+    import re
+    cpf_limpo = re.sub(r'\D', '', cpf)
+    
+    result = await session.execute(
+        select(AlunoModel, PedidoModel.curso_nome)
+        .join(PedidoModel, AlunoModel.pedido_id == PedidoModel.id)
+        .where(AlunoModel.cpf == cpf_limpo)
+    )
+    row = result.first()
+    
+    if not row:
+        return {"encontrado": False, "aluno": None}
+    
+    aluno, curso_nome = row
+    return {
+        "encontrado": True,
+        "aluno": {
+            "id": aluno.id,
+            "nome": aluno.nome,
+            "cpf": aluno.cpf,
+            "email": aluno.email,
+            "telefone": aluno.telefone,
+            "curso_nome": curso_nome,
+            "pedido_id": aluno.pedido_id
+        }
+    }
+
+
 @router.get("/tipos-documento")
 async def listar_tipos_documento(
     session: AsyncSession = Depends(get_db_session),
