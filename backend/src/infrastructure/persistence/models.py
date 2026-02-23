@@ -126,6 +126,14 @@ class CursoModel(Base):
     id = Column(String(36), primary_key=True)
     nome = Column(String(200), nullable=False, unique=True)
     descricao = Column(Text, nullable=True)
+    
+    # Novos campos para controle de cursos
+    tipo = Column(String(50), nullable=True, index=True)  # graduacao, pos_graduacao, tecnico, livre
+    modalidade = Column(String(30), nullable=True)  # presencial, ead, hibrido
+    area = Column(String(100), nullable=True)  # tecnologia, gestao, saude, industria, etc
+    carga_horaria = Column(String(20), nullable=True)  # Ex: "800h", "1200h"
+    duracao = Column(String(50), nullable=True)  # Ex: "2 anos", "18 meses"
+    
     ativo = Column(Boolean, default=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
