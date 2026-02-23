@@ -137,8 +137,35 @@ export default function ReembolsosPage() {
   };
 
   const criarReembolso = async () => {
-    if (!novoForm.aluno_nome.trim() || !novoForm.curso.trim() || !novoForm.motivo) {
-      toast.error('Preencha os campos obrigatórios');
+    // Validar campos obrigatórios
+    const camposObrigatorios = [
+      { campo: novoForm.aluno_nome, nome: 'Nome do Aluno' },
+      { campo: novoForm.aluno_cpf, nome: 'CPF' },
+      { campo: novoForm.aluno_email, nome: 'Email' },
+      { campo: novoForm.aluno_telefone, nome: 'Telefone' },
+      { campo: novoForm.turma, nome: 'Turma' },
+      { campo: novoForm.numero_chamado_sgc, nome: 'Número do Chamado SGC Plus' },
+      { campo: novoForm.curso, nome: 'Curso' },
+      { campo: novoForm.motivo, nome: 'Motivo do Reembolso' }
+    ];
+
+    // Se motivo for "outros", descrição também é obrigatória
+    if (novoForm.motivo === 'outros') {
+      camposObrigatorios.push({ campo: novoForm.motivo_descricao, nome: 'Descrição do Motivo' });
+    }
+
+    // Verificar se todos os campos estão preenchidos
+    const campoVazio = camposObrigatorios.find(item => !item.campo || !item.campo.toString().trim());
+    
+    if (campoVazio) {
+      toast.error(`O campo "${campoVazio.nome}" é obrigatório`);
+      return;
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(novoForm.aluno_email)) {
+      toast.error('Email inválido');
       return;
     }
     
