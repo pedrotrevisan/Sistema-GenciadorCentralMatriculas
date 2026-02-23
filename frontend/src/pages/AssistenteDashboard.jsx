@@ -227,6 +227,9 @@ const AssistenteDashboard = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn" data-testid="assistente-dashboard">
+      {/* Alerta de Retornos Atrasados */}
+      <AlertaRetornos variant="banner" />
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
