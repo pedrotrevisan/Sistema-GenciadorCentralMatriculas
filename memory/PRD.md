@@ -119,6 +119,7 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Log de Contatos (Fase 3) ✅
 - [x] Kanban Board interativo ✅
 - [x] Nova Pendência Manual (criar sem pedido) ✅
+- [x] Importação de Pendências em Lote (Excel/CSV) ✅
 - [ ] Apoio Cognitivo ("Meu Dia", Base de Conhecimento)
 - [ ] Filtros por Data nas listagens
 - [ ] Refatorar pedidos para router separado
