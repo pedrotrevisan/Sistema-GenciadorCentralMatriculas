@@ -8,6 +8,7 @@ import { Input } from '../components/ui/input';
 import { Skeleton } from '../components/ui/skeleton';
 import CobrarZap from '../components/CobrarZap';
 import IndicadorSLA from '../components/IndicadorSLA';
+import AtribuirResponsavelModal from '../components/AtribuirResponsavelModal';
 import {
   DndContext,
   DragOverlay,
@@ -33,7 +34,9 @@ import {
   Calendar,
   ChevronRight,
   LayoutGrid,
-  MessageCircle
+  MessageCircle,
+  UserPlus,
+  User
 } from 'lucide-react';
 
 // Configuração de status do Kanban
