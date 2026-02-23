@@ -356,3 +356,45 @@ Dashboard de Business Intelligence com gráficos interativos usando Recharts.
 - Frontend: React + Recharts
 - Backend: Endpoints `/api/documentos/bi/*`
 
+## Log de Contatos - Fase 3 (2026-02-23) - NOVO!
+Sistema para registrar e consultar todas as interações com alunos.
+
+### Tipos de Contato (6 tipos)
+- `ligacao` - Ligação Telefônica
+- `whatsapp` - WhatsApp
+- `email` - E-mail
+- `presencial` - Presencial
+- `sms` - SMS
+- `outro` - Outro
+
+### Resultados de Contato (7 resultados)
+- `sucesso` - Conseguiu falar/contactar
+- `nao_atendeu` - Não atendeu ligação
+- `caixa_postal` - Caiu na caixa postal
+- `numero_errado` - Número incorreto
+- `sem_resposta` - WhatsApp/Email sem resposta
+- `pendente` - Aguardando retorno
+- `agendado` - Retorno agendado
+
+### Motivos de Contato (10 motivos)
+- documentacao, acompanhamento, confirmacao, reembolso, pendencia
+- informacao, desistencia, boas_vindas, lembrete, outro
+
+### Endpoints (/api/contatos)
+**Referência:**
+- `GET /api/contatos/tipos` - Lista tipos de contato
+- `GET /api/contatos/resultados` - Lista resultados
+- `GET /api/contatos/motivos` - Lista motivos
+
+**Estatísticas:**
+- `GET /api/contatos/stats` - KPIs gerais de contatos
+- `GET /api/contatos/retornos` - Lista retornos pendentes/atrasados
+
+**CRUD:**
+- `POST /api/contatos` - Registrar novo contato
+- `GET /api/contatos/pedido/{pedido_id}` - Listar contatos de um pedido
+- `GET /api/contatos/{id}` - Buscar contato
+- `PUT /api/contatos/{id}` - Atualizar contato
+- `POST /api/contatos/{id}/marcar-retorno` - Marcar retorno realizado
+- `DELETE /api/contatos/{id}` - Excluir (admin only)
+
