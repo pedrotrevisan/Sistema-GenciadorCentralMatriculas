@@ -87,6 +87,8 @@ function App() {
             <Route element={<DashboardLayout />}>
               <Route path="/meu-dia" element={<MeuDiaPage />} />
               <Route path="/base-conhecimento" element={<BaseConhecimentoPage />} />
+              <Route path="/minha-conta" element={<ConfiguracaoContaPage />} />
+              <Route path="/caixa-entrada" element={<CaixaEntradaPage />} />
             </Route>
           </Route>
 
