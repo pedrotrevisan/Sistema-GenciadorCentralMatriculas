@@ -125,4 +125,34 @@ export const reembolsosAPI = {
   marcarEmailEnviado: (id) => api.post(`/reembolsos/${id}/marcar-email-enviado`),
 };
 
+// Documentos API (Clean Architecture - Fase 2)
+export const documentosAPI = {
+  // Referência
+  getTipos: () => api.get('/documentos/tipos'),
+  getStatus: () => api.get('/documentos/status'),
+  getPrioridades: () => api.get('/documentos/prioridades'),
+  
+  // Estatísticas
+  getStatsResumo: () => api.get('/documentos/stats/resumo'),
+  getStatsPorTipo: () => api.get('/documentos/stats/por-tipo'),
+  getStatsVencendo: (dias = 3) => api.get('/documentos/stats/vencendo', { params: { dias } }),
+  
+  // Dashboard BI
+  getBIMatriculas: () => api.get('/documentos/bi/matriculas'),
+  getBIEvolucao: (meses = 6) => api.get('/documentos/bi/evolucao', { params: { meses } }),
+  getBIReembolsos: () => api.get('/documentos/bi/reembolsos'),
+  getBIPendencias: () => api.get('/documentos/bi/pendencias'),
+  getBICompleto: () => api.get('/documentos/bi/completo'),
+  
+  // CRUD
+  criar: (data) => api.post('/documentos', data),
+  criarPadrao: (pedidoId, prazoDias = 7) => api.post(`/documentos/padrao/${pedidoId}`, null, { params: { prazo_dias: prazoDias } }),
+  listarPorPedido: (pedidoId, status) => api.get(`/documentos/pedido/${pedidoId}`, { params: { status } }),
+  buscarPorId: (id) => api.get(`/documentos/${id}`),
+  enviar: (id, data) => api.post(`/documentos/${id}/enviar`, data),
+  validar: (id, data) => api.post(`/documentos/${id}/validar`, data),
+  atualizarObservacoes: (id, data) => api.put(`/documentos/${id}/observacoes`, data),
+  getFilaValidacao: (limite = 20) => api.get('/documentos/validacao/fila', { params: { limite } }),
+};
+
 export default api;
