@@ -24,6 +24,8 @@ import CentralPendenciasPage from "./pages/CentralPendenciasPage";
 import ReembolsosPage from "./pages/ReembolsosPage";
 import BIDashboardPage from "./pages/BIDashboardPage";
 import KanbanPage from "./pages/KanbanPage";
+import MeuDiaPage from "./pages/MeuDiaPage";
+import BaseConhecimentoPage from "./pages/BaseConhecimentoPage";
 
 function App() {
   return (
