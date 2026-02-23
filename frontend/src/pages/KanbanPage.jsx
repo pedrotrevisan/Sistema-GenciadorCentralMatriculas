@@ -465,6 +465,7 @@ const KanbanPage = () => {
                 key={column.id}
                 column={column}
                 pedidos={pedidosByStatus[column.id] || []}
+                onAtribuir={handleOpenAtribuir}
               />
             ))}
           </div>
@@ -474,6 +475,17 @@ const KanbanPage = () => {
           </DragOverlay>
         </DndContext>
       </div>
+
+      {/* Modal de Atribuição */}
+      <AtribuirResponsavelModal
+        isOpen={modalAtribuir.isOpen}
+        onClose={() => setModalAtribuir({ isOpen: false, pedido: null })}
+        tipo="pedido"
+        itemId={modalAtribuir.pedido?.id}
+        itemTitulo={`${modalAtribuir.pedido?.protocolo || 'S/N'} - ${modalAtribuir.pedido?.alunos?.[0]?.nome || 'Sem aluno'}`}
+        responsavelAtual={modalAtribuir.pedido?.responsavel_id}
+        onSuccess={handleAtribuicaoSuccess}
+      />
 
       {/* Legenda */}
       <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
