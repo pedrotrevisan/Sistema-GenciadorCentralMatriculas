@@ -120,10 +120,11 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Kanban Board interativo ✅
 - [x] Nova Pendência Manual (criar sem pedido) ✅
 - [x] Importação de Pendências em Lote (Excel/CSV) ✅
+- [x] Cadastro de Cursos melhorado (Tipo, Modalidade, Área, Carga Horária) ✅
+- [x] Refatorar cadastros para router separado (cadastros.py) ✅
 - [ ] Apoio Cognitivo ("Meu Dia", Base de Conhecimento)
 - [ ] Filtros por Data nas listagens
 - [ ] Refatorar pedidos para router separado
-- [ ] Refatorar cadastros para router separado
 - [ ] Refinar máquina de estados dos pedidos
 
 ### P2 (Futuro)
