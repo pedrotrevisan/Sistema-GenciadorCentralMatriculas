@@ -410,3 +410,71 @@ Sistema para registrar e consultar todas as interações com alunos.
 - `POST /api/contatos/{id}/marcar-retorno` - Marcar retorno realizado
 - `DELETE /api/contatos/{id}` - Excluir (admin only)
 
+
+## Apoio Cognitivo - Meu Dia + Base de Conhecimento (2026-02-23) - NOVO!
+Sistema de apoio cognitivo para organização pessoal e gestão de conhecimento.
+
+### Meu Dia (Checklist Diário)
+Página personalizada com:
+- Saudação dinâmica (Bom dia/Boa tarde/Boa noite + nome do usuário)
+- Cards de resumo: Tarefas do dia, Pendências abertas, Pedidos em andamento, Retornos pendentes
+- Lista de tarefas com checkbox, categorias, prioridades e horários sugeridos
+- Lembretes do dia
+- Acesso rápido para módulos importantes
+- Dica do dia
+
+### Categorias de Tarefas
+- `rotina` - Rotina Diária (azul)
+- `pendencia` - Pendência (laranja)
+- `lembrete` - Lembrete (roxo)
+- `reuniao` - Reunião (verde)
+- `outro` - Outro (cinza)
+
+### Base de Conhecimento
+Repositório de artigos e procedimentos com:
+- Categorias: Procedimento, FAQ, Documento, Dica Rápida, Informação de Contato
+- Busca por texto
+- Filtro por categoria
+- Artigos em destaque
+- Contador de visualizações
+- Renderização markdown simplificada
+
+### Endpoints (/api/apoio)
+
+**Meu Dia:**
+- `GET /api/apoio/meu-dia` - Resumo completo do dia do usuário
+
+**Tarefas:**
+- `GET /api/apoio/tarefas` - Listar tarefas (com filtros: data, categoria, concluida)
+- `POST /api/apoio/tarefas` - Criar tarefa
+- `PUT /api/apoio/tarefas/{id}` - Atualizar tarefa
+- `PATCH /api/apoio/tarefas/{id}/concluir` - Marcar/desmarcar como concluída
+- `DELETE /api/apoio/tarefas/{id}` - Remover tarefa
+
+**Lembretes:**
+- `GET /api/apoio/lembretes` - Listar lembretes
+- `POST /api/apoio/lembretes` - Criar lembrete
+- `PATCH /api/apoio/lembretes/{id}/concluir` - Marcar como concluído
+- `DELETE /api/apoio/lembretes/{id}` - Remover lembrete
+
+**Base de Conhecimento:**
+- `GET /api/apoio/conhecimento/categorias` - Listar categorias
+- `GET /api/apoio/conhecimento` - Listar artigos (com filtros: categoria, busca, destaque)
+- `GET /api/apoio/conhecimento/{id}` - Buscar artigo (incrementa visualizações)
+- `POST /api/apoio/conhecimento` - Criar artigo (Admin only)
+- `PUT /api/apoio/conhecimento/{id}` - Atualizar artigo (Admin only)
+- `DELETE /api/apoio/conhecimento/{id}` - Remover artigo (Admin only)
+
+### Páginas Frontend
+- `/meu-dia` - MeuDiaPage.jsx
+- `/base-conhecimento` - BaseConhecimentoPage.jsx
+
+### Modelos de Dados (SQLAlchemy)
+- `TarefaDiariaModel` - Tarefas do checklist diário
+- `LembreteModel` - Lembretes personalizados
+- `ArtigoConhecimentoModel` - Artigos da base de conhecimento
+
+### Test Report
+- `/app/test_reports/iteration_10.json` - 41/41 testes PASS (100%)
+- `/app/backend/tests/test_apoio_cognitivo.py` - Suite de testes
+
