@@ -547,7 +547,7 @@ async def criar_artigo(
     usuario: Usuario = Depends(get_current_user)
 ):
     """Cria um novo artigo (Admin)"""
-    if usuario.role != 'admin':
+    if usuario.role.value != 'admin':
         raise HTTPException(403, "Apenas administradores podem criar artigos")
     
     artigo = ArtigoConhecimentoModel(
@@ -582,7 +582,7 @@ async def atualizar_artigo(
     usuario: Usuario = Depends(get_current_user)
 ):
     """Atualiza um artigo (Admin)"""
-    if usuario.role != 'admin':
+    if usuario.role.value != 'admin':
         raise HTTPException(403, "Apenas administradores podem editar artigos")
     
     result = await session.execute(
@@ -613,7 +613,7 @@ async def deletar_artigo(
     usuario: Usuario = Depends(get_current_user)
 ):
     """Remove um artigo (Admin)"""
-    if usuario.role != 'admin':
+    if usuario.role.value != 'admin':
         raise HTTPException(403, "Apenas administradores podem remover artigos")
     
     result = await session.execute(
