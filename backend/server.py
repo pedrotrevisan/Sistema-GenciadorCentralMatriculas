@@ -1334,6 +1334,7 @@ from src.routers.documentos import router as documentos_router
 from src.routers.contatos import router as contatos_router
 from src.routers.cadastros import router as cadastros_router
 from src.routers.apoio_cognitivo import router as apoio_router
+from src.routers.atribuicoes import router as atribuicoes_router
 
 api_router.include_router(reembolsos_router)
 api_router.include_router(pendencias_router)
@@ -1344,6 +1345,7 @@ api_router.include_router(documentos_router)
 api_router.include_router(contatos_router)
 api_router.include_router(cadastros_router)
 api_router.include_router(apoio_router)
+api_router.include_router(atribuicoes_router)
 
 # Then include main router in app
 app.include_router(api_router)
