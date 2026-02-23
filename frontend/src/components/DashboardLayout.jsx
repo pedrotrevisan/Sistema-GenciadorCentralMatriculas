@@ -126,7 +126,12 @@ const DashboardLayout = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            {/* Alerta de Retornos */}
+            {(user?.role === 'admin' || user?.role === 'assistente') && (
+              <AlertaRetornos variant="popover" />
+            )}
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="text-white hover:bg-white/10">
