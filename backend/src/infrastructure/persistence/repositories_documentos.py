@@ -44,7 +44,8 @@ class PendenciaDocumentalRepository:
             atualizado_em=datetime.now()
         )
         
-        self.session.add(pendencia_model)
+        # Use merge instead of add to handle both insert and update
+        await self.session.merge(pendencia_model)
         await self.session.flush()
     
     async def buscar_por_id(self, pendencia_id: str) -> Optional[PendenciaDocumental]:
