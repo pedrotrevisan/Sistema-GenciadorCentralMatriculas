@@ -532,11 +532,11 @@ class TestDocumentWorkflow:
         # Create pendencia only (don't submit)
         payload = {
             "pedido_id": pedido_id,
-            "tipo": "declaracao_quitacao",
+            "tipo": "titulo_eleitor",
             "obrigatorio": False,
             "prioridade": "baixa",
             "prazo_dias": 30,
-            "descricao": "TEST_Declaração para teste não enviado"
+            "descricao": "TEST_Titulo para teste não enviado"
         }
         create_r = requests.post(f"{BASE_URL}/api/documentos", headers=admin_headers, json=payload)
         pendencia_id = create_r.json()["id"]
