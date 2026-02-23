@@ -46,6 +46,12 @@ export default function ReembolsosPage() {
   const [modalDadosBancarios, setModalDadosBancarios] = useState(null);
   const [modalTemplates, setModalTemplates] = useState(null);
   
+  // Modal Atribuição
+  const [modalAtribuir, setModalAtribuir] = useState({
+    isOpen: false,
+    reembolso: null
+  });
+  
   // Formulário novo reembolso
   const [novoForm, setNovoForm] = useState({
     aluno_nome: '',
