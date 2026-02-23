@@ -240,7 +240,7 @@ async def meu_dia(
             }
             for l in lembretes
         ],
-        "retornos_pendentes": len(retornos),
+        "retornos_pendentes": total_retornos,
         "resumo": {
             "tarefas_total": len(tarefas),
             "tarefas_concluidas": len([t for t in tarefas if t.concluida]),
