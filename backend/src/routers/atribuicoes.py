@@ -215,6 +215,11 @@ async def atribuir_demanda(
             raise HTTPException(404, "Pendência não encontrada")
         item.responsavel_id = request.responsavel_id
         item.responsavel_nome = responsavel.nome
+        if request.prioridade:
+            item.prioridade = request.prioridade
+        titulo_demanda = f"Pendência - {item.documento_nome or item.documento_codigo}"
+        descricao_demanda = item.observacoes or "Documento pendente"
+        link_demanda = f"/pendencias?id={item.id}"
         
     elif request.tipo == "reembolso":
         result = await session.execute(
@@ -225,10 +230,36 @@ async def atribuir_demanda(
             raise HTTPException(404, "Reembolso não encontrado")
         item.responsavel_id = request.responsavel_id
         item.responsavel_nome = responsavel.nome
+        if request.prioridade:
+            item.prioridade = request.prioridade
+        titulo_demanda = f"Reembolso - {item.aluno_nome}"
+        descricao_demanda = f"{item.curso} - {item.motivo}"
+        link_demanda = f"/reembolsos?id={item.id}"
     else:
         raise HTTPException(400, "Tipo inválido. Use: pedido, pendencia ou reembolso")
     
     await session.commit()
+    
+    # Enviar notificação por email (em background, não bloqueia a resposta)
+    base_url = os.environ.get('FRONTEND_URL', 'https://matriculas-ai.preview.emergentagent.com')
+    full_link = f"{base_url}{link_demanda}"
+    
+    # Tentar enviar email (não falha se não conseguir)
+    try:
+        email_service.send_atribuicao_notification(
+            to_email=responsavel.email,
+            to_name=responsavel.nome,
+            tipo_demanda=request.tipo,
+            titulo_demanda=titulo_demanda,
+            descricao=descricao_demanda,
+            prioridade=request.prioridade or "normal",
+            link=full_link,
+            atribuido_por=usuario.nome
+        )
+    except Exception as e:
+        # Log do erro mas não falha a requisição
+        import logging
+        logging.warning(f"Falha ao enviar email de notificação: {e}")
     
     return {
         "message": f"Demanda atribuída a {responsavel.nome}",
@@ -236,7 +267,8 @@ async def atribuir_demanda(
             "id": responsavel.id,
             "nome": responsavel.nome,
             "email": responsavel.email
-        }
+        },
+        "notificacao_email": email_service.enabled
     }
 
 
