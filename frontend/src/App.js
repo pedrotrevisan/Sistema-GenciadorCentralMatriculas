@@ -100,7 +100,9 @@ function App() {
             },
           }}
         />
+        </KeyboardShortcuts>
       </BrowserRouter>
+      </FavoritosProvider>
     </AuthProvider>
   );
 }
