@@ -292,6 +292,132 @@ async def criar_pendencia(
     }
 
 
+@router.post("/manual")
+async def criar_pendencia_manual(
+    dto: CriarPendenciaManualDTO,
+    session: AsyncSession = Depends(get_db_session),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """
+    Cria uma nova pendência manual sem necessidade de pedido existente.
+    Cria um aluno e pedido temporário para armazenar a pendência.
+    """
+    import re
+    from datetime import datetime, timezone
+    
+    # Limpar CPF
+    cpf_limpo = re.sub(r'\D', '', dto.aluno_cpf)
+    if len(cpf_limpo) != 11:
+        raise HTTPException(status_code=400, detail="CPF inválido. Deve ter 11 dígitos")
+    
+    # Buscar tipo de documento
+    tipo_doc_result = await session.execute(
+        select(TipoDocumentoModel).where(TipoDocumentoModel.codigo == dto.documento_codigo)
+    )
+    tipo_doc = tipo_doc_result.scalar_one_or_none()
+    if not tipo_doc:
+        raise HTTPException(status_code=404, detail="Tipo de documento não encontrado")
+    
+    # Verificar se já existe aluno com este CPF
+    aluno_existente_result = await session.execute(
+        select(AlunoModel).where(AlunoModel.cpf == cpf_limpo)
+    )
+    aluno = aluno_existente_result.scalar_one_or_none()
+    
+    if aluno:
+        # Aluno já existe - verificar se já tem pendência para este documento
+        pendencia_existente_result = await session.execute(
+            select(PendenciaModel).where(
+                and_(
+                    PendenciaModel.aluno_id == aluno.id,
+                    PendenciaModel.documento_codigo == dto.documento_codigo,
+                    PendenciaModel.status != 'aprovado'
+                )
+            )
+        )
+        if pendencia_existente_result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=409, 
+                detail=f"Já existe uma pendência em aberto para este documento e aluno"
+            )
+        
+        # Usar o pedido existente do aluno
+        pedido_id = aluno.pedido_id
+    else:
+        # Criar novo aluno e pedido manual
+        pedido_id = str(uuid.uuid4())
+        aluno_id = str(uuid.uuid4())
+        
+        # Criar pedido manual (sem consultor real, é um pedido administrativo)
+        from src.infrastructure.persistence.models import PedidoModel as PM
+        
+        # Gerar número de protocolo
+        count_result = await session.execute(select(func.count(PM.id)))
+        count = count_result.scalar() or 0
+        ano = datetime.now(timezone.utc).year
+        numero_protocolo = f"CM-{ano}-{(count + 1):04d}"
+        
+        pedido_manual = PM(
+            id=pedido_id,
+            numero_protocolo=numero_protocolo,
+            consultor_id=usuario.id,
+            consultor_nome=usuario.nome,
+            curso_id="manual",
+            curso_nome=dto.curso_nome or "Pendência Manual",
+            status="documentacao_pendente",
+            observacoes=f"Pedido criado automaticamente para pendência manual - {dto.observacoes or ''}"
+        )
+        session.add(pedido_manual)
+        
+        # Criar aluno
+        aluno = AlunoModel(
+            id=aluno_id,
+            pedido_id=pedido_id,
+            nome=dto.aluno_nome.strip().title(),
+            cpf=cpf_limpo,
+            email=dto.aluno_email or "pendencia@manual.com",
+            telefone=re.sub(r'\D', '', dto.aluno_telefone or "00000000000"),
+            data_nascimento=datetime(2000, 1, 1, tzinfo=timezone.utc),  # Data placeholder
+            rg="000000000",
+            rg_orgao_emissor="SSP",
+            rg_uf="BA",
+            endereco_cep="00000000",
+            endereco_logradouro="Não informado",
+            endereco_numero="0",
+            endereco_bairro="Não informado",
+            endereco_cidade="Não informado",
+            endereco_uf="BA"
+        )
+        session.add(aluno)
+        await session.flush()  # Para garantir que o aluno foi criado antes da pendência
+    
+    # Criar a pendência
+    pendencia = PendenciaModel(
+        id=str(uuid.uuid4()),
+        aluno_id=aluno.id,
+        pedido_id=pedido_id if not aluno.pedido_id else aluno.pedido_id,
+        tipo_documento_id=tipo_doc.id,
+        documento_codigo=dto.documento_codigo,
+        documento_nome=tipo_doc.nome,
+        status="pendente",
+        observacoes=f"{dto.curso_nome or ''} - {dto.observacoes or ''}".strip(" -"),
+        criado_por_id=usuario.id,
+        criado_por_nome=usuario.nome
+    )
+    
+    session.add(pendencia)
+    await session.commit()
+    
+    return {
+        "id": pendencia.id,
+        "mensagem": "Pendência manual criada com sucesso",
+        "status": pendencia.status,
+        "aluno_id": aluno.id,
+        "aluno_nome": dto.aluno_nome,
+        "documento": tipo_doc.nome
+    }
+
+
 @router.post("/lote")
 async def criar_pendencias_lote(
     pendencias: List[CriarPendenciaDTO],
