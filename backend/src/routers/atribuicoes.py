@@ -173,8 +173,10 @@ async def atribuir_demanda(
     session: AsyncSession = Depends(get_db_session),
     usuario: Usuario = Depends(get_current_user)
 ):
-    """Atribui uma demanda a um responsável"""
+    """Atribui uma demanda a um responsável e envia notificação por email"""
     from src.infrastructure.persistence.models import PedidoModel, PendenciaModel, ReembolsoModel, UsuarioModel
+    from src.services.email_service import email_service
+    import os
     
     # Verificar se responsável existe
     result = await session.execute(
@@ -183,6 +185,10 @@ async def atribuir_demanda(
     responsavel = result.scalar_one_or_none()
     if not responsavel:
         raise HTTPException(404, "Responsável não encontrado")
+    
+    titulo_demanda = ""
+    descricao_demanda = ""
+    link_demanda = ""
     
     # Atribuir baseado no tipo
     if request.tipo == "pedido":
@@ -194,6 +200,11 @@ async def atribuir_demanda(
             raise HTTPException(404, "Pedido não encontrado")
         item.responsavel_id = request.responsavel_id
         item.responsavel_nome = responsavel.nome
+        if request.prioridade:
+            item.prioridade = request.prioridade
+        titulo_demanda = f"Matrícula - {item.numero_protocolo or 'S/N'}"
+        descricao_demanda = item.curso_nome or ""
+        link_demanda = f"/pedidos/{item.id}"
         
     elif request.tipo == "pendencia":
         result = await session.execute(
