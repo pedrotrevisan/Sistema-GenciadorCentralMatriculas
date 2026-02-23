@@ -35,6 +35,7 @@ class CriarPedidoDTO(BaseModel):
     """DTO para criação de pedido"""
     curso_id: str
     curso_nome: str
+    turma_id: Optional[str] = None  # NOVO - ID da turma (para reserva de vaga)
     projeto_id: Optional[str] = None
     projeto_nome: Optional[str] = None
     empresa_id: Optional[str] = None
