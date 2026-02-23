@@ -215,8 +215,7 @@ class EstatisticasGeralUseCase:
                 func.sum(case((ReembolsoModel.status == 'enviado_financeiro', 1), else_=0)).label('no_financeiro'),
                 func.sum(case((ReembolsoModel.status == 'pago', 1), else_=0)).label('pagos'),
                 func.sum(case((ReembolsoModel.status == 'cancelado', 1), else_=0)).label('cancelados'),
-                func.sum(ReembolsoModel.valor).label('valor_total'),
-                func.sum(case((ReembolsoModel.status == 'pago', ReembolsoModel.valor), else_=0)).label('valor_pago')
+                func.sum(case((ReembolsoModel.reter_taxa == True, 1), else_=0)).label('com_retencao')
             )
         )
         row = result.one()
@@ -228,8 +227,7 @@ class EstatisticasGeralUseCase:
             'no_financeiro': row.no_financeiro or 0,
             'pagos': row.pagos or 0,
             'cancelados': row.cancelados or 0,
-            'valor_total': float(row.valor_total or 0),
-            'valor_pago': float(row.valor_pago or 0),
+            'com_retencao': row.com_retencao or 0,
             'pendentes': (row.abertos or 0) + (row.aguardando or 0) + (row.no_financeiro or 0)
         }
     
