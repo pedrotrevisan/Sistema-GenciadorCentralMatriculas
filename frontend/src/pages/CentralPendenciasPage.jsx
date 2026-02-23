@@ -1125,6 +1125,212 @@ export default function CentralPendenciasPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Importação em Lote */}
+      <Dialog open={modalImportacao} onOpenChange={(open) => {
+        setModalImportacao(open);
+        if (!open) resetarImportacao();
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-purple-600" />
+              Importar Pendências em Lote
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Etapa: Upload */}
+            {etapaImportacao === 'upload' && (
+              <>
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-purple-800 mb-2">Como funciona:</h4>
+                  <ol className="text-sm text-purple-700 space-y-1 list-decimal list-inside">
+                    <li>Baixe o template de planilha</li>
+                    <li>Preencha com os dados das pendências</li>
+                    <li>Faça upload do arquivo preenchido</li>
+                    <li>Valide e execute a importação</li>
+                  </ol>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={baixarTemplate} className="flex-1">
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar Template
+                  </Button>
+                </div>
+                
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center">
+                  <Upload className="w-12 h-12 mx-auto text-slate-400 mb-3" />
+                  <p className="text-slate-600 mb-3">
+                    Arraste um arquivo ou clique para selecionar
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="file-upload"
+                    data-testid="input-arquivo-importacao"
+                  />
+                  <label htmlFor="file-upload">
+                    <Button variant="outline" className="cursor-pointer" asChild>
+                      <span>Selecionar Arquivo</span>
+                    </Button>
+                  </label>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Formatos aceitos: .xlsx, .xls, .csv
+                  </p>
+                </div>
+                
+                {arquivoImportacao && (
+                  <div className="flex items-center justify-between bg-slate-100 p-3 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <FileSpreadsheet className="w-5 h-5 text-green-600" />
+                      <span className="text-sm font-medium">{arquivoImportacao.name}</span>
+                      <span className="text-xs text-slate-500">
+                        ({(arquivoImportacao.size / 1024).toFixed(1)} KB)
+                      </span>
+                    </div>
+                    <Button 
+                      onClick={validarImportacao} 
+                      className="bg-purple-600 hover:bg-purple-700"
+                      data-testid="btn-validar-importacao"
+                    >
+                      Validar Arquivo
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {/* Etapa: Validando */}
+            {etapaImportacao === 'validando' && (
+              <div className="text-center py-12">
+                <Loader2 className="w-12 h-12 mx-auto text-purple-600 animate-spin mb-4" />
+                <p className="text-slate-600">Validando arquivo...</p>
+              </div>
+            )}
+            
+            {/* Etapa: Preview */}
+            {etapaImportacao === 'preview' && validacaoImportacao && (
+              <>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-slate-100 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-slate-700">{validacaoImportacao.total_linhas}</p>
+                    <p className="text-sm text-slate-500">Total de linhas</p>
+                  </div>
+                  <div className="bg-green-100 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-green-700">{validacaoImportacao.linhas_validas}</p>
+                    <p className="text-sm text-green-600">Linhas válidas</p>
+                  </div>
+                  <div className="bg-red-100 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-red-700">{validacaoImportacao.linhas_com_erro}</p>
+                    <p className="text-sm text-red-600">Com erro</p>
+                  </div>
+                </div>
+                
+                <div className="max-h-[300px] overflow-y-auto border rounded-lg">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-100 sticky top-0">
+                      <tr>
+                        <th className="p-2 text-left">Linha</th>
+                        <th className="p-2 text-left">Nome</th>
+                        <th className="p-2 text-left">CPF</th>
+                        <th className="p-2 text-left">Documento</th>
+                        <th className="p-2 text-left">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {validacaoImportacao.preview?.map((item, idx) => (
+                        <tr key={idx} className={item.valido ? 'bg-green-50' : 'bg-red-50'}>
+                          <td className="p-2">{item.linha}</td>
+                          <td className="p-2">{item.nome}</td>
+                          <td className="p-2 font-mono text-xs">{item.cpf}</td>
+                          <td className="p-2">{item.documento_codigo} - {item.documento_nome}</td>
+                          <td className="p-2">
+                            {item.valido ? (
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <XCircle className="w-4 h-4 text-red-600" />
+                                <span className="text-xs text-red-600">{item.erros?.[0]}</span>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {validacaoImportacao.linhas_validas > 0 && (
+                  <div className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={resetarImportacao}>
+                      Voltar
+                    </Button>
+                    <Button 
+                      onClick={executarImportacao} 
+                      className="bg-green-600 hover:bg-green-700"
+                      data-testid="btn-executar-importacao"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Importar {validacaoImportacao.linhas_validas} pendência(s)
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {/* Etapa: Importando */}
+            {etapaImportacao === 'importando' && (
+              <div className="text-center py-12">
+                <Loader2 className="w-12 h-12 mx-auto text-green-600 animate-spin mb-4" />
+                <p className="text-slate-600">Criando pendências...</p>
+              </div>
+            )}
+            
+            {/* Etapa: Resultado */}
+            {etapaImportacao === 'resultado' && validacaoImportacao && (
+              <>
+                <div className="text-center py-8 bg-green-50 rounded-lg">
+                  <CheckCircle className="w-16 h-16 mx-auto text-green-600 mb-4" />
+                  <h3 className="text-xl font-bold text-green-800">
+                    Importação Concluída!
+                  </h3>
+                  <p className="text-green-600 mt-2">
+                    {validacaoImportacao.pendencias_criadas} pendência(s) criada(s) com sucesso
+                  </p>
+                </div>
+                
+                {validacaoImportacao.erros_importacao?.length > 0 && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-yellow-800 mb-2 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" />
+                      {validacaoImportacao.erros_importacao.length} erro(s) durante a importação:
+                    </h4>
+                    <ul className="text-sm text-yellow-700 space-y-1">
+                      {validacaoImportacao.erros_importacao.slice(0, 5).map((err, idx) => (
+                        <li key={idx}>Linha {err.linha}: {err.erro}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => {
+                    setModalImportacao(false);
+                    resetarImportacao();
+                  }} className="bg-[#004587]">
+                    Fechar
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
