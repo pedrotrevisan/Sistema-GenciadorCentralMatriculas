@@ -197,6 +197,11 @@ class PendenciaModel(Base):
     observacoes = Column(Text, nullable=True)
     motivo_rejeicao = Column(Text, nullable=True)
     
+    # Campos de atribuição
+    responsavel_id = Column(String(36), ForeignKey("usuarios.id"), nullable=True, index=True)
+    responsavel_nome = Column(String(200), nullable=True)
+    prioridade = Column(String(20), nullable=True, default="normal")  # baixa, normal, alta, urgente
+    
     # Auditoria
     criado_por_id = Column(String(36), ForeignKey("usuarios.id"), nullable=True)
     criado_por_nome = Column(String(200), nullable=True)
