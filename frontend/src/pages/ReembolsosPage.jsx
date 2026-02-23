@@ -252,6 +252,15 @@ export default function ReembolsosPage() {
     }
   };
 
+  const handleAtribuicaoSuccess = (data) => {
+    // Atualizar o reembolso na lista local
+    setReembolsos(prev => prev.map(r => 
+      r.id === modalAtribuir.reembolso?.id 
+        ? { ...r, responsavel_id: data.responsavel_id, responsavel_nome: data.responsavel_nome, prioridade: data.prioridade }
+        : r
+    ));
+  };
+
   const copiarParaClipboard = async (texto, identificador) => {
     try {
       await navigator.clipboard.writeText(texto);
