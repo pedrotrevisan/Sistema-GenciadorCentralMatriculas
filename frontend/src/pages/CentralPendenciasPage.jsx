@@ -610,6 +610,18 @@ export default function CentralPendenciasPage() {
                           <StatusBadge status={pendencia.status} />
                         </td>
                         <td className="p-3">
+                          {pendencia.responsavel_nome ? (
+                            <Badge variant="outline" className="bg-green-50 text-green-700">
+                              <User className="w-3 h-3 mr-1" />
+                              {pendencia.responsavel_nome}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-slate-50 text-slate-500">
+                              Não atribuído
+                            </Badge>
+                          )}
+                        </td>
+                        <td className="p-3">
                           <Badge variant="outline" className="bg-slate-50">
                             {pendencia.total_contatos} contato(s)
                           </Badge>
@@ -627,6 +639,16 @@ export default function CentralPendenciasPage() {
                               data-testid={`btn-detalhes-${pendencia.id}`}
                             >
                               <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setModalAtribuir({ isOpen: true, pendencia })}
+                              title={pendencia.responsavel_nome ? `Atribuído: ${pendencia.responsavel_nome}` : 'Atribuir responsável'}
+                              className={pendencia.responsavel_id ? 'text-green-600' : 'text-slate-400'}
+                              data-testid={`btn-atribuir-${pendencia.id}`}
+                            >
+                              <UserPlus className="w-4 h-4" />
                             </Button>
                             <Button
                               size="sm"
