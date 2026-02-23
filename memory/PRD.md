@@ -179,8 +179,10 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/tests/test_pendencias_api.py` - Suite de testes da Central de Pendências
 - `/app/tests/test_reembolsos_api.py` - Suite de testes do Módulo de Reembolsos (atualizada com 27 testes)
 - `/app/backend/tests/test_timeline_api.py` - Suite de testes da Timeline de Auditoria
-- `/app/test_reports/iteration_8.json` - Fase 2: Gestão de Pendências Documentais + BI Dashboard (25/25 PASS) - NOVO!
-- `/app/backend/tests/test_documentos_api.py` - Suite de testes do módulo de Documentos (Clean Architecture) - NOVO!
+- `/app/test_reports/iteration_8.json` - Fase 2: Gestão de Pendências Documentais + BI Dashboard (25/25 PASS)
+- `/app/backend/tests/test_documentos_api.py` - Suite de testes do módulo de Documentos (Clean Architecture)
+- `/app/test_reports/iteration_9.json` - Fase 3: Log de Contatos (32/32 PASS) - NOVO!
+- `/app/backend/tests/test_contatos_api.py` - Suite de testes do módulo de Contatos - NOVO!
 
 ## Last Updated
 2026-02-23 - Fase 3 Concluída: Log de Contatos com arquitetura Clean + Dashboard BI atualizado
