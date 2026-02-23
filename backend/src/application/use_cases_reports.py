@@ -215,7 +215,7 @@ class EstatisticasGeralUseCase:
                 func.sum(case((ReembolsoModel.status == 'enviado_financeiro', 1), else_=0)).label('no_financeiro'),
                 func.sum(case((ReembolsoModel.status == 'pago', 1), else_=0)).label('pagos'),
                 func.sum(case((ReembolsoModel.status == 'cancelado', 1), else_=0)).label('cancelados'),
-                func.sum(case((ReembolsoModel.reter_taxa == True, 1), else_=0)).label('com_retencao')
+                func.sum(case((ReembolsoModel.reter_taxa, 1), else_=0)).label('com_retencao')
             )
         )
         row = result.one()
