@@ -60,6 +60,10 @@ async def init_db():
     from src.infrastructure.persistence.models_transicoes import (
         TransicaoStatusModel
     )
+    # Import documentos models (Fase 2 - Clean Architecture)
+    from src.infrastructure.persistence.models_documentos import (
+        PendenciaDocumentalModel
+    )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

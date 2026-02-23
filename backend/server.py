@@ -1597,12 +1597,14 @@ from src.routers.pendencias import router as pendencias_router
 from src.routers.turmas import router as turmas_router
 from src.routers.ocr import router as ocr_router
 from src.routers.status_matricula import router as status_router
+from src.routers.documentos import router as documentos_router
 
 api_router.include_router(reembolsos_router)
 api_router.include_router(pendencias_router)
 api_router.include_router(turmas_router)
 api_router.include_router(ocr_router)
 api_router.include_router(status_router)
+api_router.include_router(documentos_router)
 
 # Then include main router in app
 app.include_router(api_router)
