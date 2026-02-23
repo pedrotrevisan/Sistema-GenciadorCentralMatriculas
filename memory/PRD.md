@@ -188,7 +188,7 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/backend/tests/test_contatos_api.py` - Suite de testes do módulo de Contatos - NOVO!
 
 ## Last Updated
-2026-02-23 - Nova Pendência Manual: Botão para criar pendências independentes de pedidos
+2026-02-23 - Importação de Pendências em Lote via planilha (Excel/CSV)
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
@@ -209,10 +209,13 @@ Nova funcionalidade para gerenciar documentos pendentes dos alunos:
 ### Endpoints da Central de Pendências
 - `GET /api/pendencias/tipos-documento` - Lista tipos de documento
 - `GET /api/pendencias/dashboard` - Dashboard de status
-- `GET /api/pendencias/buscar-aluno/{cpf}` - Busca aluno por CPF (NOVO!)
+- `GET /api/pendencias/buscar-aluno/{cpf}` - Busca aluno por CPF
 - `GET /api/pendencias` - Lista pendências com filtros
 - `POST /api/pendencias` - Cria pendência vinculada a pedido
-- `POST /api/pendencias/manual` - Cria pendência manual (NOVO!)
+- `POST /api/pendencias/manual` - Cria pendência manual
+- `GET /api/pendencias/importacao/template` - Download template Excel (NOVO!)
+- `POST /api/pendencias/importacao/validar` - Valida arquivo para importação (NOVO!)
+- `POST /api/pendencias/importacao/executar` - Executa importação em lote (NOVO!)
 - `GET /api/pendencias/{id}` - Detalhes da pendência
 - `PUT /api/pendencias/{id}` - Atualiza status
 - `POST /api/pendencias/{id}/contatos` - Registra contato
