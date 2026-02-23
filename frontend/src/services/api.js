@@ -76,9 +76,12 @@ export const auxiliaresAPI = {
 
 // CRUD Cursos
 export const cursosAPI = {
-  listar: (ativo) => api.get('/cursos', { params: { ativo } }),
+  listar: (params) => api.get('/cursos', { params }),
+  getOpcoes: () => api.get('/cursos/opcoes'),
+  getEstatisticas: () => api.get('/cursos/estatisticas'),
   criar: (data) => api.post('/cursos', data),
   atualizar: (id, data) => api.put(`/cursos/${id}`, data),
+  ativar: (id) => api.patch(`/cursos/${id}/ativar`),
   deletar: (id) => api.delete(`/cursos/${id}`),
 };
 
