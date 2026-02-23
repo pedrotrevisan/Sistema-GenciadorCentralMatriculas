@@ -273,6 +273,11 @@ class ReembolsoModel(Base):
     banco_responsavel_financeiro = Column(Boolean, default=False)  # True se conta é do responsável (menor de 18)
     dados_bancarios_recebidos_em = Column(DateTime, nullable=True)  # Data que recebeu os dados
     
+    # Campos de atribuição
+    responsavel_id = Column(String(36), ForeignKey("usuarios.id"), nullable=True, index=True)
+    responsavel_nome = Column(String(200), nullable=True)
+    prioridade = Column(String(20), nullable=True, default="normal")  # baixa, normal, alta, urgente
+    
     # Datas do Fluxo
     data_abertura = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     data_solicitacao_dados_bancarios = Column(DateTime, nullable=True)  # Data que enviou email solicitando
