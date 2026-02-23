@@ -26,6 +26,20 @@ class CriarPendenciaDTO(BaseModel):
     observacoes: Optional[str] = None
 
 
+class CriarPendenciaManualDTO(BaseModel):
+    """DTO para criar pendência manual sem pedido"""
+    # Dados do aluno
+    aluno_nome: str
+    aluno_cpf: str
+    aluno_email: Optional[str] = None
+    aluno_telefone: Optional[str] = None
+    # Documento
+    documento_codigo: str
+    # Curso (opcional, para contexto)
+    curso_nome: Optional[str] = None
+    observacoes: Optional[str] = None
+
+
 class AtualizarPendenciaDTO(BaseModel):
     status: str  # pendente, aguardando_aluno, em_analise, aprovado, rejeitado, reenvio_necessario
     observacoes: Optional[str] = None
