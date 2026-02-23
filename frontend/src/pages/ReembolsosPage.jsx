@@ -609,41 +609,46 @@ export default function ReembolsosPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <Label>Nome do Aluno *</Label>
+                <Label>Nome do Aluno <span className="text-red-500">*</span></Label>
                 <Input
                   value={novoForm.aluno_nome}
                   onChange={(e) => setNovoForm({ ...novoForm, aluno_nome: e.target.value })}
                   placeholder="Nome completo do aluno"
+                  required
                   data-testid="input-aluno-nome"
                 />
               </div>
               
               <div>
-                <Label>CPF</Label>
+                <Label>CPF <span className="text-red-500">*</span></Label>
                 <Input
                   value={novoForm.aluno_cpf}
                   onChange={(e) => setNovoForm({ ...novoForm, aluno_cpf: e.target.value })}
                   placeholder="000.000.000-00"
+                  required
                   data-testid="input-aluno-cpf"
                 />
               </div>
               
               <div>
-                <Label>Telefone</Label>
+                <Label>Telefone <span className="text-red-500">*</span></Label>
                 <Input
                   value={novoForm.aluno_telefone}
                   onChange={(e) => setNovoForm({ ...novoForm, aluno_telefone: e.target.value })}
                   placeholder="(71) 99999-9999"
+                  required
                   data-testid="input-aluno-telefone"
                 />
               </div>
               
               <div className="col-span-2">
-                <Label>Email</Label>
+                <Label>Email <span className="text-red-500">*</span></Label>
                 <Input
+                  type="email"
                   value={novoForm.aluno_email}
                   onChange={(e) => setNovoForm({ ...novoForm, aluno_email: e.target.value })}
                   placeholder="email@exemplo.com"
+                  required
                   data-testid="input-aluno-email"
                 />
               </div>
@@ -662,40 +667,44 @@ export default function ReembolsosPage() {
               </div>
               
               <div>
-                <Label>Turma</Label>
+                <Label>Turma <span className="text-red-500">*</span></Label>
                 <Input
                   value={novoForm.turma}
                   onChange={(e) => setNovoForm({ ...novoForm, turma: e.target.value })}
                   placeholder="Ex: T1, T2, Manhã"
+                  required
                   data-testid="input-turma"
                 />
               </div>
               
               <div>
-                <Label>Nº Chamado SGC Plus</Label>
+                <Label>Nº Chamado SGC Plus <span className="text-red-500">*</span></Label>
                 <Input
                   value={novoForm.numero_chamado_sgc}
                   onChange={(e) => setNovoForm({ ...novoForm, numero_chamado_sgc: e.target.value })}
                   placeholder="Ex: 12345"
+                  required
                   data-testid="input-chamado-sgc"
                 />
               </div>
               
               <div className="col-span-2">
-                <Label>Curso *</Label>
+                <Label>Curso <span className="text-red-500">*</span></Label>
                 <Input
                   value={novoForm.curso}
                   onChange={(e) => setNovoForm({ ...novoForm, curso: e.target.value })}
                   placeholder="Nome do curso"
+                  required
                   data-testid="input-curso"
                 />
               </div>
               
               <div className="col-span-2">
-                <Label>Motivo do Reembolso *</Label>
+                <Label>Motivo do Reembolso <span className="text-red-500">*</span></Label>
                 <Select
                   value={novoForm.motivo}
                   onValueChange={(v) => setNovoForm({ ...novoForm, motivo: v })}
+                  required
                 >
                   <SelectTrigger data-testid="select-motivo">
                     <SelectValue placeholder="Selecione o motivo" />
@@ -712,12 +721,13 @@ export default function ReembolsosPage() {
               
               {novoForm.motivo === 'outros' && (
                 <div className="col-span-2">
-                  <Label>Descrição do Motivo</Label>
+                  <Label>Descrição do Motivo <span className="text-red-500">*</span></Label>
                   <Textarea
                     value={novoForm.motivo_descricao}
                     onChange={(e) => setNovoForm({ ...novoForm, motivo_descricao: e.target.value })}
                     placeholder="Descreva o motivo..."
                     rows={2}
+                    required
                     data-testid="input-motivo-descricao"
                   />
                 </div>
