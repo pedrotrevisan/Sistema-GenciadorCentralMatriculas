@@ -436,19 +436,55 @@ async def get_me(
 
 # ==================== PEDIDOS ROUTES ====================
 
-@api_router.post("/pedidos", response_model=PedidoResponseDTO, tags=["Pedidos"])
+@api_router.post("/pedidos", response_model=dict, tags=["Pedidos"])
 async def criar_pedido(
     request: CriarPedidoDTO,
     deps: tuple = Depends(require_permission("pedido:criar"))
 ):
-    """Cria um novo pedido de matrícula"""
+    """
+    Cria um novo pedido de matrícula COM reserva automática de vaga
+    
+    Se turma_id for fornecido, reserva vaga automaticamente.
+    Retorna informações do pedido E da reserva.
+    """
     usuario, session = deps
     pedido_repo = PedidoRepository(session)
     auditoria_repo = AuditoriaRepository(session)
     
+    # Se turma_id fornecido, usar use case com reserva
+    if request.turma_id:
+        from src.infrastructure.persistence.repositories_turmas import TurmaRepository, ReservaVagaRepository
+        from src.application.use_cases.criar_pedido_com_reserva_use_case import CriarPedidoComReservaUseCase
+        
+        turma_repo = TurmaRepository(session)
+        reserva_repo = ReservaVagaRepository(session)
+        
+        criar_pedido_uc = CriarPedidoComReservaUseCase(
+            pedido_repo, auditoria_repo, turma_repo, reserva_repo
+        )
+        
+        resultado = await criar_pedido_uc.executar(request, usuario, request.turma_id)
+        
+        return {
+            "pedido": PedidoResponseDTO(**resultado["pedido"].to_dict()).model_dump(),
+            "reserva": {
+                "id": resultado["reserva"].id if resultado["reserva"] else None,
+                "turma_id": resultado["reserva"].turma_id if resultado["reserva"] else None,
+                "status": resultado["reserva"].status.value if resultado["reserva"] else None,
+                "data_expiracao": resultado["reserva"].data_expiracao.isoformat() if resultado["reserva"] and resultado["reserva"].data_expiracao else None
+            } if resultado["reserva"] else None,
+            "mensagem_reserva": resultado["mensagem_reserva"]
+        }
+    
+    # Sem turma, usar use case padrão
     criar_pedido_uc = CriarPedidoMatriculaUseCase(pedido_repo, auditoria_repo)
     pedido = await criar_pedido_uc.executar(request, usuario)
-    return PedidoResponseDTO(**pedido.to_dict())
+    
+    return {
+        "pedido": PedidoResponseDTO(**pedido.to_dict()).model_dump(),
+        "reserva": None,
+        "mensagem_reserva": None
+    }
 
 
 @api_router.get("/pedidos", response_model=ListaPedidosResponseDTO, tags=["Pedidos"])
