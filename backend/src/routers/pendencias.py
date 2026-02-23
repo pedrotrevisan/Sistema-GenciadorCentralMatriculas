@@ -105,7 +105,7 @@ async def listar_tipos_documento(
 ):
     """Lista todos os tipos de documento disponíveis"""
     result = await session.execute(
-        select(TipoDocumentoModel).where(TipoDocumentoModel.ativo == True).order_by(TipoDocumentoModel.codigo)
+        select(TipoDocumentoModel).where(TipoDocumentoModel.ativo.is_(True)).order_by(TipoDocumentoModel.codigo)
     )
     tipos = result.scalars().all()
     
