@@ -250,6 +250,15 @@ export default function CentralPendenciasPage() {
     }
   };
 
+  const handleAtribuicaoSuccess = (data) => {
+    // Atualizar a pendência na lista local
+    setPendencias(prev => prev.map(p => 
+      p.id === modalAtribuir.pendencia?.id 
+        ? { ...p, responsavel_id: data.responsavel_id, responsavel_nome: data.responsavel_nome, prioridade: data.prioridade }
+        : p
+    ));
+  };
+
   const formatarCPF = (value) => {
     const nums = value.replace(/\D/g, '').slice(0, 11);
     if (nums.length <= 3) return nums;
