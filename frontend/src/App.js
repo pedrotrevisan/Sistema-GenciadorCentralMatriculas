@@ -2,6 +2,8 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
+import { FavoritosProvider } from "./components/BotaoFavorito";
+import KeyboardShortcuts from "./components/KeyboardShortcuts";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -26,7 +28,9 @@ import KanbanPage from "./pages/KanbanPage";
 function App() {
   return (
     <AuthProvider>
+      <FavoritosProvider>
       <BrowserRouter>
+        <KeyboardShortcuts>
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
