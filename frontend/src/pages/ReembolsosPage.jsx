@@ -10,11 +10,12 @@ import { Textarea } from '../components/ui/textarea';
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import api from '../services/api';
+import AtribuirResponsavelModal from '../components/AtribuirResponsavelModal';
 import {
   DollarSign, Search, Filter, Plus, Eye, Edit,
   Clock, CheckCircle, XCircle, Send, CreditCard,
   ChevronLeft, ChevronRight, FileText, User, Calendar,
-  Mail, Copy, Check, AlertTriangle, Phone, Building
+  Mail, Copy, Check, AlertTriangle, Phone, Building, UserPlus
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
