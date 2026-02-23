@@ -9,6 +9,7 @@ import uuid
 
 from src.domain.entities import Usuario
 from src.infrastructure.persistence.models import ReembolsoModel
+from src.utils.text_formatters import formatar_nome_proprio  # NOVO - importar formatação
 
 from .dependencies import get_db_session, get_current_user
 
@@ -317,15 +318,20 @@ async def criar_reembolso(
     # Determinar se deve reter taxa (10%)
     reter_taxa = MOTIVOS_REEMBOLSO[dto.motivo]["reter_taxa"]
     
+    # FORMATAÇÃO AUTOMÁTICA DE NOMES
+    aluno_nome_formatado = formatar_nome_proprio(dto.aluno_nome) if dto.aluno_nome else None
+    curso_formatado = formatar_nome_proprio(dto.curso) if dto.curso else None
+    turma_formatada = dto.turma.upper() if dto.turma else None  # Turma em maiúscula
+    
     reembolso = ReembolsoModel(
         id=str(uuid.uuid4()),
-        aluno_nome=dto.aluno_nome,
+        aluno_nome=aluno_nome_formatado,  # Formatado
         aluno_cpf=dto.aluno_cpf,
-        aluno_email=dto.aluno_email,
+        aluno_email=dto.aluno_email.lower() if dto.aluno_email else None,  # Email em minúscula
         aluno_telefone=dto.aluno_telefone,
         aluno_menor_idade=dto.aluno_menor_idade or False,
-        curso=dto.curso,
-        turma=dto.turma,
+        curso=curso_formatado,  # Formatado
+        turma=turma_formatada,  # Formatado
         motivo=dto.motivo,
         motivo_descricao=dto.motivo_descricao,
         reter_taxa=reter_taxa,
