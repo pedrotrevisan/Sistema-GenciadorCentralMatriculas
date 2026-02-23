@@ -25,7 +25,8 @@ import {
   Upload,
   AlertCircle,
   DollarSign,
-  BarChart3
+  BarChart3,
+  LayoutGrid
 } from 'lucide-react';
 import AlertaRetornos from './AlertaRetornos';
 
