@@ -496,6 +496,7 @@ export default function ReembolsosPage() {
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Curso</th>
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Motivo</th>
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Status</th>
+                      <th className="text-left p-3 text-sm font-medium text-slate-600">Responsável</th>
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Abertura</th>
                       <th className="text-center p-3 text-sm font-medium text-slate-600">Ações</th>
                     </tr>
