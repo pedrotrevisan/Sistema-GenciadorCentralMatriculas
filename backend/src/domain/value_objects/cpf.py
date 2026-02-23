@@ -8,11 +8,19 @@ from ..exceptions.domain_exceptions import CPFInvalidoException
 class CPF:
     """Value Object para CPF com validação completa"""
     valor: str
+    validar_digitos: bool = True  # Se False, apenas valida formato (11 dígitos)
 
     def __post_init__(self):
         cpf_limpo = self._limpar(self.valor)
-        if not self._validar(cpf_limpo):
+        
+        # Validação básica de formato (11 dígitos)
+        if len(cpf_limpo) != 11:
             raise CPFInvalidoException(self.valor)
+        
+        # Validação estrita com dígitos verificadores (opcional)
+        if self.validar_digitos and not self._validar_digitos(cpf_limpo):
+            raise CPFInvalidoException(self.valor)
+            
         object.__setattr__(self, 'valor', cpf_limpo)
 
     @staticmethod
@@ -21,7 +29,7 @@ class CPF:
         return re.sub(r'\D', '', cpf)
 
     @staticmethod
-    def _validar(cpf: str) -> bool:
+    def _validar_digitos(cpf: str) -> bool:
         """Valida CPF usando algoritmo de dígitos verificadores"""
         if len(cpf) != 11:
             return False
