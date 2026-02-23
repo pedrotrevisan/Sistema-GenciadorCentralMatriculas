@@ -13,7 +13,7 @@ import api from '../services/api';
 import {
   FileText, Search, Filter, Phone, Mail, MessageSquare, User,
   AlertTriangle, CheckCircle, Clock, XCircle, RefreshCw, Plus,
-  ChevronLeft, ChevronRight, Eye, Building, BookOpen
+  ChevronLeft, ChevronRight, Eye, Building, BookOpen, UserPlus
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
