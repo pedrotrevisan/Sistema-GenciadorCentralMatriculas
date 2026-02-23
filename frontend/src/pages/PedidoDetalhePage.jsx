@@ -7,6 +7,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
 import TimelineAuditoria from '../components/TimelineAuditoria';
+import LogContatos from '../components/LogContatos';
 import {
   Select,
   SelectContent,
@@ -24,14 +25,6 @@ import {
   DialogTitle,
 } from '../components/ui/dialog';
 import { toast } from 'sonner';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../components/ui/table';
 import { 
   ChevronLeft, 
   FileText, 
@@ -40,7 +33,6 @@ import {
   XCircle, 
   AlertCircle,
   User,
-  Building,
   Edit
 } from 'lucide-react';
 
