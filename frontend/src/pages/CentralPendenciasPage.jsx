@@ -519,6 +519,15 @@ export default function CentralPendenciasPage() {
               <UserPlus className="w-4 h-4 mr-2" />
               Nova Pendência
             </Button>
+            
+            <Button 
+              onClick={() => setModalImportacao(true)} 
+              className="bg-purple-600 hover:bg-purple-700"
+              data-testid="btn-importar-lote"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Importar Lote
+            </Button>
           </div>
         </CardContent>
       </Card>
