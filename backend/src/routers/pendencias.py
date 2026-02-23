@@ -389,7 +389,7 @@ async def criar_pendencia_manual(
         if pendencia_existente_result.scalar_one_or_none():
             raise HTTPException(
                 status_code=409, 
-                detail=f"Já existe uma pendência em aberto para este documento e aluno"
+                detail="Já existe uma pendência em aberto para este documento e aluno"
             )
         
         # Usar o pedido existente do aluno
