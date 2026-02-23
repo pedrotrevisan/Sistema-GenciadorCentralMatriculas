@@ -117,3 +117,127 @@ async def get_me(
     """Retorna dados do usuário autenticado"""
     usuario = await get_current_user(token, session)
     return UsuarioResponseDTO(**usuario.to_dict())
+
+
+# ==================== PAINEL DE CONTA ====================
+
+@router.put("/me/senha")
+async def alterar_senha(
+    request: AlterarSenhaRequest,
+    token: str = Depends(oauth2_scheme),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """Altera a senha do usuário autenticado"""
+    usuario = await get_current_user(token, session)
+    usuario_repo = UsuarioRepository(session)
+    
+    # Verifica senha atual
+    if not jwt_auth.verificar_senha(request.senha_atual, usuario.senha_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Senha atual incorreta"
+        )
+    
+    # Verifica confirmação
+    if request.nova_senha != request.confirmar_senha:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nova senha e confirmação não conferem"
+        )
+    
+    # Verifica se nova senha é diferente da atual
+    if request.senha_atual == request.nova_senha:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nova senha deve ser diferente da atual"
+        )
+    
+    # Atualiza senha
+    usuario.senha_hash = jwt_auth.hash_senha(request.nova_senha)
+    await usuario_repo.salvar(usuario)
+    
+    return {"message": "Senha alterada com sucesso"}
+
+
+@router.put("/me/perfil", response_model=UsuarioResponseDTO)
+async def atualizar_perfil(
+    request: AtualizarPerfilRequest,
+    token: str = Depends(oauth2_scheme),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """Atualiza dados do perfil do usuário autenticado"""
+    usuario = await get_current_user(token, session)
+    usuario_repo = UsuarioRepository(session)
+    
+    # Atualiza campos permitidos
+    if request.nome:
+        usuario.nome = request.nome
+    
+    if request.email:
+        # Verifica se email já existe
+        email_obj = Email(request.email)
+        existente = await usuario_repo.buscar_por_email(request.email)
+        if existente and existente.id != usuario.id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Este email já está em uso"
+            )
+        usuario.email = email_obj
+    
+    await usuario_repo.salvar(usuario)
+    
+    return UsuarioResponseDTO(**usuario.to_dict())
+
+
+@router.get("/me/atividades")
+async def minhas_atividades(
+    limite: int = 20,
+    token: str = Depends(oauth2_scheme),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """Retorna atividades recentes do usuário"""
+    from sqlalchemy import select, or_, desc
+    from src.infrastructure.persistence.models import AuditoriaModel, PedidoModel
+    
+    usuario = await get_current_user(token, session)
+    
+    # Buscar atividades de auditoria
+    result = await session.execute(
+        select(AuditoriaModel)
+        .where(AuditoriaModel.usuario_id == usuario.id)
+        .order_by(desc(AuditoriaModel.timestamp))
+        .limit(limite)
+    )
+    auditorias = result.scalars().all()
+    
+    # Buscar pedidos criados pelo usuário
+    result = await session.execute(
+        select(PedidoModel)
+        .where(PedidoModel.consultor_id == usuario.id)
+        .order_by(desc(PedidoModel.created_at))
+        .limit(10)
+    )
+    pedidos = result.scalars().all()
+    
+    return {
+        "auditorias": [
+            {
+                "id": a.id,
+                "acao": a.acao,
+                "pedido_id": a.pedido_id,
+                "detalhes": a.detalhes,
+                "timestamp": a.timestamp.isoformat() if a.timestamp else None
+            }
+            for a in auditorias
+        ],
+        "pedidos_recentes": [
+            {
+                "id": p.id,
+                "protocolo": p.numero_protocolo,
+                "curso": p.curso_nome,
+                "status": p.status,
+                "created_at": p.created_at.isoformat() if p.created_at else None
+            }
+            for p in pedidos
+        ]
+    }
