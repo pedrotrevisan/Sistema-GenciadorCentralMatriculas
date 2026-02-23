@@ -76,22 +76,27 @@ const DashboardLayout = () => {
     
     if (user?.role === 'consultor') {
       items.push(
+        { to: '/meu-dia', icon: Sun, label: 'Meu Dia' },
         { to: '/consultor', icon: LayoutDashboard, label: 'Meus Pedidos' },
         { to: '/consultor/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
-        { to: '/importacao', icon: Upload, label: 'Importar Lote' }
+        { to: '/importacao', icon: Upload, label: 'Importar Lote' },
+        { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' }
       );
     } else if (user?.role === 'assistente') {
       items.push(
+        { to: '/meu-dia', icon: Sun, label: 'Meu Dia' },
         { to: '/assistente', icon: LayoutDashboard, label: 'Painel de Gestão' },
         { to: '/bi', icon: BarChart3, label: 'Dashboard BI' },
         { to: '/kanban', icon: LayoutGrid, label: 'Kanban' },
         { to: '/assistente/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
         { to: '/pendencias', icon: AlertCircle, label: 'Pendências' },
         { to: '/reembolsos', icon: DollarSign, label: 'Reembolsos' },
-        { to: '/importacao', icon: Upload, label: 'Importar Lote' }
+        { to: '/importacao', icon: Upload, label: 'Importar Lote' },
+        { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' }
       );
     } else if (user?.role === 'admin') {
       items.push(
+        { to: '/meu-dia', icon: Sun, label: 'Meu Dia' },
         { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
         { to: '/bi', icon: BarChart3, label: 'Dashboard BI' },
         { to: '/kanban', icon: LayoutGrid, label: 'Kanban' },
@@ -101,7 +106,8 @@ const DashboardLayout = () => {
         { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
         { to: '/admin/cadastros', icon: Settings, label: 'Cadastros' },
         { to: '/admin/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
-        { to: '/importacao', icon: Upload, label: 'Importar Lote' }
+        { to: '/importacao', icon: Upload, label: 'Importar Lote' },
+        { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' }
       );
     }
     
