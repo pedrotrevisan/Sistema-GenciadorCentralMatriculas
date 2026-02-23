@@ -95,6 +95,12 @@ export default function CentralPendenciasPage() {
   const [etapaImportacao, setEtapaImportacao] = useState('upload'); // upload, validando, preview, importando, resultado
   const fileInputRef = useRef(null);
 
+  // Modal Atribuição
+  const [modalAtribuir, setModalAtribuir] = useState({
+    isOpen: false,
+    pendencia: null
+  });
+
   useEffect(() => {
     carregarDados();
   }, []);
