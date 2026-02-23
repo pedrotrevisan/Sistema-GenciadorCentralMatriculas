@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional
 import uuid
 
 from src.domain.entities import Usuario, RoleUsuario
@@ -14,6 +15,22 @@ from .dependencies import (
 )
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+
+
+# ==================== DTOs ====================
+
+class AlterarSenhaRequest(BaseModel):
+    senha_atual: str = Field(..., min_length=1)
+    nova_senha: str = Field(..., min_length=6)
+    confirmar_senha: str = Field(..., min_length=6)
+
+
+class AtualizarPerfilRequest(BaseModel):
+    nome: Optional[str] = Field(None, min_length=3)
+    email: Optional[str] = None
+    telefone: Optional[str] = None
+    cargo: Optional[str] = None
+    setor: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
