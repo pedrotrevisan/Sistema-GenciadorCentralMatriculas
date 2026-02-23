@@ -316,3 +316,43 @@ Aberto → Aguardando Dados Bancários → Enviado ao Financeiro → Pago
    - Confirmação de recebimento
    - Confirmação de pagamento
    - Botão "Copiar" para cada template
+
+## Dashboard de BI - Fase 5 (2026-02-23) - NOVO!
+Dashboard de Business Intelligence com gráficos interativos usando Recharts.
+
+### Acessível via
+- Menu lateral: "Dashboard BI"
+- URL: `/bi`
+- Perfis: Assistente, Admin
+
+### KPIs Principais (Cards)
+1. **Total Matrículas** - Com badge de matrículas do mês
+2. **Taxa de Conversão** - Indicador de meta (acima/abaixo)
+3. **Pendências Abertas** - Link para central de pendências
+4. **Reembolsos Pendentes** - Link para módulo de reembolsos
+5. **Aprovação de Documentos** - Taxa percentual
+
+### Abas do Dashboard
+1. **Visão Geral**
+   - Gráfico de área: Evolução de Matrículas (6 meses)
+   - Gráfico de pizza: Distribuição por Status
+   - Cards de resumo: Matrículas, Pendências, Reembolsos
+
+2. **Matrículas**
+   - Gráfico de barras: Funil de Conversão
+   - Gráfico radial: Taxa de Conversão (meta 70%)
+   - Grid: Detalhamento por Status
+
+3. **Documentos**
+   - Cards: Total, Pendentes, Em Análise, Aprovados
+   - Barra de progresso: Taxa de Aprovação
+
+4. **Financeiro**
+   - Cards: Total, Abertos, No Financeiro, Pagos
+   - Gráfico de barras: Fluxo de Reembolsos
+   - Alerta: Reembolsos com retenção de 10%
+
+### Tecnologias
+- Frontend: React + Recharts
+- Backend: Endpoints `/api/documentos/bi/*`
+
