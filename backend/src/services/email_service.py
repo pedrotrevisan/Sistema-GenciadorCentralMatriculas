@@ -1,40 +1,37 @@
-"""Serviço de envio de emails via SMTP Outlook/Microsoft 365"""
+"""Serviço de envio de emails via Resend"""
 import os
-import smtplib
 import logging
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from typing import Optional, List
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# Importar resend
+try:
+    import resend
+    RESEND_AVAILABLE = True
+except ImportError:
+    RESEND_AVAILABLE = False
+    logger.warning("Biblioteca 'resend' não instalada. Execute: pip install resend")
+
 
 class EmailService:
-    """Serviço para envio de emails via SMTP"""
+    """Serviço para envio de emails via Resend"""
     
     def __init__(self):
-        self.smtp_server = os.environ.get('SMTP_SERVER', 'smtp.office365.com')
-        self.smtp_port = int(os.environ.get('SMTP_PORT', '587'))
-        self.smtp_user = os.environ.get('SMTP_USER', '')
-        self.smtp_password = os.environ.get('SMTP_PASSWORD', '')
-        self.from_email = os.environ.get('SMTP_FROM_EMAIL', self.smtp_user)
-        self.from_name = os.environ.get('SMTP_FROM_NAME', 'SYNAPSE - Sistema de Matrículas')
-        self.enabled = bool(self.smtp_user and self.smtp_password)
+        self.api_key = os.environ.get('RESEND_API_KEY', '')
+        self.from_email = os.environ.get('RESEND_FROM_EMAIL', 'onboarding@resend.dev')
+        self.from_name = os.environ.get('RESEND_FROM_NAME', 'SYNAPSE - Sistema de Matrículas')
+        self.enabled = bool(self.api_key and RESEND_AVAILABLE)
         
-        if not self.enabled:
-            logger.warning("Serviço de email não configurado. Defina SMTP_USER e SMTP_PASSWORD no .env")
-    
-    def _get_connection(self):
-        """Estabelece conexão com o servidor SMTP"""
-        try:
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            server.starttls()
-            server.login(self.smtp_user, self.smtp_password)
-            return server
-        except Exception as e:
-            logger.error(f"Erro ao conectar ao servidor SMTP: {e}")
-            raise
+        if self.enabled:
+            resend.api_key = self.api_key
+            logger.info("Serviço de email Resend configurado com sucesso!")
+        else:
+            if not RESEND_AVAILABLE:
+                logger.warning("Resend não disponível - biblioteca não instalada")
+            elif not self.api_key:
+                logger.warning("Serviço de email não configurado. Defina RESEND_API_KEY no .env")
     
     def send_email(
         self,
@@ -46,7 +43,7 @@ class EmailService:
         bcc: Optional[List[str]] = None
     ) -> bool:
         """
-        Envia um email
+        Envia um email via Resend
         
         Args:
             to_email: Email do destinatário
@@ -64,36 +61,25 @@ class EmailService:
             return False
         
         try:
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From'] = f"{self.from_name} <{self.from_email}>"
-            msg['To'] = to_email
+            params = {
+                "from": f"{self.from_name} <{self.from_email}>",
+                "to": [to_email],
+                "subject": subject,
+                "html": body_html,
+            }
             
-            if cc:
-                msg['Cc'] = ', '.join(cc)
-            
-            # Adiciona corpo texto
             if body_text:
-                part1 = MIMEText(body_text, 'plain', 'utf-8')
-                msg.attach(part1)
+                params["text"] = body_text
             
-            # Adiciona corpo HTML
-            part2 = MIMEText(body_html, 'html', 'utf-8')
-            msg.attach(part2)
-            
-            # Lista de todos os destinatários
-            recipients = [to_email]
             if cc:
-                recipients.extend(cc)
+                params["cc"] = cc
+            
             if bcc:
-                recipients.extend(bcc)
+                params["bcc"] = bcc
             
-            # Envia
-            server = self._get_connection()
-            server.sendmail(self.from_email, recipients, msg.as_string())
-            server.quit()
+            response = resend.Emails.send(params)
             
-            logger.info(f"Email enviado com sucesso: {subject} -> {to_email}")
+            logger.info(f"Email enviado com sucesso: {subject} -> {to_email} (ID: {response.get('id', 'N/A')})")
             return True
             
         except Exception as e:
@@ -123,52 +109,45 @@ class EmailService:
             'baixa': '⚪'
         }.get(prioridade, '🔵')
         
+        prioridade_color = {
+            'urgente': '#dc2626',
+            'alta': '#ea580c',
+            'normal': '#2563eb',
+            'baixa': '#6b7280'
+        }.get(prioridade, '#2563eb')
+        
         body_html = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
-            <style>
-                body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; }}
-                .container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-                .header {{ background: linear-gradient(135deg, #004587, #0066cc); color: white; padding: 30px; text-align: center; }}
-                .header h1 {{ margin: 0; font-size: 24px; }}
-                .content {{ padding: 30px; }}
-                .badge {{ display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }}
-                .badge-tipo {{ background: #e3f2fd; color: #1565c0; }}
-                .badge-prioridade {{ background: #fff3e0; color: #e65100; }}
-                .info-box {{ background: #f8f9fa; border-left: 4px solid #004587; padding: 15px; margin: 20px 0; border-radius: 0 4px 4px 0; }}
-                .btn {{ display: inline-block; background: #004587; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: 600; margin-top: 20px; }}
-                .btn:hover {{ background: #003366; }}
-                .footer {{ background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }}
-            </style>
         </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Nova Demanda Atribuída</h1>
+        <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <div style="background: linear-gradient(135deg, #004587, #0066cc); color: white; padding: 30px; text-align: center;">
+                    <h1 style="margin: 0; font-size: 24px;">📥 Nova Demanda Atribuída</h1>
                 </div>
-                <div class="content">
-                    <p>Olá, <strong>{to_name}</strong>!</p>
-                    <p>Uma nova demanda foi atribuída a você no sistema SYNAPSE.</p>
+                <div style="padding: 30px;">
+                    <p style="font-size: 16px;">Olá, <strong>{to_name}</strong>!</p>
+                    <p style="color: #666;">Uma nova demanda foi atribuída a você no sistema SYNAPSE.</p>
                     
-                    <div class="info-box">
+                    <div style="background: #f8f9fa; border-left: 4px solid #004587; padding: 15px; margin: 20px 0; border-radius: 0 4px 4px 0;">
                         <p style="margin: 0 0 10px 0;">
-                            <span class="badge badge-tipo">{tipo_demanda.upper()}</span>
-                            <span class="badge badge-prioridade">{prioridade_emoji} {prioridade.upper()}</span>
+                            <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #e3f2fd; color: #1565c0; margin-right: 8px;">{tipo_demanda.upper()}</span>
+                            <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: {prioridade_color}22; color: {prioridade_color};">{prioridade_emoji} {prioridade.upper()}</span>
                         </p>
-                        <h3 style="margin: 0 0 10px 0; color: #333;">{titulo_demanda}</h3>
+                        <h3 style="margin: 10px 0; color: #333;">{titulo_demanda}</h3>
                         <p style="margin: 0; color: #666;">{descricao}</p>
                     </div>
                     
                     <p><strong>Atribuído por:</strong> {atribuido_por}</p>
                     <p><strong>Data:</strong> {datetime.now().strftime('%d/%m/%Y às %H:%M')}</p>
                     
-                    <a href="{link}" class="btn">Acessar Demanda</a>
+                    <a href="{link}" style="display: inline-block; background: #004587; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: 600; margin-top: 20px;">Acessar Demanda</a>
                 </div>
-                <div class="footer">
-                    <p>Este email foi enviado automaticamente pelo sistema SYNAPSE.</p>
-                    <p>SENAI CIMATEC - Sistema Central de Matrículas</p>
+                <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666;">
+                    <p style="margin: 0;">Este email foi enviado automaticamente pelo sistema SYNAPSE.</p>
+                    <p style="margin: 5px 0 0 0;">SENAI CIMATEC - Sistema Central de Matrículas</p>
                 </div>
             </div>
         </body>
@@ -211,42 +190,32 @@ SENAI CIMATEC - Sistema Central de Matrículas
         """
         subject = f"[SYNAPSE] Lembrete: {titulo_lembrete}"
         
-        link_html = f'<a href="{link}" class="btn">Acessar Sistema</a>' if link else ''
+        link_html = f'<a href="{link}" style="display: inline-block; background: #004587; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: 600; margin-top: 20px;">Acessar Sistema</a>' if link else ''
         
         body_html = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
-            <style>
-                body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; }}
-                .container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-                .header {{ background: #ffc107; color: #333; padding: 30px; text-align: center; }}
-                .header h1 {{ margin: 0; font-size: 24px; }}
-                .content {{ padding: 30px; }}
-                .info-box {{ background: #fff8e1; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 0 4px 4px 0; }}
-                .btn {{ display: inline-block; background: #004587; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: 600; margin-top: 20px; }}
-                .footer {{ background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }}
-            </style>
         </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>🔔 Lembrete</h1>
+        <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <div style="background: #ffc107; color: #333; padding: 30px; text-align: center;">
+                    <h1 style="margin: 0; font-size: 24px;">🔔 Lembrete</h1>
                 </div>
-                <div class="content">
-                    <p>Olá, <strong>{to_name}</strong>!</p>
+                <div style="padding: 30px;">
+                    <p style="font-size: 16px;">Olá, <strong>{to_name}</strong>!</p>
                     
-                    <div class="info-box">
+                    <div style="background: #fff8e1; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 0 4px 4px 0;">
                         <h3 style="margin: 0 0 10px 0; color: #333;">{titulo_lembrete}</h3>
                         {f'<p style="margin: 0; color: #666;">{descricao}</p>' if descricao else ''}
                     </div>
                     
                     {link_html}
                 </div>
-                <div class="footer">
-                    <p>Este email foi enviado automaticamente pelo sistema SYNAPSE.</p>
-                    <p>SENAI CIMATEC - Sistema Central de Matrículas</p>
+                <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666;">
+                    <p style="margin: 0;">Este email foi enviado automaticamente pelo sistema SYNAPSE.</p>
+                    <p style="margin: 5px 0 0 0;">SENAI CIMATEC - Sistema Central de Matrículas</p>
                 </div>
             </div>
         </body>
