@@ -1327,6 +1327,17 @@ export default function ReembolsosPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Atribuição */}
+      <AtribuirResponsavelModal
+        isOpen={modalAtribuir.isOpen}
+        onClose={() => setModalAtribuir({ isOpen: false, reembolso: null })}
+        tipo="reembolso"
+        itemId={modalAtribuir.reembolso?.id}
+        itemTitulo={`Reembolso - ${modalAtribuir.reembolso?.aluno_nome}`}
+        responsavelAtual={modalAtribuir.reembolso?.responsavel_id}
+        onSuccess={handleAtribuicaoSuccess}
+      />
     </div>
   );
 }
