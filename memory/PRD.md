@@ -185,7 +185,7 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/backend/tests/test_contatos_api.py` - Suite de testes do módulo de Contatos - NOVO!
 
 ## Last Updated
-2026-02-23 - Fase 3 Concluída: Log de Contatos com arquitetura Clean + Dashboard BI atualizado
+2026-02-23 - Log de Contatos integrado na página de detalhe do pedido (frontend completo)
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
