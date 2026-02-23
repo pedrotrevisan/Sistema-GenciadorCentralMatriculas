@@ -47,6 +47,10 @@ class PedidoMatricula:
 
     def _validar_vinculo(self):
         """Valida que pedido tem vínculo válido"""
+        # Pedidos manuais ou de importação não precisam de vinculo
+        if self.curso_id in ['manual', 'importacao']:
+            return
+        # Pedidos regulares devem ter projeto ou empresa
         if not self.projeto_id and not self.empresa_id:
             raise BusinessRuleException(
                 "Um pedido deve estar vinculado a um Projeto, Empresa ou Brasil Mais Produtivo"
