@@ -70,6 +70,21 @@ export default function CentralPendenciasPage() {
     observacoes: '',
     motivo_rejeicao: ''
   });
+  
+  // Modal Nova Pendência Manual
+  const [modalNovaPendencia, setModalNovaPendencia] = useState(false);
+  const [novaPendenciaForm, setNovaPendenciaForm] = useState({
+    aluno_nome: '',
+    aluno_cpf: '',
+    aluno_email: '',
+    aluno_telefone: '',
+    documento_codigo: '',
+    curso_nome: '',
+    observacoes: ''
+  });
+  const [buscandoCpf, setBuscandoCpf] = useState(false);
+  const [alunoEncontrado, setAlunoEncontrado] = useState(null);
+  const [salvandoPendencia, setSalvandoPendencia] = useState(false);
 
   useEffect(() => {
     carregarDados();
