@@ -891,7 +891,7 @@ async def validar_importacao_pendencias(
                     )
                 )
                 if pendencia_existente.scalar_one_or_none():
-                    linha_erros.append(f"Já existe pendência aberta para este documento")
+                    linha_erros.append("Já existe pendência aberta para este documento")
         
         # Montar preview
         preview_item = {
