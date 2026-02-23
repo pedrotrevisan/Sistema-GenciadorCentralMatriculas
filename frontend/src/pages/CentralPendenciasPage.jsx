@@ -579,6 +579,7 @@ export default function CentralPendenciasPage() {
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Documento</th>
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Curso</th>
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Status</th>
+                      <th className="text-left p-3 text-sm font-medium text-slate-600">Responsável</th>
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Contatos</th>
                       <th className="text-left p-3 text-sm font-medium text-slate-600">Criado em</th>
                       <th className="text-center p-3 text-sm font-medium text-slate-600">Ações</th>
