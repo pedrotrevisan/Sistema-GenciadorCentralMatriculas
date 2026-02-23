@@ -115,10 +115,12 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 ### P1 (Próximos)
 - [x] Timeline de Auditoria Visual - histórico de cada pedido ✅
 - [x] Refatorar pendências para router separado ✅
+- [x] Dashboard de BI com gráficos (Fase 5) ✅
 - [ ] Refatorar pedidos para router separado
 - [ ] Refatorar cadastros para router separado
 - [ ] Refinar máquina de estados dos pedidos
 - [ ] Filtros avançados de data na listagem
+- [ ] Iniciar Fase 3: Log de Contatos
 
 ### P2 (Futuro)
 - [ ] Notificações automáticas por email
@@ -181,7 +183,7 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/backend/tests/test_documentos_api.py` - Suite de testes do módulo de Documentos (Clean Architecture) - NOVO!
 
 ## Last Updated
-2026-02-23 - Fase 2 Concluída: Gestão de Pendências Documentais com Clean Architecture + Endpoints de BI para Dashboard
+2026-02-23 - Fase 5 Concluída: Dashboard de BI com gráficos interativos (Recharts)
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
