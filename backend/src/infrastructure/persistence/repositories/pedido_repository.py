@@ -47,7 +47,7 @@ class PedidoRepository(IPedidoRepository):
             aluno = Aluno(
                 id=aluno_model.id,
                 nome=aluno_model.nome,
-                cpf=CPF(aluno_model.cpf),
+                cpf=CPF(aluno_model.cpf, validar_digitos=False),  # Dados do banco já foram validados na entrada
                 email=Email(aluno_model.email),
                 telefone=Telefone(aluno_model.telefone),
                 data_nascimento=aluno_model.data_nascimento,
