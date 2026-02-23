@@ -351,12 +351,12 @@ const GestaoCadastrosPage = () => {
               
               <div className="w-[180px]">
                 <Label>Tipo</Label>
-                <Select value={filtros.tipo} onValueChange={(v) => setFiltros({ ...filtros, tipo: v })}>
+                <Select value={filtros.tipo || "all"} onValueChange={(v) => setFiltros({ ...filtros, tipo: v === "all" ? "" : v })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     {opcoesCursos.tipos.map((t) => (
                       <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                     ))}
@@ -366,12 +366,12 @@ const GestaoCadastrosPage = () => {
               
               <div className="w-[150px]">
                 <Label>Modalidade</Label>
-                <Select value={filtros.modalidade} onValueChange={(v) => setFiltros({ ...filtros, modalidade: v })}>
+                <Select value={filtros.modalidade || "all"} onValueChange={(v) => setFiltros({ ...filtros, modalidade: v === "all" ? "" : v })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
                     {opcoesCursos.modalidades.map((m) => (
                       <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                     ))}
@@ -381,12 +381,12 @@ const GestaoCadastrosPage = () => {
               
               <div className="w-[180px]">
                 <Label>Área</Label>
-                <Select value={filtros.area} onValueChange={(v) => setFiltros({ ...filtros, area: v })}>
+                <Select value={filtros.area || "all"} onValueChange={(v) => setFiltros({ ...filtros, area: v === "all" ? "" : v })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
                     {opcoesCursos.areas.map((a) => (
                       <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
                     ))}
