@@ -82,6 +82,7 @@ const DashboardLayout = () => {
       items.push(
         { to: '/assistente', icon: LayoutDashboard, label: 'Painel de Gestão' },
         { to: '/bi', icon: BarChart3, label: 'Dashboard BI' },
+        { to: '/kanban', icon: LayoutGrid, label: 'Kanban' },
         { to: '/assistente/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
         { to: '/pendencias', icon: AlertCircle, label: 'Pendências' },
         { to: '/reembolsos', icon: DollarSign, label: 'Reembolsos' },
@@ -91,6 +92,7 @@ const DashboardLayout = () => {
       items.push(
         { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
         { to: '/bi', icon: BarChart3, label: 'Dashboard BI' },
+        { to: '/kanban', icon: LayoutGrid, label: 'Kanban' },
         { to: '/admin/pedidos', icon: FileText, label: 'Pedidos' },
         { to: '/pendencias', icon: AlertCircle, label: 'Pendências' },
         { to: '/reembolsos', icon: DollarSign, label: 'Reembolsos' },
