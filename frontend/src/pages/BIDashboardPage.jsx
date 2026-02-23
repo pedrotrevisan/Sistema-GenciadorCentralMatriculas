@@ -57,14 +57,19 @@ const CHART_COLORS = ['#004587', '#10B981', '#F59E0B', '#E30613', '#8B5CF6', '#E
 const BIDashboardPage = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
+  const [contatosData, setContatosData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('visao-geral');
 
   const loadData = async () => {
     try {
-      const response = await documentosAPI.getBICompleto();
-      setData(response.data);
+      const [biResponse, contatosResponse] = await Promise.all([
+        documentosAPI.getBICompleto(),
+        contatosAPI.getStats()
+      ]);
+      setData(biResponse.data);
+      setContatosData(contatosResponse.data);
     } catch (error) {
       console.error('Erro ao carregar dados do BI:', error);
     } finally {
