@@ -187,11 +187,11 @@ async def meu_dia(
     lembretes = lembretes_result.scalars().all()
     
     # Buscar retornos de contato pendentes (usando a tabela de contatos correta)
-    retornos_query = select(func.count(ContatoModel.id)).where(
+    retornos_query = select(func.count(LogContatoModel.id)).where(
         and_(
-            ContatoModel.data_retorno != None,
-            ContatoModel.retorno_realizado == False,
-            ContatoModel.data_retorno <= fim_dia
+            LogContatoModel.data_retorno != None,
+            LogContatoModel.retorno_realizado == False,
+            LogContatoModel.data_retorno <= fim_dia
         )
     )
     retornos_result = await session.execute(retornos_query)
