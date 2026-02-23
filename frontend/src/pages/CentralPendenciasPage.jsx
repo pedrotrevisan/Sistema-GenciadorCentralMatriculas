@@ -167,6 +167,89 @@ export default function CentralPendenciasPage() {
     }
   };
 
+  // Funções para Nova Pendência Manual
+  const buscarAlunoPorCpf = async (cpf) => {
+    if (!cpf || cpf.replace(/\D/g, '').length < 11) return;
+    
+    setBuscandoCpf(true);
+    try {
+      const response = await api.get(`/pendencias/buscar-aluno/${cpf}`);
+      if (response.data.encontrado) {
+        setAlunoEncontrado(response.data.aluno);
+        setNovaPendenciaForm(prev => ({
+          ...prev,
+          aluno_nome: response.data.aluno.nome,
+          aluno_email: response.data.aluno.email,
+          aluno_telefone: response.data.aluno.telefone,
+          curso_nome: response.data.aluno.curso_nome
+        }));
+        toast.info(`Aluno encontrado: ${response.data.aluno.nome}`);
+      } else {
+        setAlunoEncontrado(null);
+        toast.info('Aluno não encontrado. Preencha os dados para criar novo cadastro.');
+      }
+    } catch (error) {
+      setAlunoEncontrado(null);
+    } finally {
+      setBuscandoCpf(false);
+    }
+  };
+
+  const criarPendenciaManual = async () => {
+    // Validações
+    if (!novaPendenciaForm.aluno_nome.trim()) {
+      toast.error('Informe o nome do aluno');
+      return;
+    }
+    if (!novaPendenciaForm.aluno_cpf.trim() || novaPendenciaForm.aluno_cpf.replace(/\D/g, '').length !== 11) {
+      toast.error('Informe um CPF válido');
+      return;
+    }
+    if (!novaPendenciaForm.documento_codigo) {
+      toast.error('Selecione o tipo de documento');
+      return;
+    }
+    
+    setSalvandoPendencia(true);
+    try {
+      await api.post('/pendencias/manual', novaPendenciaForm);
+      toast.success('Pendência criada com sucesso!');
+      setModalNovaPendencia(false);
+      setNovaPendenciaForm({
+        aluno_nome: '',
+        aluno_cpf: '',
+        aluno_email: '',
+        aluno_telefone: '',
+        documento_codigo: '',
+        curso_nome: '',
+        observacoes: ''
+      });
+      setAlunoEncontrado(null);
+      carregarPendencias(1);
+      carregarDados();
+    } catch (error) {
+      const msg = error.response?.data?.detail || 'Erro ao criar pendência';
+      toast.error(msg);
+    } finally {
+      setSalvandoPendencia(false);
+    }
+  };
+
+  const formatarCPF = (value) => {
+    const nums = value.replace(/\D/g, '').slice(0, 11);
+    if (nums.length <= 3) return nums;
+    if (nums.length <= 6) return `${nums.slice(0, 3)}.${nums.slice(3)}`;
+    if (nums.length <= 9) return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6)}`;
+    return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6, 9)}-${nums.slice(9)}`;
+  };
+
+  const formatarTelefone = (value) => {
+    const nums = value.replace(/\D/g, '').slice(0, 11);
+    if (nums.length <= 2) return nums;
+    if (nums.length <= 7) return `(${nums.slice(0, 2)}) ${nums.slice(2)}`;
+    return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7)}`;
+  };
+
   const formatarData = (dataStr) => {
     if (!dataStr) return '-';
     const data = new Date(dataStr);
