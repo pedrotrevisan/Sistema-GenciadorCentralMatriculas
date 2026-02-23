@@ -166,6 +166,15 @@ const DashboardLayout = () => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/minha-conta')} className="cursor-pointer">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Minha Conta
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/caixa-entrada')} className="cursor-pointer">
+                  <Inbox className="h-4 w-4 mr-2" />
+                  Caixa de Entrada
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
                   <LogOut className="h-4 w-4 mr-2" />
                   Sair
