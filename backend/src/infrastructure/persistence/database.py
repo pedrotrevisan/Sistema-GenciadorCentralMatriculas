@@ -64,6 +64,10 @@ async def init_db():
     from src.infrastructure.persistence.models_documentos import (
         PendenciaDocumentalModel
     )
+    # Import contatos models (Fase 3 - Log de Contatos)
+    from src.infrastructure.persistence.models_contatos import (
+        LogContatoModel
+    )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
