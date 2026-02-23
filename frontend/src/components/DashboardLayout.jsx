@@ -28,7 +28,8 @@ import {
   BarChart3,
   LayoutGrid,
   Sun,
-  BookOpen
+  BookOpen,
+  Inbox
 } from 'lucide-react';
 import AlertaRetornos from './AlertaRetornos';
 
