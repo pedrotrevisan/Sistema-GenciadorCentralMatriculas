@@ -390,6 +390,15 @@ export default function CentralPendenciasPage() {
               <Filter className="w-4 h-4 mr-2" />
               Filtrar
             </Button>
+            
+            <Button 
+              onClick={() => setModalNovaPendencia(true)} 
+              className="bg-green-600 hover:bg-green-700"
+              data-testid="btn-nova-pendencia"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Nova Pendência
+            </Button>
           </div>
         </CardContent>
       </Card>
