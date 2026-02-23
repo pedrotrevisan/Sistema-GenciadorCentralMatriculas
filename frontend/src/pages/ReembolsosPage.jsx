@@ -544,6 +544,18 @@ export default function ReembolsosPage() {
                         <td className="p-3">
                           <StatusBadge status={r.status} />
                         </td>
+                        <td className="p-3">
+                          {r.responsavel_nome ? (
+                            <Badge variant="outline" className="bg-green-50 text-green-700">
+                              <User className="w-3 h-3 mr-1" />
+                              {r.responsavel_nome}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-slate-50 text-slate-500">
+                              Não atribuído
+                            </Badge>
+                          )}
+                        </td>
                         <td className="p-3 text-sm text-slate-500">
                           {formatarData(r.data_abertura)}
                         </td>
@@ -557,6 +569,16 @@ export default function ReembolsosPage() {
                               data-testid={`btn-detalhes-${r.id}`}
                             >
                               <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setModalAtribuir({ isOpen: true, reembolso: r })}
+                              title={r.responsavel_nome ? `Atribuído: ${r.responsavel_nome}` : 'Atribuir responsável'}
+                              className={r.responsavel_id ? 'text-green-600' : 'text-slate-400'}
+                              data-testid={`btn-atribuir-${r.id}`}
+                            >
+                              <UserPlus className="w-4 h-4" />
                             </Button>
                             {r.status === 'aberto' && (
                               <Button
