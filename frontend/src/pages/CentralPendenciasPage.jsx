@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
 import api from '../services/api';
+import AtribuirResponsavelModal from '../components/AtribuirResponsavelModal';
 import {
   FileText, Search, Filter, Phone, Mail, MessageSquare, User,
   AlertTriangle, CheckCircle, Clock, XCircle, RefreshCw, Plus,
