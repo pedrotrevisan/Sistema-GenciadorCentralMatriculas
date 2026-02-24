@@ -452,18 +452,15 @@ const NovaMatriculaPage = () => {
             <div className="space-y-6" data-testid="step-1">
               <div className="space-y-2">
                 <Label htmlFor="curso">Curso *</Label>
-                <Select value={formData.curso_id} onValueChange={handleCursoChange}>
-                  <SelectTrigger data-testid="curso-select">
-                    <SelectValue placeholder="Selecione o curso" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cursos.map((curso) => (
-                      <SelectItem key={curso.id} value={curso.id}>
-                        {curso.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CursoAutocomplete
+                  cursos={cursos}
+                  value={formData.curso_id}
+                  onChange={handleCursoChange}
+                  placeholder="Digite para buscar entre os 4.489 cursos disponíveis..."
+                />
+                <p className="text-xs text-slate-500">
+                  Busca inteligente: digite parte do nome do curso para encontrar rapidamente
+                </p>
               </div>
 
               <div className="space-y-2">
