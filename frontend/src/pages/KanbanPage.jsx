@@ -43,15 +43,21 @@ import {
   AlertTriangle
 } from 'lucide-react';
 
-// Configuração de status do Kanban
+// Configuração de status do Kanban - Alinhado com fluxo SENAI
 const KANBAN_COLUMNS = [
   { id: 'pendente', title: 'Pendente', color: 'bg-amber-500', bgColor: 'bg-amber-50', borderColor: 'border-amber-200' },
+  { id: 'inscricao', title: 'Inscrição', color: 'bg-sky-500', bgColor: 'bg-sky-50', borderColor: 'border-sky-200' },
   { id: 'em_analise', title: 'Em Análise', color: 'bg-blue-500', bgColor: 'bg-blue-50', borderColor: 'border-blue-200' },
+  { id: 'analise_documental', title: 'Análise Doc.', color: 'bg-indigo-500', bgColor: 'bg-indigo-50', borderColor: 'border-indigo-200' },
   { id: 'documentacao_pendente', title: 'Doc. Pendente', color: 'bg-orange-500', bgColor: 'bg-orange-50', borderColor: 'border-orange-200' },
-  { id: 'aprovado', title: 'Aprovado', color: 'bg-green-500', bgColor: 'bg-green-50', borderColor: 'border-green-200' },
-  { id: 'realizado', title: 'Realizado', color: 'bg-purple-500', bgColor: 'bg-purple-50', borderColor: 'border-purple-200' },
+  { id: 'aprovado', title: 'Aprovado', color: 'bg-emerald-500', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200' },
+  { id: 'aguardando_pagamento', title: 'Aguard. Pgto', color: 'bg-purple-500', bgColor: 'bg-purple-50', borderColor: 'border-purple-200' },
+  { id: 'matriculado', title: 'Matriculado', color: 'bg-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200' },
+  { id: 'realizado', title: 'Realizado', color: 'bg-green-500', bgColor: 'bg-green-50', borderColor: 'border-green-200' },
   { id: 'exportado', title: 'Exportado', color: 'bg-pink-500', bgColor: 'bg-pink-50', borderColor: 'border-pink-200' },
-  { id: 'cancelado', title: 'Cancelado', color: 'bg-gray-500', bgColor: 'bg-gray-50', borderColor: 'border-gray-200' }
+  { id: 'nao_atende_requisito', title: 'Não Atende', color: 'bg-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' },
+  { id: 'cancelado', title: 'Cancelado', color: 'bg-gray-500', bgColor: 'bg-gray-50', borderColor: 'border-gray-200' },
+  { id: 'trancado', title: 'Trancado', color: 'bg-yellow-600', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200' }
 ];
 
 // Componente do Card arrastável
