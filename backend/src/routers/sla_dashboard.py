@@ -19,73 +19,94 @@ router = APIRouter(prefix="/sla", tags=["Dashboard SLA"])
 
 
 # Dependency para obter sessão do banco
-async def get_db_session():
-    from server import get_db_session as server_get_db
-    async for session in server_get_db():
-        yield session
+def get_db_session_dependency():
+    """Import dinâmico para evitar circular import"""
+    from server import get_db_session
+    return get_db_session
 
 
 # ==================== ENDPOINTS DE DASHBOARD ====================
 
 @router.get("/dashboard")
-async def get_dashboard_sla(session: AsyncSession = Depends(get_db_session)):
+async def get_dashboard_sla(session: AsyncSession = Depends(lambda: None)):
     """
     Dashboard completo de SLA com todas as métricas.
     Inclui: resumo geral, métricas por status, produtividade, alertas.
     """
-    service = MetricasSLAService(session)
-    return await service.get_dashboard_sla_completo()
+    from server import get_db_session, async_session
+    
+    async with async_session() as db_session:
+        service = MetricasSLAService(db_session)
+        return await service.get_dashboard_sla_completo()
 
 
 @router.get("/resumo")
-async def get_resumo_geral(session: AsyncSession = Depends(get_db_session)):
+async def get_resumo_geral():
     """KPIs gerais do sistema"""
-    service = MetricasSLAService(session)
-    return await service.get_resumo_geral()
+    from server import async_session
+    
+    async with async_session() as session:
+        service = MetricasSLAService(session)
+        return await service.get_resumo_geral()
 
 
 @router.get("/por-status")
-async def get_metricas_por_status(session: AsyncSession = Depends(get_db_session)):
+async def get_metricas_por_status():
     """Métricas detalhadas por status de pedido"""
-    service = MetricasSLAService(session)
-    return await service.get_metricas_por_status()
+    from server import async_session
+    
+    async with async_session() as session:
+        service = MetricasSLAService(session)
+        return await service.get_metricas_por_status()
 
 
 @router.get("/produtividade")
-async def get_produtividade_atendentes(session: AsyncSession = Depends(get_db_session)):
+async def get_produtividade_atendentes():
     """
     Ranking de produtividade por atendente.
     Mostra total atribuído, concluídos, pendentes e taxa de conclusão.
     """
-    service = MetricasSLAService(session)
-    return await service.get_produtividade_atendentes()
+    from server import async_session
+    
+    async with async_session() as session:
+        service = MetricasSLAService(session)
+        return await service.get_produtividade_atendentes()
 
 
 @router.get("/por-tipo-ps")
-async def get_sla_por_tipo_ps(session: AsyncSession = Depends(get_db_session)):
+async def get_sla_por_tipo_ps():
     """
     Métricas por tipo de Processo Seletivo.
     Inclui taxa de conversão e cancelamento por tipo.
     """
-    service = MetricasSLAService(session)
-    return await service.get_sla_por_tipo_ps()
+    from server import async_session
+    
+    async with async_session() as session:
+        service = MetricasSLAService(session)
+        return await service.get_sla_por_tipo_ps()
 
 
 @router.get("/evolucao")
-async def get_evolucao_semanal(session: AsyncSession = Depends(get_db_session)):
+async def get_evolucao_semanal():
     """Evolução de pedidos nas últimas 4 semanas"""
-    service = MetricasSLAService(session)
-    return await service.get_evolucao_semanal()
+    from server import async_session
+    
+    async with async_session() as session:
+        service = MetricasSLAService(session)
+        return await service.get_evolucao_semanal()
 
 
 @router.get("/alertas")
-async def get_alertas_sla(session: AsyncSession = Depends(get_db_session)):
+async def get_alertas_sla():
     """
     Lista de alertas de SLA críticos.
     Inclui análises atrasadas e pendências expirando.
     """
-    service = MetricasSLAService(session)
-    return await service.get_alertas_sla()
+    from server import async_session
+    
+    async with async_session() as session:
+        service = MetricasSLAService(session)
+        return await service.get_alertas_sla()
 
 
 # ==================== ENDPOINTS DE CONFIGURAÇÃO ====================
