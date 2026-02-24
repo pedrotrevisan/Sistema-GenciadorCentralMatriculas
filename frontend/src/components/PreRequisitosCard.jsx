@@ -33,6 +33,20 @@ const PreRequisitosCard = ({
   const [validacao, setValidacao] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [tiposCurso, setTiposCurso] = useState([]);
+
+  // Buscar tipos de curso disponíveis
+  useEffect(() => {
+    const fetchTipos = async () => {
+      try {
+        const response = await api.get('/api/regras/tipos-curso');
+        setTiposCurso(response.data);
+      } catch (err) {
+        console.error('Erro ao buscar tipos de curso:', err);
+      }
+    };
+    fetchTipos();
+  }, []);
 
   // Buscar requisitos do tipo de curso
   useEffect(() => {
