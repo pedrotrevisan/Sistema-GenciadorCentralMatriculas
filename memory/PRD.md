@@ -481,21 +481,63 @@ Repositório de artigos e procedimentos com:
 - `/app/backend/tests/test_apoio_cognitivo.py` - Suite de testes
 
 
-## Painel de Conta do Usuário (2026-02-23) - NOVO!
-Sistema de gerenciamento de conta pessoal do usuário.
+## Painel de Conta do Usuário (2026-02-24) - COMPLETO! ✅
+Sistema de gerenciamento de conta pessoal do usuário com log de atividades.
 
 ### Funcionalidades
 - **Perfil:** Editar nome e email
 - **Segurança:** Alterar senha (com validação da senha atual)
-- **Atividades:** Ver histórico de ações recentes no sistema
+- **Atividades:** Log completo de auditoria das ações do usuário (NOVO!)
+
+### Log de Atividades (2026-02-24) - NOVO!
+Sistema de auditoria que registra automaticamente todas as ações do usuário:
+
+**Tipos de Atividades Rastreadas:**
+- `login` - Login no sistema
+- `logout` - Logout do sistema  
+- `criar_pedido` - Criação de solicitação de matrícula
+- `atualizar_pedido` - Atualização de solicitação
+- `criar_pendencia` - Criação de pendência documental
+- `atualizar_pendencia` - Atualização de pendência
+- `criar_reembolso` - Criação de solicitação de reembolso
+- `atualizar_reembolso` - Atualização de reembolso
+- `atribuir_demanda` - Atribuição de demanda a responsável
+- `alterar_perfil` - Alteração de dados do perfil
+- `alterar_senha` - Alteração de senha
+- `exportar_totvs` - Exportação para TOTVS
+- `importar_lote` - Importação de dados em lote
+
+**Modelo de Dados (AtividadeUsuarioModel):**
+- `id` - UUID
+- `usuario_id` - ID do usuário
+- `usuario_nome` - Nome do usuário
+- `tipo` - Tipo da atividade
+- `descricao` - Descrição legível
+- `entidade_tipo` - Tipo da entidade (pedido, pendencia, etc)
+- `entidade_id` - ID da entidade relacionada
+- `entidade_nome` - Nome/identificador da entidade
+- `detalhes` - JSON com detalhes adicionais
+- `ip_address` - IP do usuário (opcional)
+- `created_at` - Data/hora da ação
 
 ### Endpoints (/api/auth)
-- `PUT /api/auth/me/perfil` - Atualizar dados do perfil
-- `PUT /api/auth/me/senha` - Alterar senha
-- `GET /api/auth/me/atividades` - Listar atividades recentes
+- `PUT /api/auth/me/perfil` - Atualizar dados do perfil (registra atividade)
+- `PUT /api/auth/me/senha` - Alterar senha (registra atividade)
+- `GET /api/auth/me/atividades` - Listar atividades com filtros
+  - Query params: `limite` (1-100), `tipo` (filtro por tipo)
+  - Retorna: `atividades`, `auditorias`, `pedidos_recentes`, `tipos_disponiveis`
 
 ### Página Frontend
 - `/minha-conta` - ConfiguracaoContaPage.jsx
+- **Aba Atividades:** Timeline visual com ícones coloridos, filtro por tipo, botão de atualizar
+- **Retrocompatibilidade:** Exibe auditorias antigas do sistema legado
+
+### Serviço de Atividades
+- `/app/backend/src/services/atividade_service.py`
+- Funções: `registrar_atividade()`, `listar_atividades_usuario()`, `get_tipos_atividade()`
+
+### Test Report
+- `/app/test_reports/iteration_11.json` - 21/21 backend + 100% frontend PASS
 
 
 ## Sistema de Atribuições/Chamados (2026-02-23) - NOVO!
