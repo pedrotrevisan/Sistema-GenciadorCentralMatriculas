@@ -27,6 +27,7 @@ export const AlertaPrazo = ({
     if (dataCriacao && status === 'documentacao_pendente') {
       calcularPrazo();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataCriacao, status]);
 
   const calcularPrazo = async () => {
