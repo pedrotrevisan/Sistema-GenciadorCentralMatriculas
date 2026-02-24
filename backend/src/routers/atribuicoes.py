@@ -241,7 +241,7 @@ async def atribuir_demanda(
     await session.commit()
     
     # Enviar notificação por email (em background, não bloqueia a resposta)
-    base_url = os.environ.get('FRONTEND_URL', 'https://matriculas-ai.preview.emergentagent.com')
+    base_url = os.environ.get('FRONTEND_URL', 'https://operacional-hub.preview.emergentagent.com')
     full_link = f"{base_url}{link_demanda}"
     
     # Tentar enviar email (não falha se não conseguir)
