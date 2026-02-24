@@ -395,44 +395,226 @@ const ConfiguracaoContaPage = () => {
           <TabsContent value="atividades">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <History className="w-5 h-5 text-[#004587]" />
-                  Atividades Recentes
-                </CardTitle>
-                <CardDescription>
-                  Histórico das suas últimas ações no sistema
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <History className="w-5 h-5 text-[#004587]" />
+                      Log de Atividades
+                    </CardTitle>
+                    <CardDescription>
+                      Histórico completo das suas ações no sistema
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+                      <SelectTrigger className="w-[180px]" data-testid="filtro-tipo-atividade">
+                        <Filter className="w-4 h-4 mr-2" />
+                        <SelectValue placeholder="Filtrar por tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todas as atividades</SelectItem>
+                        <SelectItem value="login">Logins</SelectItem>
+                        <SelectItem value="criar_pedido">Pedidos criados</SelectItem>
+                        <SelectItem value="atualizar_pedido">Pedidos atualizados</SelectItem>
+                        <SelectItem value="alterar_perfil">Alterações de perfil</SelectItem>
+                        <SelectItem value="alterar_senha">Alterações de senha</SelectItem>
+                        <SelectItem value="exportar_totvs">Exportações TOTVS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={carregarAtividades}
+                      disabled={loadingAtividades}
+                      data-testid="btn-atualizar-atividades"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${loadingAtividades ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {atividades?.pedidos_recentes?.length > 0 ? (
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-slate-700">Últimas Solicitações</h4>
-                    <div className="space-y-2">
-                      {atividades.pedidos_recentes.map((pedido) => (
-                        <div 
-                          key={pedido.id}
-                          className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
-                        >
-                          <div>
-                            <p className="font-medium text-slate-800">
-                              {pedido.protocolo || 'Sem protocolo'}
-                            </p>
-                            <p className="text-sm text-slate-500">{pedido.curso}</p>
-                          </div>
-                          <div className="text-right">
-                            <Badge variant="outline">{pedido.status}</Badge>
-                            <p className="text-xs text-slate-400 mt-1">
-                              {pedido.created_at ? new Date(pedido.created_at).toLocaleDateString('pt-BR') : '-'}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                {loadingAtividades ? (
+                  <div className="flex items-center justify-center py-12">
+                    <RefreshCw className="w-8 h-8 animate-spin text-slate-400" />
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-slate-500">
-                    <History className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                    <p>Nenhuma atividade recente</p>
+                  <div className="space-y-6">
+                    {/* Atividades do Novo Sistema */}
+                    {atividades?.atividades?.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-slate-700 flex items-center gap-2">
+                          <Activity className="w-4 h-4" />
+                          Atividades Recentes
+                        </h4>
+                        <div className="relative">
+                          {/* Timeline Line */}
+                          <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-slate-200" />
+                          
+                          <div className="space-y-4">
+                            {atividades.atividades.map((atividade) => {
+                              const Icone = getIcone(atividade.tipo);
+                              return (
+                                <div
+                                  key={atividade.id}
+                                  className="relative flex items-start gap-4 pl-2"
+                                  data-testid={`atividade-${atividade.id}`}
+                                >
+                                  {/* Ícone no timeline */}
+                                  <div className={`relative z-10 p-2 rounded-full border ${getCorClasse(atividade.tipo_cor)}`}>
+                                    <Icone className="w-4 h-4" />
+                                  </div>
+                                  
+                                  {/* Conteúdo */}
+                                  <div className="flex-1 bg-white border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex items-center justify-between">
+                                      <p className="font-medium text-slate-800">
+                                        {atividade.descricao}
+                                      </p>
+                                      <span className="text-xs text-slate-400 flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {atividade.created_at
+                                          ? new Date(atividade.created_at).toLocaleString('pt-BR', {
+                                              day: '2-digit',
+                                              month: '2-digit',
+                                              hour: '2-digit',
+                                              minute: '2-digit'
+                                            })
+                                          : '-'}
+                                      </span>
+                                    </div>
+                                    
+                                    {atividade.entidade_nome && (
+                                      <p className="text-sm text-slate-500 mt-1 flex items-center gap-1">
+                                        <ExternalLink className="w-3 h-3" />
+                                        {atividade.entidade_tipo}: {atividade.entidade_nome}
+                                      </p>
+                                    )}
+                                    
+                                    {atividade.detalhes && Object.keys(atividade.detalhes).length > 0 && (
+                                      <div className="mt-2 text-xs text-slate-400 bg-slate-50 rounded p-2">
+                                        {JSON.stringify(atividade.detalhes)}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Auditorias (sistema antigo) */}
+                    {atividades?.auditorias?.length > 0 && (
+                      <div className="space-y-3">
+                        <Separator />
+                        <h4 className="font-medium text-slate-700 flex items-center gap-2">
+                          <History className="w-4 h-4" />
+                          Histórico de Auditoria
+                        </h4>
+                        <div className="relative">
+                          <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-slate-200" />
+                          
+                          <div className="space-y-4">
+                            {atividades.auditorias.slice(0, 10).map((audit) => {
+                              const Icone = getIcone(audit.tipo);
+                              return (
+                                <div
+                                  key={audit.id}
+                                  className="relative flex items-start gap-4 pl-2"
+                                  data-testid={`auditoria-${audit.id}`}
+                                >
+                                  <div className={`relative z-10 p-2 rounded-full border ${getCorClasse(audit.tipo_cor)}`}>
+                                    <Icone className="w-4 h-4" />
+                                  </div>
+                                  
+                                  <div className="flex-1 bg-white border rounded-lg p-3 shadow-sm">
+                                    <div className="flex items-center justify-between">
+                                      <p className="font-medium text-slate-800">
+                                        {audit.descricao}
+                                      </p>
+                                      <span className="text-xs text-slate-400 flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {audit.created_at
+                                          ? new Date(audit.created_at).toLocaleString('pt-BR', {
+                                              day: '2-digit',
+                                              month: '2-digit',
+                                              hour: '2-digit',
+                                              minute: '2-digit'
+                                            })
+                                          : '-'}
+                                      </span>
+                                    </div>
+                                    
+                                    {audit.entidade_id && (
+                                      <Badge variant="outline" className="mt-2 text-xs">
+                                        Pedido: {audit.entidade_id.substring(0, 8)}...
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pedidos Recentes */}
+                    {atividades?.pedidos_recentes?.length > 0 && (
+                      <div className="space-y-3">
+                        <Separator />
+                        <h4 className="font-medium text-slate-700 flex items-center gap-2">
+                          <FilePlus className="w-4 h-4" />
+                          Suas Últimas Solicitações
+                        </h4>
+                        <div className="grid gap-2">
+                          {atividades.pedidos_recentes.map((pedido) => (
+                            <div
+                              key={pedido.id}
+                              className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                              data-testid={`pedido-recente-${pedido.id}`}
+                            >
+                              <div>
+                                <p className="font-medium text-slate-800">
+                                  {pedido.protocolo || 'Sem protocolo'}
+                                </p>
+                                <p className="text-sm text-slate-500">{pedido.curso}</p>
+                              </div>
+                              <div className="text-right">
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    pedido.status === 'aprovado' || pedido.status === 'realizado'
+                                      ? 'bg-green-100 text-green-700 border-green-200'
+                                      : pedido.status === 'pendente'
+                                      ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                      : 'bg-slate-100 text-slate-700'
+                                  }
+                                >
+                                  {pedido.status?.replace('_', ' ')}
+                                </Badge>
+                                <p className="text-xs text-slate-400 mt-1">
+                                  {pedido.created_at
+                                    ? new Date(pedido.created_at).toLocaleDateString('pt-BR')
+                                    : '-'}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Estado vazio */}
+                    {(!atividades?.atividades?.length && !atividades?.auditorias?.length && !atividades?.pedidos_recentes?.length) && (
+                      <div className="text-center py-12 text-slate-500">
+                        <History className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+                        <p className="text-lg font-medium">Nenhuma atividade encontrada</p>
+                        <p className="text-sm">Suas ações no sistema aparecerão aqui</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
