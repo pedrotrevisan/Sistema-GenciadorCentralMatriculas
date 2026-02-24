@@ -470,7 +470,7 @@ const NovaMatriculaPage = () => {
                   cursoId={formData.curso_id}
                   cursoTipo={cursos.find(c => c.id === formData.curso_id)?.tipo}
                   dataNascimento={formData.alunos[0]?.data_nascimento}
-                  escolaridade={formData.alunos[0]?.escolaridade}
+                  escolaridade={formData.alunos[0]?.grau_instrucao}
                 />
               )}
 
