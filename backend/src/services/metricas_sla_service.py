@@ -354,7 +354,10 @@ class MetricasSLAService:
         pedidos_atrasados = result.scalars().all()
         
         for p in pedidos_atrasados:
-            horas_atraso = (agora - p.updated_at.replace(tzinfo=timezone.utc)).total_seconds() / 3600
+            p_updated = p.updated_at
+            if p_updated and p_updated.tzinfo is None:
+                p_updated = p_updated.replace(tzinfo=timezone.utc)
+            horas_atraso = (agora - p_updated).total_seconds() / 3600 if p_updated else 0
             alertas.append({
                 "tipo": "analise_atrasada",
                 "nivel": "critico" if horas_atraso > 72 else "alerta",
@@ -366,27 +369,34 @@ class MetricasSLAService:
                 "mensagem": f"Análise atrasada há {round(horas_atraso)}h (SLA: 48h)"
             })
         
-        # Pendências expirando
-        limite_pendencia = agora + timedelta(days=1)  # Expira em 1 dia
+        # Pendências aguardando aluno por mais de 4 dias (alerta antes de expirar os 5 dias)
+        limite_pendencia = agora - timedelta(days=4)  # 4 dias = quase expirando
         result = await self.session.execute(
             select(PendenciaModel)
             .where(and_(
-                PendenciaModel.status == 'aguardando_aluno',
-                PendenciaModel.data_limite.isnot(None),
-                PendenciaModel.data_limite < limite_pendencia
+                PendenciaModel.status.in_(['pendente', 'aguardando_aluno']),
+                PendenciaModel.created_at < limite_pendencia
             ))
             .limit(10)
         )
         pendencias_expirando = result.scalars().all()
         
         for pend in pendencias_expirando:
-            if pend.data_limite:
-                horas_restantes = (pend.data_limite.replace(tzinfo=timezone.utc) - agora).total_seconds() / 3600
+            pend_created = pend.created_at
+            if pend_created and pend_created.tzinfo is None:
+                pend_created = pend_created.replace(tzinfo=timezone.utc)
+            
+            # Calcular data limite (5 dias após criação)
+            if pend_created:
+                data_limite = pend_created + timedelta(days=5)
+                horas_restantes = (data_limite - agora).total_seconds() / 3600
+                
                 alertas.append({
                     "tipo": "pendencia_expirando",
                     "nivel": "critico" if horas_restantes < 0 else "alerta",
                     "pendencia_id": pend.id,
-                    "aluno_nome": pend.aluno_nome,
+                    "aluno_nome": getattr(pend, 'aluno_nome', None) or 'Não identificado',
+                    "documento": pend.documento_nome,
                     "horas_restantes": round(horas_restantes, 1),
                     "mensagem": f"Pendência {'expirada' if horas_restantes < 0 else 'expira em ' + str(round(horas_restantes)) + 'h'}"
                 })
