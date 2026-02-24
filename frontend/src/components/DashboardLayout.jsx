@@ -28,6 +28,7 @@ import {
   BarChart3,
   LayoutGrid,
   Sun,
+  Target,
   BookOpen,
   Inbox
 } from 'lucide-react';
