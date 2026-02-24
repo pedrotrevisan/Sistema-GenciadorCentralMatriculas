@@ -483,6 +483,273 @@ async def deletar_empresa(
     return {"message": "Empresa desativada com sucesso"}
 
 
+# ==================== IMPORTAÇÃO DE CURSOS ====================
+
+class ImportacaoCursosResponse(BaseModel):
+    total_linhas: int
+    importados: int
+    duplicados: int
+    erros: int
+    detalhes: List[dict]
+
+
+@router.get("/cursos/importacao/template", tags=["Cursos - Importação"])
+async def download_template_cursos():
+    """Download do template Excel para importação de cursos"""
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Cursos"
+    
+    # Cabeçalhos
+    headers = ["Código", "Nome", "Descrição", "Tipo", "Modalidade", "Área", "Carga Horária", "Duração"]
+    header_fill = PatternFill(start_color="004587", end_color="004587", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center')
+        cell.border = thin_border
+    
+    # Exemplos
+    exemplos = [
+        ["0001", "Eletricista de Automóveis - EAD", "Curso de eletricista para veículos", "tecnico", "ead", "eletrica", "200h", "6 meses"],
+        ["0002", "Técnico em Mecatrônica", "Formação técnica em mecatrônica", "tecnico", "presencial", "automacao", "1200h", "2 anos"],
+    ]
+    
+    for row_num, exemplo in enumerate(exemplos, 2):
+        for col, valor in enumerate(exemplo, 1):
+            cell = ws.cell(row=row_num, column=col, value=valor)
+            cell.border = thin_border
+    
+    # Ajustar larguras
+    ws.column_dimensions['A'].width = 10
+    ws.column_dimensions['B'].width = 50
+    ws.column_dimensions['C'].width = 40
+    ws.column_dimensions['D'].width = 15
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 15
+    ws.column_dimensions['G'].width = 15
+    ws.column_dimensions['H'].width = 15
+    
+    # Aba de referência
+    ws_ref = wb.create_sheet("Referência")
+    ws_ref['A1'] = "Tipos Válidos"
+    ws_ref['B1'] = "Modalidades Válidas"
+    ws_ref['C1'] = "Áreas Válidas"
+    for cell in [ws_ref['A1'], ws_ref['B1'], ws_ref['C1']]:
+        cell.font = Font(bold=True)
+    
+    for i, tipo in enumerate(TIPOS_CURSO, 2):
+        ws_ref.cell(row=i, column=1, value=tipo['value'])
+    for i, mod in enumerate(MODALIDADES_CURSO, 2):
+        ws_ref.cell(row=i, column=2, value=mod['value'])
+    for i, area in enumerate(AREAS_CURSO, 2):
+        ws_ref.cell(row=i, column=3, value=area['value'])
+    
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=template_cursos_senai.xlsx"}
+    )
+
+
+@router.post("/cursos/importacao/validar", tags=["Cursos - Importação"])
+async def validar_importacao_cursos(
+    arquivo: UploadFile = File(...),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """Valida arquivo Excel antes da importação"""
+    import pandas as pd
+    
+    if not arquivo.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Arquivo deve ser Excel (.xlsx ou .xls)")
+    
+    try:
+        conteudo = await arquivo.read()
+        df = pd.read_excel(io.BytesIO(conteudo))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao ler arquivo: {str(e)}")
+    
+    # Identificar colunas
+    colunas_lower = {col.lower().strip(): col for col in df.columns}
+    col_codigo = colunas_lower.get('código') or colunas_lower.get('codigo')
+    col_nome = colunas_lower.get('nome')
+    
+    if not col_nome:
+        raise HTTPException(status_code=400, detail="Coluna 'Nome' é obrigatória")
+    
+    # Buscar cursos existentes
+    result = await session.execute(select(CursoModel.nome))
+    cursos_existentes = {c.lower() for c in result.scalars().all()}
+    
+    validados = []
+    duplicados = []
+    erros = []
+    
+    for idx, row in df.iterrows():
+        nome = str(row[col_nome]).strip() if pd.notna(row[col_nome]) else None
+        codigo = str(row[col_codigo]).strip() if col_codigo and pd.notna(row.get(col_codigo)) else None
+        
+        if not nome or nome.lower() == 'nan':
+            erros.append({"linha": idx + 2, "erro": "Nome vazio"})
+            continue
+        
+        if nome.lower() in cursos_existentes:
+            duplicados.append({"linha": idx + 2, "nome": nome, "motivo": "Já existe no sistema"})
+            continue
+        
+        # Verificar duplicata na planilha
+        nomes_validados = [v['nome'].lower() for v in validados]
+        if nome.lower() in nomes_validados:
+            duplicados.append({"linha": idx + 2, "nome": nome, "motivo": "Duplicado na planilha"})
+            continue
+        
+        validados.append({
+            "linha": idx + 2,
+            "codigo": codigo,
+            "nome": nome
+        })
+    
+    return {
+        "total_linhas": len(df),
+        "validos": len(validados),
+        "duplicados": len(duplicados),
+        "erros": len(erros),
+        "preview": validados[:10],
+        "duplicados_lista": duplicados[:10],
+        "erros_lista": erros[:10]
+    }
+
+
+@router.post("/cursos/importacao/executar", response_model=ImportacaoCursosResponse, tags=["Cursos - Importação"])
+async def executar_importacao_cursos(
+    arquivo: UploadFile = File(...),
+    deps: tuple = Depends(require_permission("usuario:gerenciar"))
+):
+    """Executa a importação de cursos do arquivo Excel (Admin)"""
+    import pandas as pd
+    
+    usuario, session = deps
+    
+    if not arquivo.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Arquivo deve ser Excel (.xlsx ou .xls)")
+    
+    try:
+        conteudo = await arquivo.read()
+        df = pd.read_excel(io.BytesIO(conteudo))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao ler arquivo: {str(e)}")
+    
+    # Identificar colunas
+    colunas_lower = {col.lower().strip(): col for col in df.columns}
+    col_codigo = colunas_lower.get('código') or colunas_lower.get('codigo')
+    col_nome = colunas_lower.get('nome')
+    col_descricao = colunas_lower.get('descricao') or colunas_lower.get('descrição')
+    col_tipo = colunas_lower.get('tipo')
+    col_modalidade = colunas_lower.get('modalidade')
+    col_area = colunas_lower.get('area') or colunas_lower.get('área')
+    col_carga = colunas_lower.get('carga_horaria') or colunas_lower.get('carga horária')
+    col_duracao = colunas_lower.get('duracao') or colunas_lower.get('duração')
+    
+    if not col_nome:
+        raise HTTPException(status_code=400, detail="Coluna 'Nome' é obrigatória")
+    
+    # Buscar cursos existentes
+    result = await session.execute(select(CursoModel.nome))
+    cursos_existentes = {c.lower() for c in result.scalars().all()}
+    
+    importados = 0
+    duplicados = 0
+    erros = 0
+    detalhes = []
+    nomes_importados = set()
+    
+    for idx, row in df.iterrows():
+        nome = str(row[col_nome]).strip() if pd.notna(row[col_nome]) else None
+        
+        if not nome or nome.lower() == 'nan':
+            erros += 1
+            detalhes.append({"linha": idx + 2, "status": "erro", "motivo": "Nome vazio"})
+            continue
+        
+        if nome.lower() in cursos_existentes or nome.lower() in nomes_importados:
+            duplicados += 1
+            detalhes.append({"linha": idx + 2, "nome": nome, "status": "duplicado"})
+            continue
+        
+        try:
+            # Extrair dados opcionais
+            descricao = str(row[col_descricao]).strip() if col_descricao and pd.notna(row.get(col_descricao)) else None
+            if descricao == 'nan':
+                descricao = None
+            
+            tipo = str(row[col_tipo]).strip().lower() if col_tipo and pd.notna(row.get(col_tipo)) else None
+            if tipo == 'nan':
+                tipo = None
+            
+            modalidade = str(row[col_modalidade]).strip().lower() if col_modalidade and pd.notna(row.get(col_modalidade)) else None
+            if modalidade == 'nan':
+                modalidade = None
+            
+            area = str(row[col_area]).strip().lower() if col_area and pd.notna(row.get(col_area)) else None
+            if area == 'nan':
+                area = None
+            
+            carga = str(row[col_carga]).strip() if col_carga and pd.notna(row.get(col_carga)) else None
+            if carga == 'nan':
+                carga = None
+            
+            duracao = str(row[col_duracao]).strip() if col_duracao and pd.notna(row.get(col_duracao)) else None
+            if duracao == 'nan':
+                duracao = None
+            
+            # Criar curso
+            curso = CursoModel(
+                id=str(uuid.uuid4()),
+                nome=nome,
+                descricao=descricao,
+                tipo=tipo,
+                modalidade=modalidade,
+                area=area,
+                carga_horaria=carga,
+                duracao=duracao,
+                ativo=True
+            )
+            session.add(curso)
+            nomes_importados.add(nome.lower())
+            importados += 1
+            detalhes.append({"linha": idx + 2, "nome": nome, "status": "importado"})
+            
+        except Exception as e:
+            erros += 1
+            detalhes.append({"linha": idx + 2, "nome": nome, "status": "erro", "motivo": str(e)})
+    
+    await session.commit()
+    
+    return {
+        "total_linhas": len(df),
+        "importados": importados,
+        "duplicados": duplicados,
+        "erros": erros,
+        "detalhes": detalhes[:100]  # Limitar detalhes retornados
+    }
+
+
 # ==================== DADOS AUXILIARES ====================
 
 @router.get("/status-pedido", tags=["Auxiliares"])
