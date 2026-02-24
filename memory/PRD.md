@@ -192,7 +192,7 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/backend/tests/test_contatos_api.py` - Suite de testes do módulo de Contatos - NOVO!
 
 ## Last Updated
-2026-02-23 - Botão "Atribuir Responsável" implementado em Kanban, Pendências e Reembolsos
+2026-02-24 - Log de Atividades implementado no Painel de Conta do Usuário
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
