@@ -518,14 +518,22 @@ async def atualizar_perfil(
 
 @api_router.get("/auth/me/atividades", tags=["Auth"])
 async def minhas_atividades(
-    limite: int = Query(default=20, ge=1, le=100),
+    limite: int = Query(default=50, ge=1, le=100),
+    tipo: Optional[str] = Query(None, description="Filtrar por tipo de atividade"),
     token: str = Depends(oauth2_scheme),
     session: AsyncSession = Depends(get_db_session)
 ):
-    """Retorna atividades recentes do usuário"""
+    """Retorna atividades recentes do usuário - Log de Auditoria Completo"""
+    from src.infrastructure.persistence.models import AtividadeUsuarioModel
+    from src.services.atividade_service import listar_atividades_usuario, get_tipos_atividade
+    
     usuario = await get_current_user(token, session)
     
-    # Buscar atividades de auditoria
+    # Buscar atividades do novo sistema
+    tipos_filtro = [tipo] if tipo else None
+    atividades = await listar_atividades_usuario(session, usuario.id, limite, tipos_filtro)
+    
+    # Buscar também auditorias antigas (para retrocompatibilidade)
     result = await session.execute(
         select(AuditoriaModel)
         .where(AuditoriaModel.usuario_id == usuario.id)
@@ -543,17 +551,48 @@ async def minhas_atividades(
     )
     pedidos = result.scalars().all()
     
+    # Mapear ações de auditoria para ícones e cores
+    ACOES_MAPEADAS = {
+        "CRIACAO": {"icone": "file-plus", "cor": "blue", "descricao": "Criou solicitação"},
+        "PEDIDO_CRIADO": {"icone": "file-plus", "cor": "blue", "descricao": "Criou solicitação"},
+        "STATUS_ATUALIZADO": {"icone": "refresh-cw", "cor": "yellow", "descricao": "Alterou status"},
+        "ATUALIZACAO_STATUS": {"icone": "refresh-cw", "cor": "yellow", "descricao": "Alterou status"},
+        "PEDIDO_EXPORTADO": {"icone": "download", "cor": "green", "descricao": "Exportou TOTVS"},
+        "EXPORTACAO": {"icone": "download", "cor": "green", "descricao": "Exportou TOTVS"},
+        "PEDIDO_APROVADO": {"icone": "check-circle", "cor": "green", "descricao": "Aprovação"},
+        "PEDIDO_REALIZADO": {"icone": "check-circle", "cor": "green", "descricao": "Matrícula realizada"},
+        "PEDIDO_CANCELADO": {"icone": "x-circle", "cor": "red", "descricao": "Cancelamento"},
+    }
+    
+    # Converter auditorias antigas para formato unificado
+    auditorias_formatadas = []
+    for a in auditorias:
+        info = ACOES_MAPEADAS.get(a.acao, {"icone": "activity", "cor": "gray", "descricao": a.acao})
+        
+        # Extrair descrição dos detalhes
+        descricao = info["descricao"]
+        if a.detalhes:
+            if "status_anterior" in a.detalhes and "status_novo" in a.detalhes:
+                status_ant = a.detalhes.get("status_anterior", "").replace("_", " ").title()
+                status_novo = a.detalhes.get("status_novo", "").replace("_", " ").title()
+                descricao = f"Alterou status de '{status_ant}' para '{status_novo}'"
+        
+        auditorias_formatadas.append({
+            "id": a.id,
+            "tipo": a.acao.lower(),
+            "tipo_icone": info["icone"],
+            "tipo_cor": info["cor"],
+            "descricao": descricao,
+            "entidade_tipo": "pedido",
+            "entidade_id": a.pedido_id,
+            "entidade_nome": None,
+            "detalhes": a.detalhes,
+            "created_at": a.timestamp.isoformat() if a.timestamp else None
+        })
+    
     return {
-        "auditorias": [
-            {
-                "id": a.id,
-                "acao": a.acao,
-                "pedido_id": a.pedido_id,
-                "detalhes": a.detalhes,
-                "timestamp": a.timestamp.isoformat() if a.timestamp else None
-            }
-            for a in auditorias
-        ],
+        "atividades": atividades,
+        "auditorias": auditorias_formatadas,
         "pedidos_recentes": [
             {
                 "id": p.id,
@@ -563,7 +602,8 @@ async def minhas_atividades(
                 "created_at": p.created_at.isoformat() if p.created_at else None
             }
             for p in pedidos
-        ]
+        ],
+        "tipos_disponiveis": get_tipos_atividade()
     }
 
 
