@@ -5,6 +5,15 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 
 ## Última Atualização: 2026-02-24
 
+### Buscador Inteligente de Cursos (2026-02-24) - CONCLUÍDO ✅
+- Componente `CursoAutocomplete` com busca em tempo real
+- Busca ignora acentos (ex: "mecatronica" encontra "Mecatrônica")
+- Debounce de 150ms para performance
+- Limite de 50 resultados por busca
+- Navegação por teclado (setas, Enter, Esc)
+- Destaque visual do curso selecionado com badge verde
+- Exibe tipo e modalidade do curso nos resultados
+
 ### Importação de Cursos SENAI CIMATEC (2026-02-24) - CONCLUÍDO ✅
 - **4481 cursos importados** do arquivo Excel oficial "Cursos SENAI CIMATEC.xlsx"
 - **Total atual de cursos: 4489** (8 pré-existentes + 4481 importados)
