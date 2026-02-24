@@ -22,7 +22,9 @@ import {
 const ConfiguracaoContaPage = () => {
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loadingAtividades, setLoadingAtividades] = useState(false);
   const [atividades, setAtividades] = useState(null);
+  const [filtroTipo, setFiltroTipo] = useState('todos');
   
   // Form states
   const [perfil, setPerfil] = useState({
@@ -41,6 +43,58 @@ const ConfiguracaoContaPage = () => {
     nova: false,
     confirmar: false
   });
+
+  // Mapeamento de ícones por tipo
+  const ICONE_MAP = {
+    'login': LogIn,
+    'logout': LogOut,
+    'criar_pedido': FilePlus,
+    'atualizar_pedido': Edit,
+    'criar_pendencia': FileWarning,
+    'atualizar_pendencia': FileCheck,
+    'criar_reembolso': DollarSign,
+    'atualizar_reembolso': CreditCard,
+    'atribuir_demanda': UserCheck,
+    'alterar_perfil': UserCog,
+    'alterar_senha': Key,
+    'exportar_totvs': Download,
+    'importar_lote': Upload,
+    'criar_contato': Phone,
+    'criar_tarefa': CheckSquare,
+    'criar_artigo': BookOpen,
+    'visualizar_pedido': Eye,
+    'criacao': FilePlus,
+    'pedido_criado': FilePlus,
+    'status_atualizado': RefreshCw,
+    'atualizacao_status': RefreshCw,
+    'pedido_exportado': Download,
+    'exportacao': Download,
+    'pedido_aprovado': CheckCircle,
+    'pedido_realizado': CheckCircle,
+    'pedido_cancelado': AlertTriangle,
+  };
+
+  // Cores por tipo
+  const COR_MAP = {
+    'green': 'bg-green-100 text-green-700 border-green-200',
+    'gray': 'bg-gray-100 text-gray-700 border-gray-200',
+    'blue': 'bg-blue-100 text-blue-700 border-blue-200',
+    'yellow': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    'orange': 'bg-orange-100 text-orange-700 border-orange-200',
+    'purple': 'bg-purple-100 text-purple-700 border-purple-200',
+    'cyan': 'bg-cyan-100 text-cyan-700 border-cyan-200',
+    'red': 'bg-red-100 text-red-700 border-red-200',
+    'teal': 'bg-teal-100 text-teal-700 border-teal-200',
+    'indigo': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  };
+
+  const getIcone = (tipo) => {
+    return ICONE_MAP[tipo?.toLowerCase()] || Activity;
+  };
+
+  const getCorClasse = (cor) => {
+    return COR_MAP[cor] || COR_MAP['gray'];
+  };
 
   useEffect(() => {
     if (user) {
