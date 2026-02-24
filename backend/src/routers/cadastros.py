@@ -1,11 +1,13 @@
 """Router de Cadastros (Cursos, Projetos, Empresas)"""
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
+import io
 
 from src.infrastructure.persistence.models import CursoModel, ProjetoModel, EmpresaModel
 from src.domain.value_objects import StatusPedido
