@@ -39,7 +39,7 @@ const PreRequisitosCard = ({
   useEffect(() => {
     const fetchTipos = async () => {
       try {
-        const response = await api.get('/api/regras/tipos-curso');
+        const response = await api.get('/regras/tipos-curso');
         setTiposCurso(response.data);
       } catch (err) {
         console.error('Erro ao buscar tipos de curso:', err);
@@ -60,7 +60,7 @@ const PreRequisitosCard = ({
       setError(null);
 
       try {
-        const response = await api.get(`/api/regras/tipos-curso/${cursoTipo}`);
+        const response = await api.get(`/regras/tipos-curso/${cursoTipo}`);
         setRequisitos(response.data);
       } catch (err) {
         console.error('Erro ao buscar requisitos:', err);
