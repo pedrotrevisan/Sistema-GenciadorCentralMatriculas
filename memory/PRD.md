@@ -128,7 +128,7 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - Rotas protegidas por role
 
 ### Dados Auxiliares (Seed)
-- Cursos: 10 cursos técnicos e de engenharia
+- Cursos: **4489 cursos** (importados do arquivo oficial SENAI CIMATEC em 2026-02-24)
 - Projetos: 4 projetos SENAI
 - Empresas: 5 empresas parceiras
 
@@ -148,6 +148,7 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - [x] Ajuste de Nomenclaturas (Solicitação vs Matrícula)
 - [x] Central de Pendências Documentais
 - [x] Módulo de Reembolsos - NOVO!
+- [x] **Importação de Cursos SENAI CIMATEC (4481 cursos)** ✅ (2026-02-24)
 
 ### P1 (Próximos)
 - [x] Timeline de Auditoria Visual - histórico de cada pedido ✅
@@ -168,7 +169,7 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - [x] Cálculo de Prazos e SLA ✅ (2026-02-24)
 - [x] Templates de Mensagem (Email/WhatsApp) ✅ (2026-02-24)
 - [ ] Filtros por Data nas listagens
-- [ ] Refatorar pedidos/auth para router separado
+- [ ] Refatorar pedidos/auth para router separado (dívida técnica)
 - [ ] Dashboard de SLA por atendente
 
 ### P2 (Futuro)
