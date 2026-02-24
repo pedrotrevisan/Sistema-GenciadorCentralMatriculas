@@ -3,6 +3,14 @@
 ## Problem Statement
 Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligência Operacional" que atua como middleware de front-end entre a CAC (Central de Atendimento ao Cliente) e o TOTVS Educacional. O objetivo é substituir processos manuais para gerenciar solicitações de matrícula, pendências de documentos, reembolsos, e apoio cognitivo para funcionários.
 
+## Última Atualização: 2026-02-24
+
+### Importação de Cursos SENAI CIMATEC (2026-02-24) - CONCLUÍDO ✅
+- **4481 cursos importados** do arquivo Excel oficial "Cursos SENAI CIMATEC.xlsx"
+- **Total atual de cursos: 4489** (8 pré-existentes + 4481 importados)
+- Endpoints de importação em lote criados em `/api/cursos/importacao/`
+- Duplicatas detectadas e ignoradas automaticamente (2131 duplicados na planilha)
+
 ## Architecture
 ### Backend (Clean Architecture)
 - **Domain Layer**: Entidades ricas (PedidoMatricula, Aluno, Usuario), Value Objects (CPF, Email, Telefone, StatusPedido), Interfaces de Repositório
