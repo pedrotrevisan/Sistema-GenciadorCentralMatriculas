@@ -385,6 +385,260 @@ Se você acredita que houve algum engano ou deseja mais informações, entre em 
 Protocolo: {protocolo}
 SENAI CIMATEC - Central de Atendimento ao Cliente
 """
+    },
+    
+    "cancelamento_solicitado_cac": {
+        "assunto": "[SENAI] Cancelamento de Matrícula - Dados Bancários Necessários",
+        "corpo_html": """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background: #dc3545; color: white; padding: 20px; text-align: center; }}
+        .content {{ padding: 20px; background: #f9f9f9; }}
+        .info-box {{ background: white; padding: 20px; border-radius: 5px; border: 1px solid #ddd; margin: 15px 0; }}
+        .footer {{ text-align: center; padding: 20px; font-size: 12px; color: #666; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cancelamento de Matrícula</h1>
+        </div>
+        <div class="content">
+            <p>Olá, <strong>{aluno_nome}</strong>!</p>
+            
+            <p>Recebemos sua solicitação de cancelamento de matrícula para o curso 
+            <strong>{curso_nome}</strong>.</p>
+            
+            <div class="info-box">
+                <h3>📋 Para prosseguir com o reembolso, precisamos dos seus dados bancários:</h3>
+                <ul>
+                    <li>Nome completo do titular</li>
+                    <li>CPF do titular</li>
+                    <li>Banco</li>
+                    <li>Agência</li>
+                    <li>Conta corrente (com dígito)</li>
+                    <li>Tipo de conta (corrente/poupança)</li>
+                    <li>Chave PIX (opcional)</li>
+                </ul>
+            </div>
+            
+            <p><strong>Importante:</strong></p>
+            <ul>
+                <li>O reembolso será processado em até 15 dias úteis após o recebimento dos dados</li>
+                <li>Será retido 10% do valor como taxa administrativa (conforme contrato)</li>
+            </ul>
+            
+            <p>Responda este e-mail com os dados bancários para darmos continuidade ao processo.</p>
+        </div>
+        <div class="footer">
+            <p>Protocolo: {protocolo}</p>
+            <p>SENAI CIMATEC - Central de Atendimento ao Cliente</p>
+        </div>
+    </div>
+</body>
+</html>
+""",
+        "corpo_texto": """
+CANCELAMENTO DE MATRÍCULA - SENAI CIMATEC
+
+Olá, {aluno_nome}!
+
+Recebemos sua solicitação de cancelamento de matrícula para o curso {curso_nome}.
+
+PARA PROSSEGUIR COM O REEMBOLSO, PRECISAMOS DOS SEUS DADOS BANCÁRIOS:
+- Nome completo do titular
+- CPF do titular
+- Banco
+- Agência
+- Conta corrente (com dígito)
+- Tipo de conta (corrente/poupança)
+- Chave PIX (opcional)
+
+IMPORTANTE:
+- O reembolso será processado em até 15 dias úteis
+- Será retido 10% do valor como taxa administrativa
+
+Responda este e-mail com os dados bancários.
+
+Protocolo: {protocolo}
+SENAI CIMATEC - Central de Atendimento ao Cliente
+"""
+    },
+    
+    "cancelamento_solicitado_caa": {
+        "assunto": "[SENAI] Cancelamento de Matrícula - Orientações",
+        "corpo_html": """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background: #dc3545; color: white; padding: 20px; text-align: center; }}
+        .content {{ padding: 20px; background: #f9f9f9; }}
+        .steps {{ background: white; padding: 20px; border-radius: 5px; border: 1px solid #ddd; margin: 15px 0; }}
+        .step {{ display: flex; align-items: flex-start; margin: 15px 0; }}
+        .step-number {{ background: #004587; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0; }}
+        .footer {{ text-align: center; padding: 20px; font-size: 12px; color: #666; }}
+        .btn {{ display: inline-block; background: #004587; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cancelamento de Matrícula</h1>
+        </div>
+        <div class="content">
+            <p>Olá, <strong>{aluno_nome}</strong>!</p>
+            
+            <p>Recebemos sua solicitação de cancelamento de matrícula para o curso 
+            <strong>{curso_nome}</strong>.</p>
+            
+            <p>Como você já está com status de <strong>MATRICULADO</strong>, o processo de 
+            cancelamento deve ser feito através do <strong>Portal do Aluno</strong>.</p>
+            
+            <div class="steps">
+                <h3>📋 Siga os passos abaixo:</h3>
+                
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div>Acesse o Portal do Aluno: <a href="{link_portal}">portal.senai.br</a></div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div>Faça login com seu CPF e senha</div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div>Acesse o menu "Requerimentos"</div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div>Selecione "Cancelamento de Matrícula"</div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div>Preencha o formulário e envie</div>
+                </div>
+            </div>
+            
+            <p style="text-align: center; margin-top: 20px;">
+                <a href="{link_portal}" class="btn">Acessar Portal do Aluno</a>
+            </p>
+            
+            <p><em>Caso tenha dificuldades de acesso, entre em contato com a CAA.</em></p>
+        </div>
+        <div class="footer">
+            <p>Protocolo: {protocolo}</p>
+            <p>SENAI CIMATEC - Central de Atendimento ao Aluno</p>
+        </div>
+    </div>
+</body>
+</html>
+""",
+        "corpo_texto": """
+CANCELAMENTO DE MATRÍCULA - SENAI CIMATEC
+
+Olá, {aluno_nome}!
+
+Recebemos sua solicitação de cancelamento de matrícula para o curso {curso_nome}.
+
+Como você já está MATRICULADO, o cancelamento deve ser feito pelo Portal do Aluno.
+
+SIGA OS PASSOS ABAIXO:
+1. Acesse o Portal do Aluno: {link_portal}
+2. Faça login com seu CPF e senha
+3. Acesse o menu "Requerimentos"
+4. Selecione "Cancelamento de Matrícula"
+5. Preencha o formulário e envie
+
+Caso tenha dificuldades de acesso, entre em contato com a CAA.
+
+Protocolo: {protocolo}
+SENAI CIMATEC - Central de Atendimento ao Aluno
+"""
+    },
+    
+    "dados_bancarios": {
+        "assunto": "[SENAI] Solicitação de Dados Bancários - Reembolso",
+        "corpo_html": """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background: #004587; color: white; padding: 20px; text-align: center; }}
+        .content {{ padding: 20px; background: #f9f9f9; }}
+        .form-box {{ background: white; padding: 20px; border-radius: 5px; border: 1px solid #ddd; }}
+        .footer {{ text-align: center; padding: 20px; font-size: 12px; color: #666; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Solicitação de Dados Bancários</h1>
+        </div>
+        <div class="content">
+            <p>Olá, <strong>{aluno_nome}</strong>!</p>
+            
+            <p>Para processar seu reembolso referente ao curso <strong>{curso_nome}</strong>, 
+            precisamos dos seguintes dados bancários:</p>
+            
+            <div class="form-box">
+                <p><strong>Nome do titular:</strong> _________________</p>
+                <p><strong>CPF do titular:</strong> _________________</p>
+                <p><strong>Banco:</strong> _________________</p>
+                <p><strong>Agência:</strong> _________________</p>
+                <p><strong>Conta:</strong> _________________ (com dígito)</p>
+                <p><strong>Tipo:</strong> ( ) Corrente ( ) Poupança</p>
+                <p><strong>Chave PIX:</strong> _________________ (opcional)</p>
+            </div>
+            
+            <p><strong>Valor do reembolso:</strong> R$ {valor_reembolso}</p>
+            <p><strong>Prazo:</strong> Até 15 dias úteis após recebimento dos dados</p>
+        </div>
+        <div class="footer">
+            <p>Protocolo: {protocolo}</p>
+            <p>SENAI CIMATEC - Central de Atendimento ao Cliente</p>
+        </div>
+    </div>
+</body>
+</html>
+""",
+        "corpo_texto": """
+SOLICITAÇÃO DE DADOS BANCÁRIOS - SENAI CIMATEC
+
+Olá, {aluno_nome}!
+
+Para processar seu reembolso referente ao curso {curso_nome}, precisamos dos seguintes dados:
+
+DADOS BANCÁRIOS:
+- Nome do titular:
+- CPF do titular:
+- Banco:
+- Agência:
+- Conta (com dígito):
+- Tipo (Corrente/Poupança):
+- Chave PIX (opcional):
+
+Valor do reembolso: R$ {valor_reembolso}
+Prazo: Até 15 dias úteis após recebimento dos dados
+
+Protocolo: {protocolo}
+SENAI CIMATEC
+"""
     }
 }
 
