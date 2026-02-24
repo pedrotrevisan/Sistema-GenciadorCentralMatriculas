@@ -161,12 +161,11 @@ const NovaMatriculaPage = () => {
     }
   };
 
-  const handleCursoChange = (cursoId) => {
-    const curso = cursos.find(c => c.id === cursoId);
+  const handleCursoChange = (cursoId, cursoObj) => {
     setFormData(prev => ({
       ...prev,
       curso_id: cursoId,
-      curso_nome: curso?.nome || ''
+      curso_nome: cursoObj?.nome || ''
     }));
   };
 
