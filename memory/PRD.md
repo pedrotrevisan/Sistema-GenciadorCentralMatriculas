@@ -228,7 +228,7 @@ Sem a variável DATABASE_URL, o sistema usa SQLite automaticamente em `./data/da
 - `/app/backend/tests/test_contatos_api.py` - Suite de testes do módulo de Contatos - NOVO!
 
 ## Last Updated
-2026-02-24 - Módulo de Regras de Negócio SENAI implementado (Máquina de Estados, Validador de Pré-Requisitos, Prazos, Templates de Mensagem)
+2026-02-24 - Implementado: Dashboard SLA, Tipos de PS, Fluxo Cancelamento NRM 48h, Documentos TOTVS, Templates CAC
 
 ## Central de Pendências Documentais (2026-01-22)
 Nova funcionalidade para gerenciar documentos pendentes dos alunos:
