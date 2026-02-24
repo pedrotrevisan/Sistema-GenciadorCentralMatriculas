@@ -725,6 +725,47 @@ Este é um lembrete sobre sua matrícula no curso *{curso_nome}*.
 Regularize sua situação para garantir sua vaga!
 
 _Protocolo: {protocolo}_"""
+    },
+    
+    "cancelamento_dados_bancarios": {
+        "mensagem": """💰 *SENAI CIMATEC - Dados Bancários*
+
+Olá, {aluno_nome}!
+
+Para processar seu *reembolso* do curso *{curso_nome}*, precisamos dos seus dados bancários:
+
+📋 *Envie:*
+• Nome do titular
+• CPF
+• Banco
+• Agência
+• Conta (com dígito)
+• Tipo (corrente/poupança)
+• Chave PIX (opcional)
+
+💵 *Valor:* R$ {valor_reembolso}
+⏰ *Prazo:* 15 dias úteis
+
+_Protocolo: {protocolo}_"""
+    },
+    
+    "cancelamento_portal_aluno": {
+        "mensagem": """🎓 *SENAI CIMATEC - Cancelamento*
+
+Olá, {aluno_nome}!
+
+Para cancelar sua matrícula no curso *{curso_nome}*, acesse o *Portal do Aluno*:
+
+📱 *Passos:*
+1️⃣ Acesse: {link_portal}
+2️⃣ Faça login com CPF e senha
+3️⃣ Menu "Requerimentos"
+4️⃣ Selecione "Cancelamento"
+5️⃣ Preencha e envie
+
+Dúvidas? Entre em contato com a CAA.
+
+_Protocolo: {protocolo}_"""
     }
 }
 
