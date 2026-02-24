@@ -103,15 +103,22 @@ const ConfiguracaoContaPage = () => {
         email: user.email || ''
       });
     }
-    carregarAtividades();
   }, [user]);
 
+  useEffect(() => {
+    carregarAtividades();
+  }, [filtroTipo]);
+
   const carregarAtividades = async () => {
+    setLoadingAtividades(true);
     try {
-      const response = await api.get('/auth/me/atividades');
+      const params = filtroTipo !== 'todos' ? { tipo: filtroTipo } : {};
+      const response = await api.get('/auth/me/atividades', { params });
       setAtividades(response.data);
     } catch (error) {
       console.error('Erro ao carregar atividades:', error);
+    } finally {
+      setLoadingAtividades(false);
     }
   };
 
