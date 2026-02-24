@@ -151,6 +151,7 @@ export const IndicadorSLAv2 = ({ dataCriacao, statusAtual }) => {
     if (dataCriacao && statusAtual) {
       calcularSLA();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataCriacao, statusAtual]);
 
   const calcularSLA = async () => {
