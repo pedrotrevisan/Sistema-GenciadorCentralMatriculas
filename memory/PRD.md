@@ -621,3 +621,85 @@ FRONTEND_URL="https://operacional-hub.preview.emergentagent.com"
 - Envia lembretes automáticos
 - Funciona em background (não bloqueia requisições)
 
+
+## Módulo de Regras de Negócio SENAI (2026-02-24) - NOVO!
+Sistema completo de regras de negócio baseado nos procedimentos oficiais do SENAI (PG-SENAI.EP 003).
+
+### Máquina de Estados Expandida
+Fluxo principal: `INSCRICAO` → `ANALISE_DOCUMENTAL` → `DOCUMENTACAO_PENDENTE` (5d) → `APROVADO` → `AGUARDANDO_PAGAMENTO` → `MATRICULADO` → `EXPORTADO`
+
+Status alternativos: `NAO_ATENDE_REQUISITO`, `CANCELADO`, `TRANCADO`, `TRANSFERIDO`
+
+### Tipos de Curso Configurados
+| Tipo | Idade | Escolaridade | Empresa | Docs |
+|------|-------|--------------|---------|------|
+| CAI_BAS | 14-21 | Fund. Incompleto | Sim | 9 |
+| CAI_TEC | 14-21 | Médio Cursando | Sim | 7 |
+| CHP | 16+ | Médio Completo | Não | 5 |
+| TECNICO | 16+ | Médio Cursando | Não | 5 |
+| CURTA_DURACAO | 16+ | - | Não | 2 |
+| LIVRE | - | - | Não | 2 |
+
+### Prazos Configurados
+- Pendência documental: 5 dias
+- Não atende requisito: Cancelamento imediato (0 dias)
+- Pagamento após aprovação: 7 dias
+- Matrícula web antes da aula: 4 horas
+- Comunicação cancelamento turma: 48 horas
+- Reembolso: 15 dias úteis
+
+### Endpoints de Regras (/api/regras)
+
+**Tipos de Curso:**
+- `GET /api/regras/tipos-curso` - Lista tipos de curso com regras
+- `GET /api/regras/tipos-curso/{tipo}` - Detalhes de um tipo
+- `GET /api/regras/tipos-curso/{tipo}/documentos` - Documentos obrigatórios
+
+**Validação de Pré-Requisitos:**
+- `POST /api/regras/validar/idade` - Valida idade do aluno
+- `POST /api/regras/validar/escolaridade` - Valida escolaridade
+- `POST /api/regras/validar/documentos` - Valida documentos apresentados
+- `POST /api/regras/validar/completo` - Validação completa (recomendado)
+
+**Prazos e SLA:**
+- `GET /api/regras/prazos` - Lista prazos configurados
+- `POST /api/regras/prazos/pendencia` - Calcula prazo de pendência
+- `POST /api/regras/prazos/pagamento` - Calcula prazo de pagamento
+- `GET /api/regras/prazos/sla` - Calcula SLA do pedido
+
+**Templates de Mensagem:**
+- `GET /api/regras/templates` - Lista templates disponíveis
+- `GET /api/regras/templates/email` - Lista templates de email
+- `GET /api/regras/templates/whatsapp` - Lista templates de WhatsApp
+- `POST /api/regras/templates/email/render` - Renderiza template de email
+- `POST /api/regras/templates/whatsapp/render` - Renderiza template WhatsApp (com link wa.me)
+
+**Auxiliares:**
+- `GET /api/regras/escolaridades` - Lista níveis de escolaridade
+
+### Templates de Mensagem Disponíveis
+
+**Email:**
+- `documentos_pendentes` - Solicitação de documentos
+- `prazo_expirando` - Alerta de prazo
+- `confirmacao_matricula` - Confirmação de matrícula
+- `aguardando_pagamento` - Lembrete de pagamento
+- `nao_atende_requisito` - Comunicado de reprovação
+
+**WhatsApp:**
+- `documentos_pendentes` - Cobrança de documentos
+- `prazo_expirando` - Alerta urgente
+- `confirmacao_matricula` - Boas-vindas
+- `aguardando_pagamento` - Lembrete de pagamento
+- `lembrete_documentos` - Lembrete amigável
+
+### Componentes Frontend Novos
+- `AlertaPrazo.jsx` - Badge/Card de alerta de prazo
+- `ValidadorPreRequisitos.jsx` - Formulário de validação
+- `TemplatesMensagem.jsx` - Gerador de mensagens
+
+### Arquivos de Serviço
+- `/app/backend/src/services/regras_negocio_service.py` - Validador e Calculador de Prazos
+- `/app/backend/src/services/templates_mensagem_service.py` - Renderizador de Templates
+- `/app/backend/src/routers/regras_negocio.py` - Endpoints REST
+
