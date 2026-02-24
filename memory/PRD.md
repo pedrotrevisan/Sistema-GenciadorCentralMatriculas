@@ -612,7 +612,7 @@ SMTP_PORT="587"
 SMTP_USER="seu-email@fieb.org.br"
 SMTP_PASSWORD="sua-app-password"
 SMTP_FROM_NAME="SYNAPSE - Sistema de Matrículas"
-FRONTEND_URL="https://operacional-hub.preview.emergentagent.com"
+FRONTEND_URL="https://enrollment-sync.preview.emergentagent.com"
 ```
 
 ### Como obter App Password
