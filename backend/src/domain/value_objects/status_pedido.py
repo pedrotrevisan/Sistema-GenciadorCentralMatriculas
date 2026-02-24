@@ -135,29 +135,115 @@ class StatusPedido(Enum):
         """Verifica se o status permite edição do pedido"""
         return self in [
             StatusPedido.PENDENTE,
+            StatusPedido.INSCRICAO,
             StatusPedido.EM_ANALISE,
+            StatusPedido.ANALISE_DOCUMENTAL,
             StatusPedido.DOCUMENTACAO_PENDENTE
         ]
 
     @property
     def permite_exportacao(self) -> bool:
         """Verifica se o status permite exportação"""
-        return self == StatusPedido.REALIZADO
+        return self in [StatusPedido.REALIZADO, StatusPedido.MATRICULADO]
+
+    @property
+    def is_final(self) -> bool:
+        """Verifica se é um estado final (sem transições possíveis)"""
+        return self in [
+            StatusPedido.EXPORTADO,
+            StatusPedido.REJEITADO,
+            StatusPedido.NAO_ATENDE_REQUISITO,
+            StatusPedido.CANCELADO,
+            StatusPedido.TRANSFERIDO
+        ]
+
+    @property
+    def cor(self) -> str:
+        """Retorna a cor associada ao status para UI"""
+        cores = {
+            StatusPedido.PENDENTE: "yellow",
+            StatusPedido.INSCRICAO: "blue",
+            StatusPedido.EM_ANALISE: "blue",
+            StatusPedido.ANALISE_DOCUMENTAL: "blue",
+            StatusPedido.DOCUMENTACAO_PENDENTE: "orange",
+            StatusPedido.APROVADO: "green",
+            StatusPedido.AGUARDANDO_PAGAMENTO: "purple",
+            StatusPedido.MATRICULADO: "green",
+            StatusPedido.REALIZADO: "green",
+            StatusPedido.EXPORTADO: "gray",
+            StatusPedido.REJEITADO: "red",
+            StatusPedido.NAO_ATENDE_REQUISITO: "red",
+            StatusPedido.CANCELADO: "red",
+            StatusPedido.TRANCADO: "orange",
+            StatusPedido.TRANSFERIDO: "cyan"
+        }
+        return cores.get(self, "gray")
+
+    @property
+    def icone(self) -> str:
+        """Retorna o ícone associado ao status"""
+        icones = {
+            StatusPedido.PENDENTE: "clock",
+            StatusPedido.INSCRICAO: "file-plus",
+            StatusPedido.EM_ANALISE: "search",
+            StatusPedido.ANALISE_DOCUMENTAL: "file-search",
+            StatusPedido.DOCUMENTACAO_PENDENTE: "file-warning",
+            StatusPedido.APROVADO: "check-circle",
+            StatusPedido.AGUARDANDO_PAGAMENTO: "credit-card",
+            StatusPedido.MATRICULADO: "user-check",
+            StatusPedido.REALIZADO: "check-circle",
+            StatusPedido.EXPORTADO: "upload-cloud",
+            StatusPedido.REJEITADO: "x-circle",
+            StatusPedido.NAO_ATENDE_REQUISITO: "alert-triangle",
+            StatusPedido.CANCELADO: "x-circle",
+            StatusPedido.TRANCADO: "pause-circle",
+            StatusPedido.TRANSFERIDO: "arrow-right-circle"
+        }
+        return icones.get(self, "circle")
 
     @property
     def label(self) -> str:
         """Retorna o label legível do status"""
         labels = {
             StatusPedido.PENDENTE: "Pendente",
+            StatusPedido.INSCRICAO: "Inscrição",
             StatusPedido.EM_ANALISE: "Em Análise",
+            StatusPedido.ANALISE_DOCUMENTAL: "Análise Documental",
             StatusPedido.DOCUMENTACAO_PENDENTE: "Documentação Pendente",
             StatusPedido.APROVADO: "Aprovado",
-            StatusPedido.REJEITADO: "Rejeitado",
+            StatusPedido.AGUARDANDO_PAGAMENTO: "Aguardando Pagamento",
+            StatusPedido.MATRICULADO: "Matriculado",
             StatusPedido.REALIZADO: "Realizado",
+            StatusPedido.EXPORTADO: "Exportado",
+            StatusPedido.REJEITADO: "Rejeitado",
+            StatusPedido.NAO_ATENDE_REQUISITO: "Não Atende Requisito",
             StatusPedido.CANCELADO: "Cancelado",
-            StatusPedido.EXPORTADO: "Exportado"
+            StatusPedido.TRANCADO: "Trancado",
+            StatusPedido.TRANSFERIDO: "Transferido"
         }
         return labels.get(self, self.value)
+
+    @property
+    def descricao(self) -> str:
+        """Retorna descrição detalhada do status"""
+        descricoes = {
+            StatusPedido.PENDENTE: "Aguardando início da análise",
+            StatusPedido.INSCRICAO: "Inscrição recebida, aguardando análise",
+            StatusPedido.EM_ANALISE: "Documentos em análise pela CAC",
+            StatusPedido.ANALISE_DOCUMENTAL: "Análise de documentos em andamento",
+            StatusPedido.DOCUMENTACAO_PENDENTE: "Aguardando documentos do aluno (prazo: 5 dias)",
+            StatusPedido.APROVADO: "Documentação aprovada, aguardando efetivação",
+            StatusPedido.AGUARDANDO_PAGAMENTO: "Aguardando confirmação de pagamento",
+            StatusPedido.MATRICULADO: "Matrícula efetivada no sistema",
+            StatusPedido.REALIZADO: "Matrícula realizada com sucesso",
+            StatusPedido.EXPORTADO: "Dados exportados para o TOTVS",
+            StatusPedido.REJEITADO: "Solicitação rejeitada",
+            StatusPedido.NAO_ATENDE_REQUISITO: "Não atende aos pré-requisitos do curso",
+            StatusPedido.CANCELADO: "Solicitação cancelada",
+            StatusPedido.TRANCADO: "Matrícula trancada temporariamente",
+            StatusPedido.TRANSFERIDO: "Transferido para outro curso/unidade"
+        }
+        return descricoes.get(self, "")
 
     @classmethod
     def from_string(cls, value: str) -> "StatusPedido":
@@ -166,3 +252,32 @@ class StatusPedido(Enum):
             return cls(value.lower())
         except ValueError:
             raise ValueError(f"Status inválido: {value}")
+
+    @classmethod
+    def get_all_with_metadata(cls) -> List[Dict[str, Any]]:
+        """Retorna todos os status com seus metadados para API"""
+        return [
+            {
+                "value": status.value,
+                "label": status.label,
+                "descricao": status.descricao,
+                "cor": status.cor,
+                "icone": status.icone,
+                "is_final": status.is_final,
+                "transicoes_validas": [t.value for t in status.transicoes_validas]
+            }
+            for status in cls
+        ]
+
+    @classmethod
+    def get_fluxo_principal(cls) -> List["StatusPedido"]:
+        """Retorna os status do fluxo principal na ordem"""
+        return [
+            cls.INSCRICAO,
+            cls.ANALISE_DOCUMENTAL,
+            cls.DOCUMENTACAO_PENDENTE,
+            cls.APROVADO,
+            cls.AGUARDANDO_PAGAMENTO,
+            cls.MATRICULADO,
+            cls.EXPORTADO
+        ]
