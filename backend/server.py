@@ -496,6 +496,19 @@ async def alterar_senha(
     usuario.senha_hash = jwt_auth.hash_senha(request.nova_senha)
     await usuario_repo.salvar(usuario)
     
+    # Registrar atividade
+    from src.services.atividade_service import registrar_atividade
+    try:
+        await registrar_atividade(
+            session=session,
+            usuario_id=usuario.id,
+            usuario_nome=usuario.nome,
+            tipo="alterar_senha",
+            descricao="Alterou a senha de acesso"
+        )
+    except Exception as e:
+        logger.warning(f"Erro ao registrar atividade: {e}")
+    
     return {"message": "Senha alterada com sucesso"}
 
 
