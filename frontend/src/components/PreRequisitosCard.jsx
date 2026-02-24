@@ -317,7 +317,7 @@ const PreRequisitosCard = ({
                 {requisitos.documentos.slice(0, 5).map((doc, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="text-slate-400 mt-0.5">•</span>
-                    <span>{doc}</span>
+                    <span>{typeof doc === 'object' ? doc.nome : doc}</span>
                   </li>
                 ))}
                 {requisitos.documentos.length > 5 && (
