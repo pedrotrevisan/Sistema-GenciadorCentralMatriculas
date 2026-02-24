@@ -303,3 +303,36 @@ class ReembolsoModel(Base):
     # Relationships
     criado_por = relationship("UsuarioModel", foreign_keys=[criado_por_id])
     atualizado_por = relationship("UsuarioModel", foreign_keys=[atualizado_por_id])
+
+
+class AtividadeUsuarioModel(Base):
+    """SQLAlchemy model for Log de Atividades do Usuário"""
+    __tablename__ = "atividades_usuario"
+
+    id = Column(String(36), primary_key=True)
+    usuario_id = Column(String(36), ForeignKey("usuarios.id"), nullable=False, index=True)
+    usuario_nome = Column(String(200), nullable=False)
+    
+    # Tipo da atividade
+    tipo = Column(String(50), nullable=False, index=True)
+    # Tipos: login, logout, criar_pedido, atualizar_pedido, criar_pendencia, atualizar_pendencia,
+    #        criar_reembolso, atualizar_reembolso, atribuir_demanda, alterar_perfil, alterar_senha,
+    #        exportar_totvs, importar_lote, criar_contato, criar_tarefa, criar_artigo
+    
+    # Descrição legível da ação
+    descricao = Column(String(500), nullable=False)
+    
+    # Entidade relacionada (opcional)
+    entidade_tipo = Column(String(50), nullable=True)  # pedido, pendencia, reembolso, usuario, etc
+    entidade_id = Column(String(36), nullable=True)
+    entidade_nome = Column(String(200), nullable=True)  # Ex: protocolo do pedido, nome do aluno
+    
+    # Metadados adicionais
+    detalhes = Column(JSON, nullable=True)
+    ip_address = Column(String(50), nullable=True)
+    user_agent = Column(String(500), nullable=True)
+    
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+    # Relationships
+    usuario = relationship("UsuarioModel")
