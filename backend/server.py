@@ -522,8 +522,11 @@ async def atualizar_perfil(
     usuario = await get_current_user(token, session)
     usuario_repo = UsuarioRepository(session)
     
+    campos_alterados = []
+    
     # Atualiza campos permitidos
     if request.nome:
+        campos_alterados.append("nome")
         usuario.nome = request.nome
     
     if request.email:
@@ -535,9 +538,25 @@ async def atualizar_perfil(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Este email já está em uso"
             )
+        campos_alterados.append("email")
         usuario.email = email_obj
     
     await usuario_repo.salvar(usuario)
+    
+    # Registrar atividade
+    if campos_alterados:
+        from src.services.atividade_service import registrar_atividade
+        try:
+            await registrar_atividade(
+                session=session,
+                usuario_id=usuario.id,
+                usuario_nome=usuario.nome,
+                tipo="alterar_perfil",
+                descricao=f"Atualizou o perfil: {', '.join(campos_alterados)}",
+                detalhes={"campos_alterados": campos_alterados}
+            )
+        except Exception as e:
+            logger.warning(f"Erro ao registrar atividade: {e}")
     
     return UsuarioResponseDTO(**usuario.to_dict())
 
