@@ -64,10 +64,24 @@ class PedidoModel(Base):
     data_exportacao = Column(DateTime, nullable=True)
     exportado_por = Column(String(36), nullable=True)
     
+    # Campos de Processo Seletivo (PS)
+    tipo_processo_seletivo = Column(String(30), nullable=True, index=True)  # ps_pagante, ps_bolsista, ps_949, ps_950, ps_951
+    codigo_ps = Column(String(20), nullable=True)  # Código do PS (ex: CHP 2026.1)
+    modalidade_matricula = Column(String(30), nullable=True)  # presencial, online, link
+    requer_contrato = Column(Boolean, nullable=True, default=True)
+    contrato_aceito = Column(Boolean, nullable=True, default=False)
+    data_contrato_aceite = Column(DateTime, nullable=True)
+    
     # Campos de atribuição
     responsavel_id = Column(String(36), ForeignKey("usuarios.id"), nullable=True, index=True)
     responsavel_nome = Column(String(200), nullable=True)
     prioridade = Column(String(20), nullable=True, default="normal")  # baixa, normal, alta, urgente
+    
+    # Campos de cancelamento (fluxo NRM)
+    data_solicitacao_cancelamento = Column(DateTime, nullable=True)
+    motivo_cancelamento = Column(Text, nullable=True)
+    nrm_tentou_reversao = Column(Boolean, nullable=True, default=False)
+    data_reversao_nrm = Column(DateTime, nullable=True)
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
