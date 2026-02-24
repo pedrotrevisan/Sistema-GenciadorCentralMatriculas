@@ -49,6 +49,11 @@ const CursoAutocomplete = ({
     };
   };
 
+  // Função para remover acentos
+  const removeAccents = (str) => {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  };
+
   // Função de filtro otimizada
   const filterCursos = useCallback((searchTerm) => {
     if (!searchTerm || searchTerm.length < 2) {
@@ -59,12 +64,12 @@ const CursoAutocomplete = ({
 
     setIsSearching(true);
     
-    const termo = searchTerm.toLowerCase().trim();
+    const termo = removeAccents(searchTerm.toLowerCase().trim());
     const termos = termo.split(' ').filter(t => t.length > 0);
     
     const resultados = cursos
       .filter(curso => {
-        const nome = curso.nome.toLowerCase();
+        const nome = removeAccents(curso.nome.toLowerCase());
         // Todos os termos devem estar presentes
         return termos.every(t => nome.includes(t));
       })
