@@ -14,6 +14,11 @@ class TipoTemplate(Enum):
     CANCELAMENTO = "cancelamento"
     NAO_ATENDE_REQUISITO = "nao_atende_requisito"
     LEMBRETE_DOCUMENTOS = "lembrete_documentos"
+    # Novos templates baseados no e-mail CAC
+    CANCELAMENTO_SOLICITADO_CAC = "cancelamento_solicitado_cac"  # CAC - pré-análise/análise
+    CANCELAMENTO_SOLICITADO_CAA = "cancelamento_solicitado_caa"  # CAA - matriculado
+    DADOS_BANCARIOS = "dados_bancarios"
+    ORIENTACAO_PORTAL_ALUNO = "orientacao_portal_aluno"
 
 
 # ==================== TEMPLATES DE E-MAIL ====================
