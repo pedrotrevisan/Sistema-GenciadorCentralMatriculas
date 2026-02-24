@@ -80,6 +80,7 @@ function App() {
               <Route path="/reembolsos" element={<ReembolsosPage />} />
               <Route path="/bi" element={<BIDashboardPage />} />
               <Route path="/kanban" element={<KanbanPage />} />
+              <Route path="/sla" element={<DashboardSLAPage />} />
             </Route>
           </Route>
 
