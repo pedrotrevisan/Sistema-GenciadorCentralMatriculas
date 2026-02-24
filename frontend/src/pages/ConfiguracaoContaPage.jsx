@@ -7,11 +7,16 @@ import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Separator } from '../components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { toast } from 'sonner';
 import api from '../services/api';
 import {
   User, Lock, Bell, History, Shield, Mail, Phone, Building,
-  Eye, EyeOff, Save, RefreshCw, CheckCircle, AlertTriangle
+  Eye, EyeOff, Save, RefreshCw, CheckCircle, AlertTriangle,
+  LogIn, LogOut, FilePlus, Edit, FileWarning, FileCheck,
+  DollarSign, CreditCard, UserCheck, UserCog, Key, Download,
+  Upload, BookOpen, CheckSquare, Activity, ExternalLink,
+  Clock, Filter, Calendar
 } from 'lucide-react';
 
 const ConfiguracaoContaPage = () => {
