@@ -107,7 +107,7 @@ const PreRequisitosCard = ({
 
       try {
         const response = await api.post(
-          `/api/regras/validar/escolaridade?escolaridade=${escolaridade}&tipo_curso=${cursoTipo}`
+          `/regras/validar/escolaridade?escolaridade=${escolaridade}&tipo_curso=${cursoTipo}`
         );
         setValidacao(prev => ({ ...prev, escolaridade: response.data }));
       } catch (err) {
