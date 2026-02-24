@@ -1,7 +1,7 @@
-# Sistema Central de Matrículas (CM) - SENAI CIMATEC
+# Sistema SYNAPSE - Hub de Inteligência Operacional SENAI CIMATEC
 
 ## Problem Statement
-Construir um sistema web completo para gerenciamento de matrículas do SENAI CIMATEC, com backend em Python (FastAPI) utilizando Clean Architecture e Domain-Driven Design (DDD), e frontend moderno em React com identidade visual institucional.
+Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligência Operacional" que atua como middleware de front-end entre a CAC (Central de Atendimento ao Cliente) e o TOTVS Educacional. O objetivo é substituir processos manuais para gerenciar solicitações de matrícula, pendências de documentos, reembolsos, e apoio cognitivo para funcionários.
 
 ## Architecture
 ### Backend (Clean Architecture)
@@ -9,6 +9,7 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - **Application Layer**: Use Cases (CriarPedido, AtualizarStatus, GerarExportacao, ConsultarPedidos), DTOs
 - **Infrastructure Layer**: Repositórios SQLAlchemy (PostgreSQL/SQLite), Exportador XLSX/CSV, JWT Authentication
 - **Interface Layer**: Controllers FastAPI, Middlewares
+- **Services Layer**: Regras de Negócio SENAI, Templates de Mensagem, Validador de Pré-Requisitos
 
 ### Frontend (React)
 - React 19 + Tailwind CSS + Shadcn/UI
@@ -32,6 +33,34 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Suporte a PostgreSQL e SQLite
 
 ## What's Been Implemented
+
+### Melhorias SENAI/CAC (2026-02-24) - NOVO!
+1. **Máquina de Estados Completa** - Alinhada com fluxo oficial SENAI:
+   - Novos status: INSCRICAO, ANALISE_DOCUMENTAL, AGUARDANDO_PAGAMENTO, MATRICULADO, NAO_ATENDE_REQUISITO, TRANCADO, TRANSFERIDO
+   - Transições válidas configuradas conforme procedimento PG-SENAI.EP 003
+   - Metadados: cor, ícone, descrição, is_final
+
+2. **Cálculo Automático de Prazos**:
+   - Prazo de pendência documental (5 dias)
+   - Alertas visuais (expirado, crítico, urgente, normal)
+   - Cálculo de SLA por status
+   - Contador regressivo visual
+
+3. **Validador de Pré-Requisitos**:
+   - Validação de idade por tipo de curso (CAI BAS: 14-21 anos, etc.)
+   - Validação de escolaridade mínima
+   - Checklist de documentos obrigatórios por tipo
+   - Validação de vínculo com empresa
+
+4. **Templates de Mensagem**:
+   - E-mail: Documentos Pendentes, Prazo Expirando, Confirmação de Matrícula, Aguardando Pagamento
+   - WhatsApp: Links wa.me automáticos
+   - Formatação HTML/Texto
+
+5. **Regras de Negócio SENAI**:
+   - Tipos de curso configurados (CAI_BAS, CAI_TEC, CHP, TECNICO, etc.)
+   - Documentos obrigatórios por tipo
+   - Prazos configuráveis
 
 ### Backend (2026-01-22) - ATUALIZADO
 - Domain Layer completo (Entidades, Value Objects, Exceções)
