@@ -155,16 +155,22 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - [x] Painel de Conta do Usuário (alterar senha, perfil) ✅ (2026-02-23)
 - [x] Sistema de Atribuições/Chamados (Caixa de Entrada) ✅ (2026-02-23)
 - [x] Log de Atividades na página Minha Conta ✅ (2026-02-24)
+- [x] Máquina de Estados Completa (Fluxo SENAI) ✅ (2026-02-24)
+- [x] Validador de Pré-Requisitos ✅ (2026-02-24)
+- [x] Cálculo de Prazos e SLA ✅ (2026-02-24)
+- [x] Templates de Mensagem (Email/WhatsApp) ✅ (2026-02-24)
 - [ ] Filtros por Data nas listagens
-- [ ] Refatorar pedidos para router separado
-- [ ] Refinar máquina de estados dos pedidos
+- [ ] Refatorar pedidos/auth para router separado
+- [ ] Dashboard de SLA por atendente
 
 ### P2 (Futuro)
 - [x] Notificações por email (SMTP Outlook) - ESTRUTURA PRONTA ✅ (2026-02-23)
+- [ ] Integração com Portal do Aluno (pré-preenchimento)
 - [ ] Controle Orçamentário para projetos
 - [ ] Smart Sidebar contextual no formulário
 - [ ] Integração com API de CEP (ViaCEP)
 - [ ] Upload de documentos do aluno
+- [ ] Relatório de Produtividade por Atendente
 - [ ] Expansão para outros tipos de matrículas (cursos pagos, bolsistas)
 
 ## Tech Stack
