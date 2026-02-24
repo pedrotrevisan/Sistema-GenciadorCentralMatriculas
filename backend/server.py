@@ -389,6 +389,19 @@ async def login(request: LoginRequest, session: AsyncSession = Depends(get_db_se
     usuario.registrar_acesso()
     await usuario_repo.salvar(usuario)
     
+    # Registrar atividade de login
+    from src.services.atividade_service import registrar_atividade
+    try:
+        await registrar_atividade(
+            session=session,
+            usuario_id=usuario.id,
+            usuario_nome=usuario.nome,
+            tipo="login",
+            descricao="Fez login no sistema"
+        )
+    except Exception as e:
+        logger.warning(f"Erro ao registrar atividade de login: {e}")
+    
     # Gera token
     token = jwt_auth.criar_token(usuario)
     
