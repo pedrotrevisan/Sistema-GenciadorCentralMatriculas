@@ -83,7 +83,7 @@ const PreRequisitosCard = ({
       }
 
       try {
-        const response = await api.post('/api/regras/validar/idade', {
+        const response = await api.post('/regras/validar/idade', {
           data_nascimento: dataNascimento,
           tipo_curso: cursoTipo,
           is_pcd: isPcd
