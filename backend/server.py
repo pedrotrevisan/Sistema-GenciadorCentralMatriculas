@@ -1584,6 +1584,7 @@ api_router.include_router(contatos_router)
 api_router.include_router(cadastros_router)
 api_router.include_router(apoio_router)
 api_router.include_router(atribuicoes_router)
+api_router.include_router(regras_router)
 
 # Then include main router in app
 app.include_router(api_router)
