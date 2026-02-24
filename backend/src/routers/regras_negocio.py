@@ -14,6 +14,14 @@ from src.services.regras_negocio_service import (
     get_documentos_por_tipo_curso,
     get_tipos_curso_disponiveis
 )
+from src.services.templates_mensagem_service import (
+    render_email_template,
+    render_whatsapp_template,
+    gerar_link_whatsapp,
+    get_templates_disponiveis,
+    EMAIL_TEMPLATES,
+    WHATSAPP_TEMPLATES
+)
 
 router = APIRouter(prefix="/regras", tags=["Regras de Negócio"])
 
