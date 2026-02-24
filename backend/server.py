@@ -1163,11 +1163,30 @@ async def deletar_usuario(
 
 @api_router.get("/status-pedido", tags=["Auxiliares"])
 async def listar_status():
-    """Lista status disponíveis"""
-    return [
-        {"value": s.value, "label": s.label}
-        for s in StatusPedido
-    ]
+    """Lista status disponíveis com metadados completos"""
+    return StatusPedido.get_all_with_metadata()
+
+
+@api_router.get("/status-pedido/fluxo", tags=["Auxiliares"])
+async def get_fluxo_status():
+    """Retorna o fluxo principal de status na ordem correta"""
+    return {
+        "fluxo_principal": [
+            {
+                "value": s.value,
+                "label": s.label,
+                "cor": s.cor,
+                "icone": s.icone
+            }
+            for s in StatusPedido.get_fluxo_principal()
+        ],
+        "status_alternativos": [
+            {"value": "nao_atende_requisito", "label": "Não Atende Requisito", "cor": "red"},
+            {"value": "cancelado", "label": "Cancelado", "cor": "red"},
+            {"value": "trancado", "label": "Trancado", "cor": "orange"},
+            {"value": "transferido", "label": "Transferido", "cor": "cyan"}
+        ]
+    }
 
 
 # ==================== IMPORTAÇÃO EM LOTE ====================
