@@ -127,7 +127,7 @@ const PreRequisitosCard = ({
     }
   }, [validacao, onValidationChange]);
 
-  if (!cursoTipo && !cursoId) {
+  if (!cursoId) {
     return null;
   }
 
@@ -139,6 +139,38 @@ const PreRequisitosCard = ({
             <Loader2 className="h-4 w-4 animate-spin" />
             <span className="text-sm">Carregando requisitos...</span>
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Se o curso não tem tipo definido, mostrar card informativo
+  if (!cursoTipo) {
+    return (
+      <Card className="border-amber-200 bg-amber-50/50" data-testid="pre-requisitos-card">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-amber-600" />
+              Pré-Requisitos do Curso
+            </CardTitle>
+            <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-100">
+              <Info className="h-3 w-3 mr-1" />
+              Tipo não definido
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Alert className="bg-amber-100 border-amber-300">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800">
+              Este curso ainda não tem um <strong>tipo de curso</strong> configurado. 
+              Sem essa informação, não é possível validar pré-requisitos como idade mínima/máxima e escolaridade exigida.
+            </AlertDescription>
+          </Alert>
+          <p className="text-sm text-slate-600">
+            A solicitação pode prosseguir, mas recomenda-se configurar o tipo do curso no cadastro para habilitar a validação automática de pré-requisitos.
+          </p>
         </CardContent>
       </Card>
     );
