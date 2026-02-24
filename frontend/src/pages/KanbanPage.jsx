@@ -6,9 +6,11 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Skeleton } from '../components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 import CobrarZap from '../components/CobrarZap';
 import IndicadorSLA from '../components/IndicadorSLA';
 import AtribuirResponsavelModal from '../components/AtribuirResponsavelModal';
+import { AlertaPrazo } from '../components/AlertaPrazo';
 import {
   DndContext,
   DragOverlay,
@@ -36,7 +38,9 @@ import {
   LayoutGrid,
   MessageCircle,
   UserPlus,
-  User
+  User,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 
 // Configuração de status do Kanban
