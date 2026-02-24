@@ -1573,6 +1573,7 @@ from src.routers.cadastros import router as cadastros_router
 from src.routers.apoio_cognitivo import router as apoio_router
 from src.routers.atribuicoes import router as atribuicoes_router
 from src.routers.regras_negocio import router as regras_router
+from src.routers.sla_dashboard import router as sla_router
 
 api_router.include_router(reembolsos_router)
 api_router.include_router(pendencias_router)
