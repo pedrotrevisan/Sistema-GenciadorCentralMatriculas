@@ -125,6 +125,7 @@ Construir um sistema web completo para gerenciamento de matrículas do SENAI CIM
 - [x] Apoio Cognitivo ("Meu Dia", Base de Conhecimento) ✅ (2026-02-23)
 - [x] Painel de Conta do Usuário (alterar senha, perfil) ✅ (2026-02-23)
 - [x] Sistema de Atribuições/Chamados (Caixa de Entrada) ✅ (2026-02-23)
+- [x] Log de Atividades na página Minha Conta ✅ (2026-02-24)
 - [ ] Filtros por Data nas listagens
 - [ ] Refatorar pedidos para router separado
 - [ ] Refinar máquina de estados dos pedidos
