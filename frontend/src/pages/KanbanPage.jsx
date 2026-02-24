@@ -134,6 +134,17 @@ const KanbanCard = ({ pedido, isDragging, onAtribuir }) => {
             </div>
           )}
           
+          {/* Alerta de Prazo para Documentação Pendente */}
+          {pedido.status === 'documentacao_pendente' && (
+            <div className="mt-2">
+              <AlertaPrazo 
+                dataCriacao={pedido.data_pendencia || pedido.updated_at || pedido.created_at}
+                status={pedido.status}
+                tamanho="compact"
+              />
+            </div>
+          )}
+          
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
             <IndicadorSLA createdAt={pedido.created_at} status={pedido.status} compact />
             <div className="flex items-center gap-1">
