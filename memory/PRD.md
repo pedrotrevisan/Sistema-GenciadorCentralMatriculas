@@ -5,6 +5,17 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 
 ## Última Atualização: 2026-02-24
 
+### Validação de Pré-Requisitos em Tempo Real (2026-02-24) - CONCLUÍDO ✅
+- Componente `PreRequisitosCard` exibe requisitos do curso selecionado
+- Mostra idade mínima/máxima, escolaridade exigida e documentos obrigatórios
+- Validação em tempo real quando o atendente preenche os dados do aluno
+- Alerta visual quando curso não tem tipo configurado
+- Integrado à página Nova Solicitação
+
+### Personalização da Marca (2026-02-24) - CONCLUÍDO ✅
+- Título da aba alterado para "Central de Matrículas | SENAI CIMATEC"
+- Badge "Made with Emergent" removido do canto inferior direito
+
 ### Buscador Inteligente de Cursos (2026-02-24) - CONCLUÍDO ✅
 - Componente `CursoAutocomplete` com busca em tempo real
 - Busca ignora acentos (ex: "mecatronica" encontra "Mecatrônica")
