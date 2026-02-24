@@ -464,6 +464,16 @@ const NovaMatriculaPage = () => {
                 </p>
               </div>
 
+              {/* Card de Pré-Requisitos - aparece quando curso é selecionado */}
+              {formData.curso_id && (
+                <PreRequisitosCard
+                  cursoId={formData.curso_id}
+                  cursoTipo={cursos.find(c => c.id === formData.curso_id)?.tipo}
+                  dataNascimento={formData.alunos[0]?.data_nascimento}
+                  escolaridade={formData.alunos[0]?.escolaridade}
+                />
+              )}
+
               <div className="space-y-2">
                 <Label>Vínculo *</Label>
                 <RadioGroup
