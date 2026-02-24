@@ -232,3 +232,85 @@ async def listar_escolaridades():
             {"value": "pos_graduacao", "label": "Pós-Graduação", "ordem": 7}
         ]
     }
+
+
+# ==================== ENDPOINTS - TEMPLATES ====================
+
+class TemplateEmailRequest(BaseModel):
+    tipo: str = Field(..., description="Tipo do template")
+    dados: dict = Field(..., description="Dados para substituição no template")
+    formato: str = Field(default="html", description="Formato: html ou texto")
+
+
+class TemplateWhatsAppRequest(BaseModel):
+    tipo: str = Field(..., description="Tipo do template")
+    dados: dict = Field(..., description="Dados para substituição no template")
+    telefone: Optional[str] = Field(None, description="Telefone para gerar link WhatsApp")
+
+
+@router.get("/templates")
+async def listar_templates():
+    """Lista todos os templates de mensagem disponíveis"""
+    return get_templates_disponiveis()
+
+
+@router.get("/templates/email")
+async def listar_templates_email():
+    """Lista templates de e-mail disponíveis com seus campos"""
+    templates = []
+    for nome, template in EMAIL_TEMPLATES.items():
+        # Extrair placeholders do template
+        import re
+        placeholders = list(set(re.findall(r'\{(\w+)\}', template["assunto"] + template["corpo_texto"])))
+        templates.append({
+            "nome": nome,
+            "assunto_exemplo": template["assunto"],
+            "campos_necessarios": placeholders
+        })
+    return {"templates": templates}
+
+
+@router.get("/templates/whatsapp")
+async def listar_templates_whatsapp():
+    """Lista templates de WhatsApp disponíveis com seus campos"""
+    templates = []
+    for nome, template in WHATSAPP_TEMPLATES.items():
+        import re
+        placeholders = list(set(re.findall(r'\{(\w+)\}', template["mensagem"])))
+        templates.append({
+            "nome": nome,
+            "campos_necessarios": placeholders
+        })
+    return {"templates": templates}
+
+
+@router.post("/templates/email/render")
+async def renderizar_template_email(request: TemplateEmailRequest):
+    """Renderiza um template de e-mail com os dados fornecidos"""
+    try:
+        resultado = render_email_template(request.tipo, request.dados, request.formato)
+        return resultado
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except KeyError as e:
+        raise HTTPException(status_code=400, detail=f"Campo obrigatório faltando: {e}")
+
+
+@router.post("/templates/whatsapp/render")
+async def renderizar_template_whatsapp(request: TemplateWhatsAppRequest):
+    """Renderiza um template de WhatsApp e opcionalmente gera link wa.me"""
+    try:
+        mensagem = render_whatsapp_template(request.tipo, request.dados)
+        resultado = {
+            "mensagem": mensagem,
+            "tipo": request.tipo
+        }
+        
+        if request.telefone:
+            resultado["link_whatsapp"] = gerar_link_whatsapp(request.telefone, mensagem)
+        
+        return resultado
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except KeyError as e:
+        raise HTTPException(status_code=400, detail=f"Campo obrigatório faltando: {e}")
