@@ -766,6 +766,40 @@ Para cancelar sua matrícula no curso *{curso_nome}*, acesse o *Portal do Aluno*
 Dúvidas? Entre em contato com a CAA.
 
 _Protocolo: {protocolo}_"""
+    },
+    
+    "cpf_invalido": {
+        "mensagem": """⚠️ *CPF INVÁLIDO - SENAI CIMATEC*
+
+Olá!
+
+O CPF informado para o aluno *{aluno_nome}* está *inválido* no validador.
+
+Para prosseguir com a matrícula no curso *{curso_nome}*, preciso do CPF correto.
+
+📋 *Por favor, confirme:*
+• CPF correto (11 dígitos)
+• Se o aluno é maior ou menor de 18 anos
+• Se menor, dados do responsável financeiro
+
+Aguardo retorno.
+
+_Atendente: {atendente_nome}_"""
+    },
+    
+    "dados_incompletos": {
+        "mensagem": """📋 *DADOS INCOMPLETOS - SENAI CIMATEC*
+
+Olá!
+
+A solicitação de matrícula para *{aluno_nome}* no curso *{curso_nome}* está com dados incompletos.
+
+❌ *Pendências:*
+{lista_pendencias}
+
+Por favor, envie os dados faltantes para prosseguirmos.
+
+_Atendente: {atendente_nome}_"""
     }
 }
 
