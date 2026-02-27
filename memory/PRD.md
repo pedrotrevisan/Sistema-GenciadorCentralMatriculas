@@ -5,6 +5,42 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 
 ## Última Atualização: 2026-02-27
 
+### Fluxo de Cancelamento de Matrícula (2026-02-27) - NOVO! ✅
+**Página completa para gerenciar cancelamentos conforme procedimento CAC:**
+- Nova página `/cancelamentos` no menu lateral (Assistente/Admin)
+- Cards de responsabilidades por status (CAC, CAA)
+- Busca de pedido por ID ou protocolo
+- Modal de solicitação de cancelamento com 4 tipos:
+  - Solicitado pelo candidato → Encaminha para NRM (48h)
+  - Pelo SENAI → Cancela direto
+  - Prazo expirado → Automático
+  - Não atende requisito
+- Indicador de prazo NRM com barra de progresso
+- Modal de resposta do NRM (Revertido/Não Revertido)
+- Fluxo visual completo do processo
+- Endpoints: `/api/cancelamento/solicitar`, `/api/cancelamento/resposta-nrm`, `/api/cancelamento/verificar-prazo/{id}`
+
+### Templates de Mensagem Integrados (2026-02-27) - NOVO! ✅
+**Integração do componente TemplatesMensagem na página de detalhes do pedido:**
+- Aba WhatsApp com 9 templates prontos (link wa.me)
+- Aba Email com 8 templates HTML
+- Substituição automática de variáveis (nome, curso, protocolo, etc.)
+- Botão "Copiar" e "Abrir WhatsApp/Email"
+- Templates disponíveis:
+  - Documentos Pendentes
+  - Prazo Expirando
+  - Confirmação de Matrícula
+  - Aguardando Pagamento
+  - Não Atende Requisito
+  - Lembrete de Documentos
+
+### Correção do Formatador de Planilhas (2026-02-27) - CORRIGIDO! ✅
+**Bugs corrigidos:**
+- Drag-and-drop agora funciona corretamente (arquivo é selecionado, não aberto)
+- Download do arquivo formatado agora inclui extensão `.xlsx`
+- Handlers de eventos otimizados com useCallback
+- Drop zone reestruturada para evitar conflitos de eventos
+
 ### Formatador de Planilhas (2026-02-27) - CONCLUÍDO ✅
 **Nova funcionalidade completa para processar planilhas de empresas:**
 - Página `/formatador` no menu lateral
