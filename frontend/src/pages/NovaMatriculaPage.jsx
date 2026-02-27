@@ -91,6 +91,7 @@ const GRAU_INSTRUCAO_OPTIONS = [
 const emptyAluno = {
   nome: '',
   cpf: '',
+  cpf_valido: null, // null = não validado, true = válido, false = inválido
   email: '',
   telefone: '',
   data_nascimento: '',
@@ -111,7 +112,8 @@ const emptyAluno = {
   endereco_complemento: '',
   endereco_bairro: '',
   endereco_cidade: '',
-  endereco_uf: ''
+  endereco_uf: '',
+  is_ouvinte: false // Novo campo: se true, não gera matrícula
 };
 
 const NovaMatriculaPage = () => {
