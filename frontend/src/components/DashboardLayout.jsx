@@ -98,6 +98,7 @@ const DashboardLayout = () => {
         { to: '/assistente/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
         { to: '/pendencias', icon: AlertCircle, label: 'Pendências' },
         { to: '/reembolsos', icon: DollarSign, label: 'Reembolsos' },
+        { to: '/cancelamentos', icon: Ban, label: 'Cancelamentos' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' },
         { to: '/formatador', icon: FileSpreadsheet, label: 'Formatador Planilhas' },
         { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' }
