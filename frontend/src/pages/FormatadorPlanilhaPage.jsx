@@ -31,16 +31,60 @@ const FormatadorPlanilhaPage = () => {
   const [resultado, setResultado] = useState(null);
   const [alunoExpandido, setAlunoExpandido] = useState(null);
   const [copiado, setCopiado] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
 
+  // Validar arquivo
+  const validarArquivo = (file) => {
+    if (!file) return false;
+    const nome = file.name.toLowerCase();
+    if (!nome.endsWith('.xls') && !nome.endsWith('.xlsx')) {
+      toast.error('Arquivo deve ser Excel (.xls ou .xlsx)');
+      return false;
+    }
+    return true;
+  };
+
+  // Handler para seleção via input
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (!file.name.endsWith('.xls') && !file.name.endsWith('.xlsx')) {
-        toast.error('Arquivo deve ser Excel (.xls ou .xlsx)');
-        return;
-      }
+    if (file && validarArquivo(file)) {
       setArquivo(file);
       setResultado(null);
+      toast.success(`Arquivo "${file.name}" selecionado!`);
+    }
+  };
+
+  // Handlers para Drag & Drop
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (validarArquivo(file)) {
+        setArquivo(file);
+        setResultado(null);
+        toast.success(`Arquivo "${file.name}" selecionado!`);
+      }
     }
   };
 
@@ -82,15 +126,30 @@ const FormatadorPlanilhaPage = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
+      // Criar blob com tipo MIME correto para Excel
+      const blob = new Blob([response.data], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
+      
+      // Gerar nome do arquivo
+      const nomeOriginal = arquivo.name.toLowerCase();
+      const nomeFormatado = nomeOriginal.endsWith('.xlsx') 
+        ? arquivo.name.replace('.xlsx', '_FORMATADO.xlsx')
+        : arquivo.name.replace('.xls', '_FORMATADO.xlsx');
+      
       // Download do arquivo
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', arquivo.name.replace('.xls', '_FORMATADO.xlsx'));
+      link.download = nomeFormatado; // Usar .download ao invés de setAttribute
       document.body.appendChild(link);
       link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
 
       toast.success('Planilha formatada baixada!');
     } catch (error) {
