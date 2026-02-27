@@ -1575,6 +1575,7 @@ from src.routers.atribuicoes import router as atribuicoes_router
 from src.routers.regras_negocio import router as regras_router
 from src.routers.sla_dashboard import router as sla_router
 from src.routers.cancelamento import router as cancelamento_router
+from src.routers.formatador import router as formatador_router
 
 api_router.include_router(reembolsos_router)
 api_router.include_router(pendencias_router)
@@ -1589,6 +1590,7 @@ api_router.include_router(atribuicoes_router)
 api_router.include_router(regras_router)
 api_router.include_router(sla_router)
 api_router.include_router(cancelamento_router)
+api_router.include_router(formatador_router)
 
 # Then include main router in app
 app.include_router(api_router)
