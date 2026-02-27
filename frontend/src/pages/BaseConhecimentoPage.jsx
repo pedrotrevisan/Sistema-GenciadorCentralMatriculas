@@ -210,29 +210,11 @@ const BaseConhecimentoPage = () => {
             </CardHeader>
             
             <CardContent>
-              {/* Conteúdo renderizado como markdown simples */}
-              <div className="prose prose-slate max-w-none">
-                {artigoSelecionado.conteudo.split('\n').map((linha, i) => {
-                  if (linha.startsWith('# ')) {
-                    return <h1 key={i} className="text-2xl font-bold mt-6 mb-4">{linha.slice(2)}</h1>;
-                  }
-                  if (linha.startsWith('## ')) {
-                    return <h2 key={i} className="text-xl font-semibold mt-5 mb-3">{linha.slice(3)}</h2>;
-                  }
-                  if (linha.startsWith('### ')) {
-                    return <h3 key={i} className="text-lg font-medium mt-4 mb-2">{linha.slice(4)}</h3>;
-                  }
-                  if (linha.startsWith('- ')) {
-                    return <li key={i} className="ml-4">{linha.slice(2)}</li>;
-                  }
-                  if (linha.startsWith('**') && linha.endsWith('**')) {
-                    return <p key={i} className="font-bold">{linha.slice(2, -2)}</p>;
-                  }
-                  if (linha.trim() === '') {
-                    return <br key={i} />;
-                  }
-                  return <p key={i} className="mb-2">{linha}</p>;
-                })}
+              {/* Conteúdo renderizado como Markdown completo */}
+              <div className="prose prose-slate max-w-none prose-headings:text-slate-800 prose-h1:text-2xl prose-h1:border-b prose-h1:pb-2 prose-h2:text-xl prose-h2:mt-8 prose-h3:text-lg prose-table:text-sm prose-th:bg-slate-100 prose-th:p-2 prose-td:p-2 prose-td:border prose-th:border prose-blockquote:bg-blue-50 prose-blockquote:border-l-blue-500 prose-blockquote:py-2 prose-blockquote:px-4 prose-strong:text-slate-800 prose-code:bg-slate-100 prose-code:px-1 prose-code:rounded">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {artigoSelecionado.conteudo}
+                </ReactMarkdown>
               </div>
               
               {/* Tags */}
