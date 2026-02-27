@@ -604,6 +604,44 @@ const NovaMatriculaPage = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {/* Checkbox Ouvinte */}
+                    <div className="flex items-center space-x-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <Checkbox
+                        id={`ouvinte-${index}`}
+                        checked={aluno.is_ouvinte}
+                        onCheckedChange={(checked) => handleAlunoChange(index, 'is_ouvinte', checked)}
+                        data-testid={`aluno-${index}-ouvinte`}
+                      />
+                      <div className="flex-1">
+                        <Label 
+                          htmlFor={`ouvinte-${index}`} 
+                          className="text-amber-800 font-medium cursor-pointer flex items-center gap-2"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Aluno Ouvinte
+                        </Label>
+                        <p className="text-xs text-amber-600 mt-0.5">
+                          Marque se o aluno participará apenas como ouvinte (não será matriculado)
+                        </p>
+                      </div>
+                      {aluno.is_ouvinte && (
+                        <Badge className="bg-amber-500 text-white">
+                          Não será matriculado
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Alerta se for ouvinte */}
+                    {aluno.is_ouvinte && (
+                      <Alert className="bg-amber-100 border-amber-300">
+                        <Eye className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-800">
+                          <strong>Aluno Ouvinte:</strong> Este aluno será registrado como participante ouvinte. 
+                          Não será gerada matrícula formal no TOTVS, apenas um registro de presença.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     {/* Dados Pessoais */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2">
@@ -618,13 +656,17 @@ const NovaMatriculaPage = () => {
                         <p className="text-xs text-slate-500 mt-1">O nome será formatado automaticamente (ex: "Pedro Henrique da Silva")</p>
                       </div>
                       <div>
-                        <Label>CPF *</Label>
-                        <Input
+                        <Label>CPF {!aluno.is_ouvinte && '*'}</Label>
+                        <CPFInput
                           value={aluno.cpf}
-                          onChange={(e) => handleAlunoChange(index, 'cpf', e.target.value)}
-                          placeholder="000.000.000-00"
+                          onChange={(value) => handleAlunoChange(index, 'cpf', value)}
+                          onValidationChange={(result) => handleAlunoChange(index, 'cpf_valido', result?.valido ?? null)}
+                          nomeAluno={aluno.nome}
                           data-testid={`aluno-${index}-cpf`}
                         />
+                        {aluno.is_ouvinte && (
+                          <p className="text-xs text-amber-600 mt-1">CPF opcional para ouvintes</p>
+                        )}
                       </div>
                       <div>
                         <Label>Data de Nascimento *</Label>
@@ -636,7 +678,7 @@ const NovaMatriculaPage = () => {
                         />
                       </div>
                       <div>
-                        <Label>Email *</Label>
+                        <Label>Email {!aluno.is_ouvinte && '*'}</Label>
                         <Input
                           type="email"
                           value={aluno.email}
@@ -646,7 +688,7 @@ const NovaMatriculaPage = () => {
                         />
                       </div>
                       <div>
-                        <Label>Telefone *</Label>
+                        <Label>Telefone {!aluno.is_ouvinte && '*'}</Label>
                         <Input
                           value={aluno.telefone}
                           onChange={(e) => handleAlunoChange(index, 'telefone', e.target.value)}
