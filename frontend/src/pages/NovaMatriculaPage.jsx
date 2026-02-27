@@ -25,10 +25,13 @@ import {
   User,
   Building,
   FileText,
-  Loader2
+  Loader2,
+  AlertTriangle,
+  Eye
 } from 'lucide-react';
 import CursoAutocomplete from '../components/CursoAutocomplete';
 import PreRequisitosCard from '../components/PreRequisitosCard';
+import CPFInput from '../components/CPFInput';
 
 // Preposições que devem permanecer em minúsculo
 const PREPOSICOES = new Set(['da', 'de', 'do', 'das', 'dos', 'e', 'em', 'na', 'no', 'nas', 'nos', 'para', 'por']);
