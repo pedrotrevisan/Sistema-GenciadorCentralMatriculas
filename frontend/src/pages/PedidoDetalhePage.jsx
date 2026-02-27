@@ -11,6 +11,7 @@ import LogContatos from '../components/LogContatos';
 import CobrarZap from '../components/CobrarZap';
 import IndicadorSLA from '../components/IndicadorSLA';
 import BotaoFavorito from '../components/BotaoFavorito';
+import TemplatesMensagem from '../components/TemplatesMensagem';
 import {
   Select,
   SelectContent,
