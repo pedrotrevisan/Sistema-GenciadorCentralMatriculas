@@ -111,19 +111,35 @@ async def processar_planilha(arquivo: UploadFile = File(...)):
     - alunos: lista de alunos com dados originais e formatados
     - resumo: contagem de OK, ERRO, AVISO
     """
-    if not arquivo.filename.endswith(('.xls', '.xlsx')):
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    if not arquivo.filename:
+        raise HTTPException(status_code=400, detail="Nome do arquivo não fornecido")
+    
+    filename_lower = arquivo.filename.lower()
+    if not filename_lower.endswith(('.xls', '.xlsx')):
         raise HTTPException(status_code=400, detail="Arquivo deve ser Excel (.xls ou .xlsx)")
     
     try:
         conteudo = await arquivo.read()
+        if not conteudo:
+            raise HTTPException(status_code=400, detail="Arquivo vazio")
+        
+        logger.info(f"Processando arquivo: {arquivo.filename}, tamanho: {len(conteudo)} bytes")
         
         # Detectar engine baseado na extensão
-        if arquivo.filename.endswith('.xls'):
+        if filename_lower.endswith('.xls'):
             df = pd.read_excel(io.BytesIO(conteudo), header=None, engine='xlrd')
         else:
             df = pd.read_excel(io.BytesIO(conteudo), header=None, engine='openpyxl')
         
+        logger.info(f"Planilha lida com sucesso: {len(df)} linhas, {len(df.columns)} colunas")
+        
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Erro ao ler arquivo {arquivo.filename}: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Erro ao ler arquivo: {str(e)}")
     
     # Detectar cabeçalho
