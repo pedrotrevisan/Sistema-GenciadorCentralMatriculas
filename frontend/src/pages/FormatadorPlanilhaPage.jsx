@@ -135,27 +135,26 @@ const FormatadorPlanilhaPage = () => {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
       });
       
-      // Gerar nome do arquivo
-      const nomeOriginal = arquivo.name.toLowerCase();
-      const nomeFormatado = nomeOriginal.endsWith('.xlsx') 
-        ? arquivo.name.replace('.xlsx', '_FORMATADO.xlsx')
-        : arquivo.name.replace('.xls', '_FORMATADO.xlsx');
+      // Gerar nome do arquivo - Remove extensão antiga e adiciona _FORMATADO.xlsx
+      const nomeBase = arquivo.name.replace(/\.(xlsx?|xls)$/i, '');
+      const nomeFormatado = `${nomeBase}_FORMATADO.xlsx`;
       
-      // Download do arquivo
+      // Download usando FileSaver pattern
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
+      link.style.display = 'none';
       link.href = url;
-      link.download = nomeFormatado; // Usar .download ao invés de setAttribute
+      link.setAttribute('download', nomeFormatado);
       document.body.appendChild(link);
       link.click();
       
-      // Cleanup
+      // Cleanup após breve delay
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-      }, 100);
+      }, 150);
 
-      toast.success('Planilha formatada baixada!');
+      toast.success(`Planilha "${nomeFormatado}" baixada!`);
     } catch (error) {
       console.error('Erro ao baixar:', error);
       toast.error('Erro ao gerar planilha formatada');
