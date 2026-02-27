@@ -54,30 +54,34 @@ const FormatadorPlanilhaPage = () => {
     }
   };
 
-  // Handlers para Drag & Drop
-  const handleDragEnter = (e) => {
+  // Handlers para Drag & Drop - Previne comportamento padrão do navegador
+  const handleDragEnter = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
-  };
+  }, []);
 
-  const handleDragLeave = (e) => {
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Só desativa quando realmente sai da área (não para elementos filhos)
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Necessário definir para permitir drop
+    e.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  const handleDrop = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-  };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const files = e.dataTransfer.files;
+    const files = e.dataTransfer?.files;
     if (files && files.length > 0) {
       const file = files[0];
       if (validarArquivo(file)) {
@@ -86,7 +90,7 @@ const FormatadorPlanilhaPage = () => {
         toast.success(`Arquivo "${file.name}" selecionado!`);
       }
     }
-  };
+  }, []);
 
   const processarPlanilha = async () => {
     if (!arquivo) {
