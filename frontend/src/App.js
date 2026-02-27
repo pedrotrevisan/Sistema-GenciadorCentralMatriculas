@@ -30,6 +30,7 @@ import ConfiguracaoContaPage from "./pages/ConfiguracaoContaPage";
 import CaixaEntradaPage from "./pages/CaixaEntradaPage";
 import DashboardSLAPage from "./pages/DashboardSLAPage";
 import FormatadorPlanilhaPage from "./pages/FormatadorPlanilhaPage";
+import CancelamentosPage from "./pages/CancelamentosPage";
 
 function App() {
   return (
