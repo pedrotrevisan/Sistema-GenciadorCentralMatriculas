@@ -42,7 +42,6 @@ Aguardo retorno.`;
   useEffect(() => {
     if (!value || value.replace(/\D/g, '').length === 0) {
       setValidacao(null);
-      if (onValidationChange) onValidationChange(null);
       return;
     }
 
@@ -52,16 +51,21 @@ Aguardo retorno.`;
     if (cpfLimpo.length === 11) {
       const resultado = validarCPF(value);
       setValidacao(resultado);
-      if (onValidationChange) onValidationChange(resultado);
     } else if (cpfLimpo.length > 0 && touched) {
       setValidacao({
         valido: false,
         mensagem: `CPF incompleto (${cpfLimpo.length}/11 dígitos)`,
         cpfFormatado: value
       });
-      if (onValidationChange) onValidationChange(null);
     }
-  }, [value, touched, onValidationChange]);
+  }, [value, touched]);
+
+  // Notificar parent sobre mudança na validação (separado para evitar loop)
+  useEffect(() => {
+    if (onValidationChange && validacao !== null) {
+      onValidationChange(validacao);
+    }
+  }, [validacao?.valido]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle input change com máscara
   const handleChange = (e) => {
