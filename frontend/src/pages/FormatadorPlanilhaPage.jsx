@@ -231,9 +231,20 @@ ${aluno.erros.map(e => `• ${e}`).join('\n')}`;
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Input oculto */}
+          <input
+            type="file"
+            accept=".xls,.xlsx"
+            onChange={handleFileChange}
+            className="hidden"
+            id="file-upload"
+            data-testid="file-input"
+          />
+          
+          {/* Área de Drop Zone */}
           <div 
             className={cn(
-              "border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200",
+              "border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 cursor-pointer",
               arquivo ? "border-green-300 bg-green-50" : "border-slate-300 hover:border-slate-400",
               isDragging && "border-blue-500 bg-blue-50 scale-[1.02]"
             )}
@@ -241,46 +252,38 @@ ${aluno.erros.map(e => `• ${e}`).join('\n')}`;
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
+            onClick={() => document.getElementById('file-upload').click()}
+            data-testid="drop-zone"
           >
-            <input
-              type="file"
-              accept=".xls,.xlsx"
-              onChange={handleFileChange}
-              className="hidden"
-              id="file-upload"
-              data-testid="file-input"
-            />
-            <label htmlFor="file-upload" className="cursor-pointer block">
-              {isDragging ? (
-                <div className="space-y-2">
-                  <Upload className="w-12 h-12 mx-auto text-blue-500 animate-bounce" />
-                  <p className="font-medium text-blue-600">
-                    Solte o arquivo aqui!
-                  </p>
-                </div>
-              ) : arquivo ? (
-                <div className="space-y-2">
-                  <FileSpreadsheet className="w-12 h-12 mx-auto text-green-600" />
-                  <p className="font-medium text-green-700">{arquivo.name}</p>
-                  <p className="text-sm text-green-600">
-                    {(arquivo.size / 1024).toFixed(1)} KB
-                  </p>
-                  <Button variant="outline" size="sm" className="mt-2" type="button">
-                    Trocar arquivo
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Upload className="w-12 h-12 mx-auto text-slate-400" />
-                  <p className="font-medium text-slate-600">
-                    Clique para selecionar ou arraste o arquivo
-                  </p>
-                  <p className="text-sm text-slate-400">
-                    Suporta .xls e .xlsx
-                  </p>
-                </div>
-              )}
-            </label>
+            {isDragging ? (
+              <div className="space-y-2 pointer-events-none">
+                <Upload className="w-12 h-12 mx-auto text-blue-500 animate-bounce" />
+                <p className="font-medium text-blue-600">
+                  Solte o arquivo aqui!
+                </p>
+              </div>
+            ) : arquivo ? (
+              <div className="space-y-2 pointer-events-none">
+                <FileSpreadsheet className="w-12 h-12 mx-auto text-green-600" />
+                <p className="font-medium text-green-700">{arquivo.name}</p>
+                <p className="text-sm text-green-600">
+                  {(arquivo.size / 1024).toFixed(1)} KB
+                </p>
+                <Button variant="outline" size="sm" className="mt-2 pointer-events-auto" type="button">
+                  Trocar arquivo
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2 pointer-events-none">
+                <Upload className="w-12 h-12 mx-auto text-slate-400" />
+                <p className="font-medium text-slate-600">
+                  Clique para selecionar ou arraste o arquivo
+                </p>
+                <p className="text-sm text-slate-400">
+                  Suporta .xls e .xlsx
+                </p>
+              </div>
+            )}
           </div>
 
           {arquivo && (
