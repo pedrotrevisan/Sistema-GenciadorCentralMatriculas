@@ -29,6 +29,7 @@ import BaseConhecimentoPage from "./pages/BaseConhecimentoPage";
 import ConfiguracaoContaPage from "./pages/ConfiguracaoContaPage";
 import CaixaEntradaPage from "./pages/CaixaEntradaPage";
 import DashboardSLAPage from "./pages/DashboardSLAPage";
+import FormatadorPlanilhaPage from "./pages/FormatadorPlanilhaPage";
 
 function App() {
   return (
