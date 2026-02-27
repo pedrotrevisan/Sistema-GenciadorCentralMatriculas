@@ -98,6 +98,7 @@ const DashboardLayout = () => {
         { to: '/pendencias', icon: AlertCircle, label: 'Pendências' },
         { to: '/reembolsos', icon: DollarSign, label: 'Reembolsos' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' },
+        { to: '/formatador', icon: FileSpreadsheet, label: 'Formatador Planilhas' },
         { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' }
       );
     } else if (user?.role === 'admin') {
