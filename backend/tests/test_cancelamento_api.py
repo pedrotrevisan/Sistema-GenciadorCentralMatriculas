@@ -212,7 +212,8 @@ class TestTemplatesEmail:
                     "protocolo": "CM-2026-0001",
                     "documentos_lista": "<li>RG</li><li>CPF</li>",
                     "documentos_lista_texto": "• RG\n• CPF",
-                    "dias_restantes": "3"
+                    "dias_restantes": "3",
+                    "link_portal": "https://portal.senai.br"
                 },
                 "formato": "html"
             }
