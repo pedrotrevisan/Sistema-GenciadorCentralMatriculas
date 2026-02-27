@@ -5,6 +5,22 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 
 ## Última Atualização: 2026-02-27
 
+### Formatador de Planilhas (2026-02-27) - CONCLUÍDO ✅
+**Nova funcionalidade completa para processar planilhas de empresas:**
+- Página `/formatador` no menu lateral
+- Upload de arquivos .xls e .xlsx
+- Formatação automática de:
+  - **Nomes:** "ADRIELLY CARLOS MACHADO DA SILVA" → "Adrielly Carlos Machado da Silva"
+  - **CPFs:** Validação com algoritmo oficial + formatação 000.000.000-00
+  - **Telefones:** "71 9 8112 8637" → "(71) 98112-8637"
+  - **Emails:** Lowercase + validação
+  - **CEPs:** Formatação 00000-000
+  - **Datas:** DD/MM/AAAA
+- Detecta CPFs inválidos automaticamente
+- Botão "Copiar Msg de Erro" para colar no chamado
+- Botão "Baixar Formatado" gera planilha Excel corrigida
+- Endpoints: `/api/formatador/processar`, `/api/formatador/processar-e-baixar`
+
 ### Validador de CPF + Campo Ouvinte + Templates (2026-02-27) - CONCLUÍDO ✅
 **Validador de CPF em tempo real:**
 - Algoritmo oficial de validação dos dígitos verificadores
