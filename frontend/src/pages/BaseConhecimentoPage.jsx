@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
 import api from '../services/api';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   Search, BookOpen, FileText, HelpCircle, Lightbulb, Phone, File,
   Plus, Eye, ChevronLeft, Star, Clock, User, Tag, X, Edit, Trash2
