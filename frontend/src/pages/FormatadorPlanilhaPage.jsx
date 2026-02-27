@@ -131,6 +131,13 @@ const FormatadorPlanilhaPage = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
+      // Verificar se a resposta é um erro JSON em vez de blob
+      if (response.data.type === 'application/json') {
+        const text = await response.data.text();
+        const errorData = JSON.parse(text);
+        throw new Error(errorData.detail || 'Erro ao processar');
+      }
+
       // Criar blob com tipo MIME correto para Excel
       const blob = new Blob([response.data], { 
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
@@ -158,7 +165,8 @@ const FormatadorPlanilhaPage = () => {
       toast.success(`Planilha "${nomeFormatado}" baixada!`);
     } catch (error) {
       console.error('Erro ao baixar:', error);
-      toast.error('Erro ao gerar planilha formatada');
+      const mensagemErro = error.response?.data?.detail || error.message || 'Erro desconhecido';
+      toast.error(`Erro ao gerar planilha formatada: ${mensagemErro}`);
     } finally {
       setProcessando(false);
     }
