@@ -229,9 +229,14 @@ ${aluno.erros.map(e => `• ${e}`).join('\n')}`;
         <CardContent className="space-y-4">
           <div 
             className={cn(
-              "border-2 border-dashed rounded-lg p-8 text-center transition-colors",
-              arquivo ? "border-green-300 bg-green-50" : "border-slate-300 hover:border-slate-400"
+              "border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200",
+              arquivo ? "border-green-300 bg-green-50" : "border-slate-300 hover:border-slate-400",
+              isDragging && "border-blue-500 bg-blue-50 scale-[1.02]"
             )}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
           >
             <input
               type="file"
@@ -241,15 +246,22 @@ ${aluno.erros.map(e => `• ${e}`).join('\n')}`;
               id="file-upload"
               data-testid="file-input"
             />
-            <label htmlFor="file-upload" className="cursor-pointer">
-              {arquivo ? (
+            <label htmlFor="file-upload" className="cursor-pointer block">
+              {isDragging ? (
+                <div className="space-y-2">
+                  <Upload className="w-12 h-12 mx-auto text-blue-500 animate-bounce" />
+                  <p className="font-medium text-blue-600">
+                    Solte o arquivo aqui!
+                  </p>
+                </div>
+              ) : arquivo ? (
                 <div className="space-y-2">
                   <FileSpreadsheet className="w-12 h-12 mx-auto text-green-600" />
                   <p className="font-medium text-green-700">{arquivo.name}</p>
                   <p className="text-sm text-green-600">
                     {(arquivo.size / 1024).toFixed(1)} KB
                   </p>
-                  <Button variant="outline" size="sm" className="mt-2">
+                  <Button variant="outline" size="sm" className="mt-2" type="button">
                     Trocar arquivo
                   </Button>
                 </div>
