@@ -30,7 +30,8 @@ import {
   Sun,
   Target,
   BookOpen,
-  Inbox
+  Inbox,
+  FileSpreadsheet
 } from 'lucide-react';
 import AlertaRetornos from './AlertaRetornos';
 
