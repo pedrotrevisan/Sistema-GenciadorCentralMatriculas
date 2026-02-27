@@ -114,6 +114,7 @@ const DashboardLayout = () => {
         { to: '/admin/pedidos', icon: FileText, label: 'Pedidos' },
         { to: '/pendencias', icon: AlertCircle, label: 'Pendências' },
         { to: '/reembolsos', icon: DollarSign, label: 'Reembolsos' },
+        { to: '/cancelamentos', icon: Ban, label: 'Cancelamentos' },
         { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
         { to: '/admin/cadastros', icon: Settings, label: 'Cadastros' },
         { to: '/admin/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
