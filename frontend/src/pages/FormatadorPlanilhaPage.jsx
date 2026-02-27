@@ -111,7 +111,8 @@ const FormatadorPlanilhaPage = () => {
       toast.success(`Planilha processada! ${response.data.total} alunos encontrados.`);
     } catch (error) {
       console.error('Erro ao processar:', error);
-      toast.error('Erro ao processar planilha');
+      const mensagemErro = error.response?.data?.detail || error.message || 'Erro desconhecido';
+      toast.error(`Erro ao processar planilha: ${mensagemErro}`);
     } finally {
       setProcessando(false);
     }
