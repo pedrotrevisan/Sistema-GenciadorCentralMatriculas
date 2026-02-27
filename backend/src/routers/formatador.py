@@ -224,18 +224,32 @@ async def processar_e_baixar(arquivo: UploadFile = File(...)):
     """
     Processa planilha e retorna nova planilha Excel formatada
     """
-    if not arquivo.filename.endswith(('.xls', '.xlsx')):
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    if not arquivo.filename:
+        raise HTTPException(status_code=400, detail="Nome do arquivo não fornecido")
+    
+    filename_lower = arquivo.filename.lower()
+    if not filename_lower.endswith(('.xls', '.xlsx')):
         raise HTTPException(status_code=400, detail="Arquivo deve ser Excel (.xls ou .xlsx)")
     
     try:
         conteudo = await arquivo.read()
+        if not conteudo:
+            raise HTTPException(status_code=400, detail="Arquivo vazio")
         
-        if arquivo.filename.endswith('.xls'):
+        logger.info(f"Processando para download: {arquivo.filename}, tamanho: {len(conteudo)} bytes")
+        
+        if filename_lower.endswith('.xls'):
             df = pd.read_excel(io.BytesIO(conteudo), header=None, engine='xlrd')
         else:
             df = pd.read_excel(io.BytesIO(conteudo), header=None, engine='openpyxl')
         
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Erro ao ler arquivo para download {arquivo.filename}: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Erro ao ler arquivo: {str(e)}")
     
     # Detectar cabeçalho
