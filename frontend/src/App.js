@@ -99,6 +99,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['consultor', 'assistente', 'admin']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/importacao" element={<ImportacaoLotePage />} />
+              <Route path="/formatador" element={<FormatadorPlanilhaPage />} />
             </Route>
           </Route>
 
