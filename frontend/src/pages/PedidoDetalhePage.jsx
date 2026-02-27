@@ -372,6 +372,15 @@ const PedidoDetalhePage = () => {
       {/* Log de Contatos */}
       <LogContatos pedidoId={id} />
 
+      {/* Templates de Mensagem */}
+      {pedido && pedido.alunos?.[0] && (
+        <TemplatesMensagem 
+          pedido={pedido} 
+          aluno={pedido.alunos[0]}
+          documentosFaltantes={[]}
+        />
+      )}
+
       {/* Timeline de Auditoria */}
       <TimelineAuditoria pedidoId={id} />
 
