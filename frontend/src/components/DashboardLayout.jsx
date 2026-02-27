@@ -114,6 +114,7 @@ const DashboardLayout = () => {
         { to: '/admin/cadastros', icon: Settings, label: 'Cadastros' },
         { to: '/admin/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' },
+        { to: '/formatador', icon: FileSpreadsheet, label: 'Formatador Planilhas' },
         { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' }
       );
     }
