@@ -27,6 +27,34 @@ def detectar_cabecalho(df: pd.DataFrame) -> int:
 def mapear_colunas(df: pd.DataFrame) -> Dict[str, int]:
     """Mapeia nomes de colunas para índices"""
     mapeamento = {}
+    
+    # Mapeamento baseado na estrutura conhecida das planilhas do SENAI
+    # Índices são os números das colunas (0-indexed)
+    mapeamento_fixo = {
+        'nome': 1,
+        'email': 2,
+        'cpf': 3,
+        'telefone': 4,
+        'funcao': 5,
+        'rg': 6,
+        'data_emissao_rg': 7,
+        'orgao_emissor': 8,
+        'naturalidade': 9,
+        'data_nascimento': 10,
+        'nome_pai': 11,
+        'nome_mae': 12,
+        'endereco': 13,
+        'numero': 14,
+        'bairro': 15,
+        'cep': 16,
+        'resp_nome': 17,
+        'resp_rg': 18,
+        'resp_data_rg': 19,
+        'resp_cpf': 20,
+        'resp_nascimento': 21,
+    }
+    
+    # Tentar detectar dinamicamente baseado nos nomes das colunas
     colunas_esperadas = {
         'nome': ['nome completo', 'nome do aluno', 'nome'],
         'email': ['email', 'e-mail'],
@@ -34,7 +62,7 @@ def mapear_colunas(df: pd.DataFrame) -> Dict[str, int]:
         'telefone': ['telefone', 'telefones', 'celular'],
         'funcao': ['função', 'funcao', 'cargo'],
         'rg': ['rg'],
-        'data_emissao_rg': ['data de emissão', 'data emissão rg', 'emissão rg'],
+        'data_emissao_rg': ['data de emissão', 'data emissão rg', 'emissão rg', 'emissão'],
         'orgao_emissor': ['orgão emissor', 'orgao emissor', 'emissor'],
         'naturalidade': ['naturalidade'],
         'data_nascimento': ['data de nascimento', 'nascimento', 'dt nascimento'],
@@ -44,20 +72,29 @@ def mapear_colunas(df: pd.DataFrame) -> Dict[str, int]:
         'numero': ['número', 'numero', 'nº'],
         'bairro': ['bairro'],
         'cep': ['cep'],
-        'resp_nome': ['nome (mãe / pai / tutor', 'responsável', 'nome responsável'],
+        'resp_nome': ['nome (mãe / pai / tutor', 'responsável', 'nome responsável', 'tutor'],
         'resp_rg': ['rg do responsável', 'rg responsável'],
-        'resp_data_rg': ['data de exp. do rg do responsável', 'data rg responsável'],
+        'resp_data_rg': ['data de exp. do rg do responsável', 'data rg responsável', 'exp. do rg'],
         'resp_cpf': ['cpf do responsável', 'cpf responsável'],
         'resp_nascimento': ['data de nascimento do responsável', 'nasc responsável'],
     }
     
+    # Primeiro tentar mapeamento dinâmico
     for col_idx, col_name in enumerate(df.columns):
+        if pd.isna(col_name):
+            continue
         col_lower = str(col_name).lower().strip()
         for campo, variantes in colunas_esperadas.items():
             for variante in variantes:
                 if variante in col_lower:
-                    mapeamento[campo] = col_idx
+                    if campo not in mapeamento:  # Não sobrescrever
+                        mapeamento[campo] = col_idx
                     break
+    
+    # Se não conseguiu mapear campos essenciais, usar mapeamento fixo
+    campos_essenciais = ['nome', 'cpf', 'email', 'telefone']
+    if not all(c in mapeamento for c in campos_essenciais):
+        return mapeamento_fixo
     
     return mapeamento
 
