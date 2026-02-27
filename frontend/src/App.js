@@ -83,6 +83,7 @@ function App() {
               <Route path="/bi" element={<BIDashboardPage />} />
               <Route path="/kanban" element={<KanbanPage />} />
               <Route path="/sla" element={<DashboardSLAPage />} />
+              <Route path="/cancelamentos" element={<CancelamentosPage />} />
             </Route>
           </Route>
 
