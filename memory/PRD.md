@@ -3,7 +3,25 @@
 ## Problem Statement
 Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligência Operacional" que atua como middleware de front-end entre a CAC (Central de Atendimento ao Cliente) e o TOTVS Educacional. O objetivo é substituir processos manuais para gerenciar solicitações de matrícula, pendências de documentos, reembolsos, e apoio cognitivo para funcionários.
 
-## Última Atualização: 2026-02-24
+## Última Atualização: 2026-02-27
+
+### Validador de CPF + Campo Ouvinte + Templates (2026-02-27) - CONCLUÍDO ✅
+**Validador de CPF em tempo real:**
+- Algoritmo oficial de validação dos dígitos verificadores
+- Máscara automática (000.000.000-00)
+- Feedback visual: verde (válido) ou vermelho (inválido)
+- Botão "Copiar Template" para mensagem de erro padronizada
+- Bloqueia avanço do formulário se CPF for inválido
+
+**Campo "Aluno Ouvinte":**
+- Checkbox no topo do card do aluno
+- Badge "Não será matriculado" quando marcado
+- Alerta explicativo sobre o que acontece com ouvintes
+- Campos CPF/Email/Telefone ficam opcionais para ouvintes
+
+**Templates de mensagem:**
+- Template "CPF Inválido" adicionado ao sistema
+- Template "Dados Incompletos" adicionado
 
 ### Validação de Pré-Requisitos em Tempo Real (2026-02-24) - CONCLUÍDO ✅
 - Componente `PreRequisitosCard` exibe requisitos do curso selecionado
