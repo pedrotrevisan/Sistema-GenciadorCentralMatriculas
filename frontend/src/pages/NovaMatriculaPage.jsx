@@ -317,19 +317,48 @@ const NovaMatriculaPage = () => {
   const validateStep2 = () => {
     for (let i = 0; i < formData.alunos.length; i++) {
       const aluno = formData.alunos[i];
+      
+      // Nome obrigatório para todos
       if (!aluno.nome || aluno.nome.length < 3) {
         toast.error(`Aluno ${i + 1}: Nome deve ter pelo menos 3 caracteres`);
         return false;
       }
-      if (!aluno.cpf || aluno.cpf.length < 11) {
-        toast.error(`Aluno ${i + 1}: CPF inválido`);
+      
+      // Se for ouvinte, validações mais flexíveis
+      if (aluno.is_ouvinte) {
+        // Ouvinte só precisa de nome e data de nascimento
+        if (!aluno.data_nascimento) {
+          toast.error(`Aluno ${i + 1} (Ouvinte): Data de nascimento obrigatória`);
+          return false;
+        }
+        continue; // Pula as demais validações para ouvintes
+      }
+      
+      // Validações para alunos normais (não ouvintes)
+      if (!aluno.cpf || aluno.cpf.replace(/\D/g, '').length !== 11) {
+        toast.error(`Aluno ${i + 1}: CPF deve ter 11 dígitos`);
         return false;
       }
+      
+      // Verifica se o CPF foi validado e é válido
+      if (aluno.cpf_valido === false) {
+        toast.error(`Aluno ${i + 1}: CPF inválido! Verifique os dígitos.`, {
+          description: 'Use o botão "Copiar Template" para solicitar o CPF correto.',
+          duration: 5000
+        });
+        return false;
+      }
+      
+      if (aluno.cpf_valido === null) {
+        toast.error(`Aluno ${i + 1}: Digite o CPF completo para validação`);
+        return false;
+      }
+      
       if (!aluno.email || !aluno.email.includes('@')) {
         toast.error(`Aluno ${i + 1}: Email inválido`);
         return false;
       }
-      if (!aluno.telefone || aluno.telefone.length < 10) {
+      if (!aluno.telefone || aluno.telefone.replace(/\D/g, '').length < 10) {
         toast.error(`Aluno ${i + 1}: Telefone inválido`);
         return false;
       }
