@@ -1,0 +1,102 @@
+{
+  "summary": "Completed e2e testing of new Cancelamentos page (/cancelamentos) and Templates de Mensagem integration on PedidoDetalhePage. All features working correctly.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Dashboard",
+        "issues": ["Console warning: Chart width/height -1 - known issue from previous iterations (non-blocking)"]
+      }
+    ]
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_cancelamento_api.py",
+    "/app/test_reports/pytest/pytest_cancelamento.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "CancelamentosPage correctly implements responsibility cards, search functionality, and visual flow diagram",
+    "TemplatesMensagem component properly integrated into PedidoDetalhePage",
+    "Backend cancelamento endpoints return correct data structures and HTTP status codes",
+    "Templates API (email/whatsapp) render correctly with dynamic data substitution",
+    "All interactive elements have proper data-testid attributes for testing"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_cancelamento_api.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% - All 16 cancelamento and templates API tests passed",
+    "frontend": "100% - All UI elements verified and interactive"
+  },
+
+  "test_credentials": "admin@senai.br / admin123",
+
+  "seed_data_creation": "Created test pedido CM-2026-0001 with aluno 'João Silva Test' (CPF: 52998224725)",
+
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "Cancelamentos page and TemplatesMensagem integration fully tested. Backend has 16 passing tests for /api/cancelamento/* and /api/regras/templates/* endpoints. Frontend verified via Playwright with login, navigation, and template button clicks working.",
+
+  "features_tested": {
+    "cancelamentos_page": {
+      "status": "PASS",
+      "tests": [
+        "Page loads at /cancelamentos",
+        "3 responsibility cards displayed (Solicitado pelo Candidato, Pré-Análise/Análise, Matriculado)",
+        "Search input (data-testid='input-busca-pedido') accepts input and triggers search",
+        "Toast notification 'Pedido não encontrado' shows for invalid search",
+        "Flow diagram visible with all steps (Candidato → CAC → NRM → Revertido/Confirmado)"
+      ]
+    },
+    "templates_mensagem": {
+      "status": "PASS",
+      "tests": [
+        "Component renders on PedidoDetalhePage (data-testid='templates-mensagem')",
+        "WhatsApp tab shows 9 template buttons",
+        "Email tab shows different template options",
+        "Telefone do Aluno field pre-populated from aluno data",
+        "Template buttons are clickable and have proper data-testid attributes"
+      ]
+    },
+    "backend_cancelamento_api": {
+      "status": "PASS",
+      "endpoints_tested": [
+        "GET /api/cancelamento/tipos - Returns 4 cancellation types",
+        "GET /api/cancelamento/responsabilidades - Returns responsibility mapping with 48h NRM prazo",
+        "GET /api/cancelamento/documentos/escolaridade - Returns 5 TOTVS documents",
+        "GET /api/cancelamento/documentos/escolaridade/{codigo} - Returns specific document",
+        "GET /api/cancelamento/documentos/fluxo-validacao - Returns 3 validation flows",
+        "POST /api/cancelamento/documentos/validar-escolaridade - Returns validation actions"
+      ]
+    },
+    "backend_templates_api": {
+      "status": "PASS",
+      "endpoints_tested": [
+        "GET /api/regras/templates/email - Returns 8 email templates",
+        "GET /api/regras/templates/whatsapp - Returns 9 WhatsApp templates",
+        "POST /api/regras/templates/email/render - Renders email with data substitution",
+        "POST /api/regras/templates/whatsapp/render - Renders WhatsApp message with wa.me link"
+      ]
+    }
+  },
+
+  "pytest_results": {
+    "total": 16,
+    "passed": 16,
+    "failed": 0,
+    "file": "/app/test_reports/pytest/pytest_cancelamento.xml"
+  }
+}
