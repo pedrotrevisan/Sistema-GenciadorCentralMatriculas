@@ -130,6 +130,8 @@ const AssistenteTOTVSPage = () => {
     // Responsáveis
     filiacao: false,
     respFinanceiro: false,
+    // Diversos
+    ensinoBasico: false,
     // Final
     salvar: false
   });
