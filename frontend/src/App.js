@@ -85,6 +85,9 @@ function App() {
               <Route path="/kanban" element={<KanbanPage />} />
               <Route path="/sla" element={<DashboardSLAPage />} />
               <Route path="/cancelamentos" element={<CancelamentosPage />} />
+              <Route path="/assistente-totvs" element={<AssistenteTOTVSPage />} />
+              <Route path="/assistente-totvs/:pedidoId" element={<AssistenteTOTVSPage />} />
+              <Route path="/assistente-totvs/:pedidoId/:alunoIndex" element={<AssistenteTOTVSPage />} />
             </Route>
           </Route>
 
