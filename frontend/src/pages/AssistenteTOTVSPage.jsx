@@ -571,6 +571,42 @@ const AssistenteTOTVSPage = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Aba Diversos */}
+            <TabsContent value="diversos" className="space-y-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Building className="w-4 h-4 text-teal-600" />
+                    Ensino Básico
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Preencha para evitar críticas posteriores no TOTVS
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <CampoCopiavel 
+                    label="Instituição" 
+                    valor={aluno?.instituicao_ensino || "Não Informado"}
+                  />
+                  <CampoCopiavel 
+                    label="Grau" 
+                    valor={aluno?.escolaridade || aluno?.grau_instrucao}
+                  />
+                  <CampoCopiavel 
+                    label="Ano de Conclusão" 
+                    valor={aluno?.ano_conclusao}
+                  />
+                  
+                  <Alert className="bg-amber-50 border-amber-200 mt-3">
+                    <AlertDescription className="text-amber-700 text-xs">
+                      <strong>Dica:</strong> Se não tiver a informação exata, use valores padrão 
+                      para evitar críticas: Instituição = "Não Informado", Grau = conforme escolaridade.
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </div>
 
