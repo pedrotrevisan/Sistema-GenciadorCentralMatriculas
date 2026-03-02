@@ -729,6 +729,23 @@ const AssistenteTOTVSPage = () => {
 
               <Separator />
 
+              {/* Diversos */}
+              <div>
+                <p className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1">
+                  <Settings className="w-3 h-3" /> ABA: DIVERSOS
+                </p>
+                <div className="space-y-1">
+                  <ChecklistItem 
+                    id="ensinoBasico" 
+                    label="Ensino Básico (Instituição/Grau/Ano)" 
+                    checked={checklist.ensinoBasico}
+                    onToggle={toggleChecklist}
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
               {/* Final */}
               <ChecklistItem 
                 id="salvar" 
