@@ -32,7 +32,8 @@ import {
   BookOpen,
   Inbox,
   FileSpreadsheet,
-  Ban
+  Ban,
+  ClipboardList
 } from 'lucide-react';
 import AlertaRetornos from './AlertaRetornos';
 
