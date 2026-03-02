@@ -326,7 +326,7 @@ const AssistenteTOTVSPage = () => {
         {/* Coluna da esquerda - Dados para copiar */}
         <div className="lg:col-span-2 space-y-4">
           <Tabs value={abaAtiva} onValueChange={setAbaAtiva}>
-            <TabsList className="grid grid-cols-4 w-full">
+            <TabsList className="grid grid-cols-5 w-full">
               <TabsTrigger value="identificacao" className="text-xs">
                 <User className="w-3 h-3 mr-1" />
                 Identificação
@@ -342,6 +342,10 @@ const AssistenteTOTVSPage = () => {
               <TabsTrigger value="responsaveis" className="text-xs">
                 <Users className="w-3 h-3 mr-1" />
                 Responsáveis
+              </TabsTrigger>
+              <TabsTrigger value="diversos" className="text-xs">
+                <Settings className="w-3 h-3 mr-1" />
+                Diversos
               </TabsTrigger>
             </TabsList>
 
