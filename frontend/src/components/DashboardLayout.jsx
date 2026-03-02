@@ -117,6 +117,7 @@ const DashboardLayout = () => {
         { to: '/pendencias', icon: AlertCircle, label: 'Pendências' },
         { to: '/reembolsos', icon: DollarSign, label: 'Reembolsos' },
         { to: '/cancelamentos', icon: Ban, label: 'Cancelamentos' },
+        { to: '/assistente-totvs', icon: ClipboardList, label: 'Assistente TOTVS' },
         { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
         { to: '/admin/cadastros', icon: Settings, label: 'Cadastros' },
         { to: '/admin/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
