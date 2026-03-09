@@ -107,7 +107,7 @@ const KanbanCard = ({ pedido, isDragging, onAtribuir }) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
             <span className="text-xs font-mono text-blue-600 font-semibold">
-              {pedido.protocolo}
+              {pedido.numero_protocolo || pedido.protocolo}
             </span>
             <button
               onClick={() => navigate(`/admin/pedido/${pedido.id}`)}
@@ -305,7 +305,7 @@ const KanbanPage = () => {
     
     const term = searchTerm.toLowerCase();
     return pedidos.filter(p => 
-      p.protocolo?.toLowerCase().includes(term) ||
+      (p.numero_protocolo || p.protocolo)?.toLowerCase().includes(term) ||
       p.alunos?.[0]?.nome?.toLowerCase().includes(term) ||
       p.curso_nome?.toLowerCase().includes(term) ||
       p.projeto_nome?.toLowerCase().includes(term)
