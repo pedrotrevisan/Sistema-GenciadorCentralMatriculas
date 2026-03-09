@@ -114,13 +114,16 @@ export default function ReembolsosPage() {
     }
   };
 
-  const carregarReembolsos = async (pagina = 1) => {
+  const carregarReembolsos = async (pagina = 1, statusOverride = null) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       params.append('pagina', pagina);
       params.append('por_pagina', 15);
-      if (filtroStatus && filtroStatus !== 'todos') params.append('status', filtroStatus);
+      
+      // Usa o statusOverride se fornecido, senão usa o filtroStatus atual
+      const statusToUse = statusOverride !== null ? statusOverride : filtroStatus;
+      if (statusToUse && statusToUse !== 'todos') params.append('status', statusToUse);
       if (filtroMotivo && filtroMotivo !== 'todos') params.append('motivo', filtroMotivo);
       if (filtroNome) params.append('aluno_nome', filtroNome);
       
@@ -368,10 +371,14 @@ export default function ReembolsosPage() {
         </div>
       </div>
 
-      {/* Dashboard Cards */}
+      {/* Dashboard Cards - Clicáveis para filtrar */}
       {dashboard && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          <Card className="bg-yellow-50 border-yellow-200">
+          <Card 
+            className="bg-yellow-50 border-yellow-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('aberto'); carregarReembolsos(1, 'aberto'); }}
+            data-testid="card-abertos"
+          >
             <CardContent className="p-4 text-center">
               <Clock className="w-8 h-8 mx-auto text-yellow-600 mb-2" />
               <p className="text-2xl font-bold text-yellow-700">{dashboard.total_aberto}</p>
@@ -379,7 +386,11 @@ export default function ReembolsosPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-blue-50 border-blue-200">
+          <Card 
+            className="bg-blue-50 border-blue-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('aguardando_dados_bancarios'); carregarReembolsos(1, 'aguardando_dados_bancarios'); }}
+            data-testid="card-aguardando"
+          >
             <CardContent className="p-4 text-center">
               <CreditCard className="w-8 h-8 mx-auto text-blue-600 mb-2" />
               <p className="text-2xl font-bold text-blue-700">{dashboard.total_aguardando}</p>
@@ -387,7 +398,11 @@ export default function ReembolsosPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-purple-50 border-purple-200">
+          <Card 
+            className="bg-purple-50 border-purple-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('enviado_financeiro'); carregarReembolsos(1, 'enviado_financeiro'); }}
+            data-testid="card-financeiro"
+          >
             <CardContent className="p-4 text-center">
               <Send className="w-8 h-8 mx-auto text-purple-600 mb-2" />
               <p className="text-2xl font-bold text-purple-700">{dashboard.total_enviado}</p>
@@ -395,7 +410,11 @@ export default function ReembolsosPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-green-50 border-green-200">
+          <Card 
+            className="bg-green-50 border-green-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('pago'); carregarReembolsos(1, 'pago'); }}
+            data-testid="card-pagos"
+          >
             <CardContent className="p-4 text-center">
               <CheckCircle className="w-8 h-8 mx-auto text-green-600 mb-2" />
               <p className="text-2xl font-bold text-green-700">{dashboard.total_pago}</p>
@@ -403,7 +422,11 @@ export default function ReembolsosPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-slate-50 border-slate-200">
+          <Card 
+            className="bg-slate-50 border-slate-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('todos'); carregarReembolsos(1, 'todos'); }}
+            data-testid="card-total"
+          >
             <CardContent className="p-4 text-center">
               <DollarSign className="w-8 h-8 mx-auto text-slate-600 mb-2" />
               <p className="text-2xl font-bold text-slate-700">{dashboard.total}</p>

@@ -269,9 +269,13 @@ const AssistenteDashboard = () => {
         </div>
       </div>
 
-      {/* Metrics */}
+      {/* Metrics - Cards Clicáveis para Filtrar */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-        <Card className="dashboard-metric-card">
+        <Card 
+          className="dashboard-metric-card cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => { setStatusFilter('all'); setPagina(1); }}
+          data-testid="card-total"
+        >
           <CardHeader className="pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-slate-500">Total</CardTitle>
           </CardHeader>
@@ -280,7 +284,11 @@ const AssistenteDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="dashboard-metric-card">
+        <Card 
+          className="dashboard-metric-card cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => { setStatusFilter('pendente'); setPagina(1); }}
+          data-testid="card-pendentes"
+        >
           <CardHeader className="pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-slate-500">Pendentes</CardTitle>
           </CardHeader>
@@ -289,7 +297,11 @@ const AssistenteDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="dashboard-metric-card">
+        <Card 
+          className="dashboard-metric-card cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => { setStatusFilter('em_analise'); setPagina(1); }}
+          data-testid="card-em-analise"
+        >
           <CardHeader className="pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-slate-500">Em Análise</CardTitle>
           </CardHeader>
@@ -298,7 +310,11 @@ const AssistenteDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="dashboard-metric-card">
+        <Card 
+          className="dashboard-metric-card cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => { setStatusFilter('documentacao_pendente'); setPagina(1); }}
+          data-testid="card-doc-pendente"
+        >
           <CardHeader className="pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-slate-500">Doc. Pend.</CardTitle>
           </CardHeader>
@@ -307,7 +323,11 @@ const AssistenteDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="dashboard-metric-card">
+        <Card 
+          className="dashboard-metric-card cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => { setStatusFilter('aprovado'); setPagina(1); }}
+          data-testid="card-aprovados"
+        >
           <CardHeader className="pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-slate-500">Aprovados</CardTitle>
           </CardHeader>
@@ -316,7 +336,11 @@ const AssistenteDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="dashboard-metric-card">
+        <Card 
+          className="dashboard-metric-card cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => { setStatusFilter('realizado'); setPagina(1); }}
+          data-testid="card-realizados"
+        >
           <CardHeader className="pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-slate-500">Realizados</CardTitle>
           </CardHeader>
@@ -325,7 +349,11 @@ const AssistenteDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="dashboard-metric-card">
+        <Card 
+          className="dashboard-metric-card cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => { setStatusFilter('exportado'); setPagina(1); }}
+          data-testid="card-exportados"
+        >
           <CardHeader className="pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-slate-500">Exportados</CardTitle>
           </CardHeader>
@@ -334,7 +362,11 @@ const AssistenteDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="dashboard-metric-card">
+        <Card 
+          className="dashboard-metric-card cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => { setStatusFilter('rejeitado'); setPagina(1); }}
+          data-testid="card-rejeitados"
+        >
           <CardHeader className="pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-slate-500">Rejeitados</CardTitle>
           </CardHeader>

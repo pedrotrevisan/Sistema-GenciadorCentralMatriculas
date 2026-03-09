@@ -5,6 +5,15 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 
 ## Última Atualização: 2026-03-09
 
+### Cards de KPI Clicáveis (2026-03-09) - NOVO! ✅
+**Implementada funcionalidade de cards clicáveis em todas as páginas de dashboard:**
+- **Reembolsos:** Cards de Abertos, Aguardando, No Financeiro, Pagos e Total Geral agora filtram a lista ao clicar
+- **Pendências Documentais:** Cards de Pendentes, Aguardando Aluno, Em Análise, Reenvio, Aprovados e Críticas filtram ao clicar
+- **Pedidos (Painel de Gestão):** Cards de Total, Pendentes, Em Análise, Doc. Pend., Aprovados, Realizados, Exportados e Rejeitados filtram ao clicar
+- **Chamados SGC:** Cards de Em Aberto, Críticos, SLA Crítico e Fechados Hoje filtram ao clicar
+- **Dashboard SLA:** Cards já eram clicáveis e navegam para as páginas correspondentes
+- Efeito visual de hover com scale e shadow para indicar interatividade
+
 ### Módulo Chamados SGC Plus (2026-03-09) - NOVO! ✅
 **Novo módulo para gestão de demandas de matrícula BMP recebidas via SGC Plus:**
 - Página `/chamados-sgc` no menu lateral

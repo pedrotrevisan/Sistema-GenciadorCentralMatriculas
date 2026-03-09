@@ -418,10 +418,14 @@ export default function CentralPendenciasPage() {
         </p>
       </div>
 
-      {/* Dashboard Cards */}
+      {/* Dashboard Cards - Clicáveis para filtrar */}
       {dashboard && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-          <Card className="bg-yellow-50 border-yellow-200">
+          <Card 
+            className="bg-yellow-50 border-yellow-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('pendente'); carregarPendencias(1); }}
+            data-testid="card-pendentes"
+          >
             <CardContent className="p-4 text-center">
               <Clock className="w-8 h-8 mx-auto text-yellow-600 mb-2" />
               <p className="text-2xl font-bold text-yellow-700">{dashboard.total_pendente}</p>
@@ -429,7 +433,11 @@ export default function CentralPendenciasPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-blue-50 border-blue-200">
+          <Card 
+            className="bg-blue-50 border-blue-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('aguardando_aluno'); carregarPendencias(1); }}
+            data-testid="card-aguardando"
+          >
             <CardContent className="p-4 text-center">
               <User className="w-8 h-8 mx-auto text-blue-600 mb-2" />
               <p className="text-2xl font-bold text-blue-700">{dashboard.total_aguardando}</p>
@@ -437,7 +445,11 @@ export default function CentralPendenciasPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-purple-50 border-purple-200">
+          <Card 
+            className="bg-purple-50 border-purple-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('em_analise'); carregarPendencias(1); }}
+            data-testid="card-em-analise"
+          >
             <CardContent className="p-4 text-center">
               <Search className="w-8 h-8 mx-auto text-purple-600 mb-2" />
               <p className="text-2xl font-bold text-purple-700">{dashboard.total_em_analise}</p>
@@ -445,7 +457,11 @@ export default function CentralPendenciasPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-orange-50 border-orange-200">
+          <Card 
+            className="bg-orange-50 border-orange-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('reenvio_necessario'); carregarPendencias(1); }}
+            data-testid="card-reenvio"
+          >
             <CardContent className="p-4 text-center">
               <RefreshCw className="w-8 h-8 mx-auto text-orange-600 mb-2" />
               <p className="text-2xl font-bold text-orange-700">{dashboard.total_reenvio}</p>
@@ -453,7 +469,11 @@ export default function CentralPendenciasPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-green-50 border-green-200">
+          <Card 
+            className="bg-green-50 border-green-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('aprovado'); carregarPendencias(1); }}
+            data-testid="card-aprovados"
+          >
             <CardContent className="p-4 text-center">
               <CheckCircle className="w-8 h-8 mx-auto text-green-600 mb-2" />
               <p className="text-2xl font-bold text-green-700">{dashboard.total_aprovado}</p>
@@ -461,7 +481,11 @@ export default function CentralPendenciasPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-red-50 border-red-200">
+          <Card 
+            className="bg-red-50 border-red-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('pendente'); carregarPendencias(1); }}
+            data-testid="card-criticas"
+          >
             <CardContent className="p-4 text-center">
               <AlertTriangle className="w-8 h-8 mx-auto text-red-600 mb-2" />
               <p className="text-2xl font-bold text-red-700">{dashboard.total_criticas}</p>

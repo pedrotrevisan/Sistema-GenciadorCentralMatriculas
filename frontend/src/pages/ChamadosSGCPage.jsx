@@ -247,11 +247,12 @@ const ChamadosSGCPage = () => {
         </Button>
       </div>
 
-      {/* Dashboard Cards */}
+      {/* Dashboard Cards - Todos clicáveis para filtrar */}
       {dashboard && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => setFiltroStatus('')}>
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+                onClick={() => { setFiltroStatus(''); carregarDados(); }}
+                data-testid="card-abertos">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <Clock className="h-8 w-8 opacity-80" />
@@ -263,7 +264,9 @@ const ChamadosSGCPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white cursor-pointer hover:shadow-lg transition-shadow">
+          <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+                onClick={() => { setFiltroStatus('backlog'); setBusca('critico'); carregarDados(); }}
+                data-testid="card-criticos">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <AlertTriangle className="h-8 w-8 opacity-80" />
@@ -275,7 +278,9 @@ const ChamadosSGCPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white cursor-pointer hover:shadow-lg transition-shadow">
+          <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+                onClick={() => { setFiltroStatus('em_atendimento'); carregarDados(); }}
+                data-testid="card-sla-critico">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <Timer className="h-8 w-8 opacity-80" />
@@ -287,7 +292,9 @@ const ChamadosSGCPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white cursor-pointer hover:shadow-lg transition-shadow">
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+                onClick={() => { setFiltroStatus('concluido'); carregarDados(); }}
+                data-testid="card-fechados">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <CheckCircle className="h-8 w-8 opacity-80" />
