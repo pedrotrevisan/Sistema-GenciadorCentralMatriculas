@@ -1661,6 +1661,7 @@ from src.routers.cancelamento import router as cancelamento_router
 from src.routers.formatador import router as formatador_router
 from src.routers.importacao_matriculas import router as importacao_router
 from src.routers.chamados_sgc import router as chamados_sgc_router
+from src.routers.painel_vagas import router as painel_vagas_router
 
 api_router.include_router(reembolsos_router)
 api_router.include_router(pendencias_router)
@@ -1678,6 +1679,7 @@ api_router.include_router(cancelamento_router)
 api_router.include_router(formatador_router)
 api_router.include_router(importacao_router)
 api_router.include_router(chamados_sgc_router)
+api_router.include_router(painel_vagas_router)
 
 # Then include main router in app
 app.include_router(api_router)

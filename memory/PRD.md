@@ -14,6 +14,17 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - **Dashboard SLA:** Cards já eram clicáveis e navegam para as páginas correspondentes
 - Efeito visual de hover com scale e shadow para indicar interatividade
 
+### Painel de Vagas (2026-03-09) - NOVO! ✅
+**Novo módulo para controle visual de ocupação de vagas por curso/turma:**
+- Dashboard com 6 KPIs: Turmas, Total Vagas, Ocupadas, Disponíveis, Ocupação Geral, Lotando
+- **Barras de ocupação visuais** por curso (ordenadas por % de ocupação)
+- Resumo por turno (Matutino/Noturno) com ícones
+- Alertas de turmas lotando (>= 85%)
+- Lista de turmas com filtros por turno e busca
+- Cadastro de novas turmas
+- **11 cursos do CIMATEC 2026.1 já importados** (438 vagas totais)
+- Substitui a planilha de controle de vagas manual!
+
 ### Módulo Chamados SGC Plus (2026-03-09) - NOVO! ✅
 **Novo módulo para gestão de demandas de matrícula BMP recebidas via SGC Plus:**
 - Página `/chamados-sgc` no menu lateral
@@ -121,6 +132,7 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - [x] Formatador de Planilhas (BMP)
 - [x] Fluxo de Cancelamento
 - [x] **Módulo Chamados SGC Plus** ✅ (2026-03-09)
+- [x] **Painel de Vagas** ✅ (2026-03-09)
 - [x] **Auditoria de Produção** ✅ (2026-03-09)
 
 ### P1 (Próximos)
@@ -137,8 +149,10 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 ## Key Files
 - `/app/backend/server.py` - Arquivo principal do FastAPI
 - `/app/backend/src/routers/chamados_sgc.py` - Router para Chamados SGC Plus
+- `/app/backend/src/routers/painel_vagas.py` - Router para Painel de Vagas
 - `/app/backend/src/infrastructure/persistence/models_chamados_sgc.py` - Modelos SQLAlchemy
 - `/app/frontend/src/pages/ChamadosSGCPage.jsx` - Página do módulo Chamados SGC
+- `/app/frontend/src/pages/PainelVagasPage.jsx` - Página do Painel de Vagas
 - `/app/frontend/src/pages/AssistenteTOTVSPage.jsx` - Assistente TOTVS
 - `/app/frontend/src/pages/PedidoDetalhePage.jsx` - Detalhes do pedido (com botões TOTVS)
 - `/app/frontend/src/pages/TrocarSenhaPrimeiroAcessoPage.jsx` - Primeiro acesso

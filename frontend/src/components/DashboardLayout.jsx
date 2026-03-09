@@ -34,7 +34,8 @@ import {
   FileSpreadsheet,
   Ban,
   ClipboardList,
-  Ticket
+  Ticket,
+  GraduationCap
 } from 'lucide-react';
 import AlertaRetornos from './AlertaRetornos';
 
@@ -102,6 +103,7 @@ const DashboardLayout = () => {
         { to: '/reembolsos', icon: DollarSign, label: 'Reembolsos' },
         { to: '/cancelamentos', icon: Ban, label: 'Cancelamentos' },
         { to: '/chamados-sgc', icon: Ticket, label: 'Chamados SGC' },
+        { to: '/painel-vagas', icon: GraduationCap, label: 'Painel de Vagas' },
         { to: '/assistente-totvs', icon: ClipboardList, label: 'Assistente TOTVS' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' },
         { to: '/formatador', icon: FileSpreadsheet, label: 'Formatador Planilhas' },
@@ -120,6 +122,7 @@ const DashboardLayout = () => {
         { to: '/reembolsos', icon: DollarSign, label: 'Reembolsos' },
         { to: '/cancelamentos', icon: Ban, label: 'Cancelamentos' },
         { to: '/chamados-sgc', icon: Ticket, label: 'Chamados SGC' },
+        { to: '/painel-vagas', icon: GraduationCap, label: 'Painel de Vagas' },
         { to: '/assistente-totvs', icon: ClipboardList, label: 'Assistente TOTVS' },
         { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
         { to: '/admin/cadastros', icon: Settings, label: 'Cadastros' },
