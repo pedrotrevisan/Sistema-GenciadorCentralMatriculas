@@ -35,6 +35,7 @@ import AssistenteTOTVSPage from "./pages/AssistenteTOTVSPage";
 import TrocarSenhaPrimeiroAcessoPage from "./pages/TrocarSenhaPrimeiroAcessoPage";
 import ChamadosSGCPage from "./pages/ChamadosSGCPage";
 import PainelVagasPage from "./pages/PainelVagasPage";
+import ApresentacaoPage from "./pages/ApresentacaoPage";
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/primeiro-acesso" element={<TrocarSenhaPrimeiroAcessoPage />} />
+          <Route path="/apresentacao" element={<ApresentacaoPage />} />
           
           {/* Consultor Routes */}
           <Route element={<ProtectedRoute allowedRoles={['consultor', 'assistente', 'admin']} />}>
