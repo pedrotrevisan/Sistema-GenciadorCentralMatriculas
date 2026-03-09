@@ -37,7 +37,8 @@ import {
   XCircle, 
   AlertCircle,
   User,
-  Edit
+  Edit,
+  ClipboardList
 } from 'lucide-react';
 
 const statusConfig = {
@@ -191,6 +192,18 @@ const PedidoDetalhePage = () => {
             }}
           />
           <CobrarZap pedido={pedido} variant="icon" />
+          {/* Botão Assistente TOTVS - para assistente e admin */}
+          {(user?.role === 'assistente' || user?.role === 'admin') && (
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/assistente-totvs/${pedido.id}`)}
+              className="border-blue-300 text-blue-600 hover:bg-blue-50"
+              data-testid="assistente-totvs-btn"
+            >
+              <ClipboardList className="h-4 w-4 mr-2" />
+              Assistente TOTVS
+            </Button>
+          )}
           {hasPermission('pedido:editar_status') && pedido.pode_editar && (
             <Button
               variant="outline"
@@ -361,6 +374,21 @@ const PedidoDetalhePage = () => {
                         {aluno.endereco_complemento ? ` - ${aluno.endereco_complemento}` : ''}, {aluno.endereco_bairro}, {aluno.endereco_cidade}/{aluno.endereco_uf} - CEP: {aluno.endereco_cep}
                       </p>
                     </div>
+                    {/* Botão Assistente TOTVS por aluno */}
+                    {(user?.role === 'assistente' || user?.role === 'admin') && (
+                      <div className="md:col-span-2 lg:col-span-3 pt-2 border-t border-slate-100">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/assistente-totvs/${pedido.id}/${index}`)}
+                          className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                          data-testid={`assistente-totvs-aluno-${index}-btn`}
+                        >
+                          <ClipboardList className="h-4 w-4 mr-2" />
+                          Preencher TOTVS para {aluno.nome?.split(' ')[0]}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
