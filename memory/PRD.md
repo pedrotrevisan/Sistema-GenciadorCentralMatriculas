@@ -118,5 +118,23 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - Frontend: React 19, Tailwind CSS, Shadcn/UI, Axios, Recharts
 - Auth: JWT (python-jose), bcrypt (passlib)
 
+### Importação de Dados das Planilhas (2026-03-09) - CONCLUÍDA ✅
+**Dados importados:**
+- **413 pedidos de matrícula** da planilha "Quantitativo de matrícula CHP 2026.1.xlsx"
+  - 293 PAGANTE
+  - 85 BOLSISTA
+  - 34 CAI
+- **50 reembolsos** da planilha "Controle de Reembolso.xlsx" (aba 2026)
+  - 20 abertos
+  - 25 pagos
+  - 5 em outros status
+
+**Observações:**
+- Dados com campos faltantes marcados com "Extraído de planilha Excel"
+- CPF placeholder: números sequenciais (000.000.000-01, etc)
+- RG placeholder: "IMPORTADO"
+- Endereço placeholder: "Extraído de planilha Excel - Endereço não informado"
+- Todos os pedidos vinculados ao projeto "Importação de Planilha Excel"
+
 ## Last Updated
-2026-03-09 - Auditoria de produção concluída, botões Assistente TOTVS adicionados na página de detalhes
+2026-03-09 - Importação de dados das planilhas CHP 2026.1 e Reembolsos concluída
