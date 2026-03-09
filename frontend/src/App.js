@@ -33,6 +33,7 @@ import FormatadorPlanilhaPage from "./pages/FormatadorPlanilhaPage";
 import CancelamentosPage from "./pages/CancelamentosPage";
 import AssistenteTOTVSPage from "./pages/AssistenteTOTVSPage";
 import TrocarSenhaPrimeiroAcessoPage from "./pages/TrocarSenhaPrimeiroAcessoPage";
+import ChamadosSGCPage from "./pages/ChamadosSGCPage";
 
 function App() {
   return (
@@ -90,6 +91,7 @@ function App() {
               <Route path="/assistente-totvs" element={<AssistenteTOTVSPage />} />
               <Route path="/assistente-totvs/:pedidoId" element={<AssistenteTOTVSPage />} />
               <Route path="/assistente-totvs/:pedidoId/:alunoIndex" element={<AssistenteTOTVSPage />} />
+              <Route path="/chamados-sgc" element={<ChamadosSGCPage />} />
             </Route>
           </Route>
 

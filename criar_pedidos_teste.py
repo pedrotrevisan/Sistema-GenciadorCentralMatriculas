@@ -2,7 +2,7 @@ import requests
 import random
 from datetime import datetime, timedelta
 
-API_URL = "https://totvs-assist.preview.emergentagent.com/api"
+API_URL = "https://hub-senai.preview.emergentagent.com/api"
 
 # Login como admin
 login_resp = requests.post(f"{API_URL}/auth/login", json={

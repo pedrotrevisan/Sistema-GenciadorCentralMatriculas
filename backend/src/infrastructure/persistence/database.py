@@ -68,6 +68,13 @@ async def init_db():
     from src.infrastructure.persistence.models_contatos import (
         LogContatoModel
     )
+    # Import chamados SGC models
+    from src.infrastructure.persistence.models_chamados_sgc import (
+        ChamadoSGCModel,
+        ChamadoSGCAndamentoModel,
+        ChamadoSGCInteracaoModel,
+        ChamadoSGCEsforcoModel
+    )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
