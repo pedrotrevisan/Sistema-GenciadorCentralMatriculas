@@ -158,7 +158,10 @@ const BIDashboardPage = () => {
 
       {/* Cards de KPIs Principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200">
+        <Card 
+          className="bg-gradient-to-br from-blue-50 to-white border-blue-200 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+          onClick={() => navigate('/admin/pedidos')}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -177,7 +180,10 @@ const BIDashboardPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-white border-green-200">
+        <Card 
+          className="bg-gradient-to-br from-green-50 to-white border-green-200 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+          onClick={() => navigate('/sla')}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -204,7 +210,10 @@ const BIDashboardPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-amber-50 to-white border-amber-200">
+        <Card 
+          className="bg-gradient-to-br from-amber-50 to-white border-amber-200 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+          onClick={() => navigate('/pendencias')}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -216,18 +225,15 @@ const BIDashboardPage = () => {
               </div>
             </div>
             <div className="mt-2">
-              <Button 
-                variant="link" 
-                className="p-0 h-auto text-amber-700"
-                onClick={() => navigate('/pendencias')}
-              >
-                Ver pendências
-              </Button>
+              <span className="text-amber-700 text-sm">Ver pendências →</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-white border-purple-200">
+        <Card 
+          className="bg-gradient-to-br from-purple-50 to-white border-purple-200 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+          onClick={() => navigate('/reembolsos')}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -239,18 +245,15 @@ const BIDashboardPage = () => {
               </div>
             </div>
             <div className="mt-2">
-              <Button 
-                variant="link" 
-                className="p-0 h-auto text-purple-700"
-                onClick={() => navigate('/reembolsos')}
-              >
-                Ver reembolsos
-              </Button>
+              <span className="text-purple-700 text-sm">Ver reembolsos →</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-200">
+        <Card 
+          className="bg-gradient-to-br from-pink-50 to-white border-pink-200 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+          onClick={() => navigate('/pendencias')}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>

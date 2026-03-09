@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -21,6 +22,7 @@ import {
 const CORES = ['#004587', '#E30613', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899'];
 
 const DashboardSLAPage = () => {
+  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -97,7 +99,11 @@ const DashboardSLAPage = () => {
 
       {/* KPIs Resumo */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+        <Card 
+          className="bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => navigate('/admin/pedidos')}
+          data-testid="kpi-total-pedidos"
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <FileText className="w-8 h-8 opacity-80" />
@@ -109,7 +115,11 @@ const DashboardSLAPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+        <Card 
+          className="bg-gradient-to-br from-green-500 to-green-600 text-white cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => navigate('/admin/pedidos')}
+          data-testid="kpi-este-mes"
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <TrendingUp className="w-8 h-8 opacity-80" />
@@ -121,7 +131,11 @@ const DashboardSLAPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+        <Card 
+          className="bg-gradient-to-br from-amber-500 to-amber-600 text-white cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => navigate('/kanban')}
+          data-testid="kpi-em-aberto"
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <Clock className="w-8 h-8 opacity-80" />
@@ -133,7 +147,11 @@ const DashboardSLAPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+        <Card 
+          className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => navigate('/admin/pedidos?status=realizado')}
+          data-testid="kpi-concluidos"
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <CheckCircle className="w-8 h-8 opacity-80" />
@@ -145,7 +163,11 @@ const DashboardSLAPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+        <Card 
+          className="bg-gradient-to-br from-purple-500 to-purple-600 text-white cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => navigate('/bi')}
+          data-testid="kpi-taxa-conclusao"
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <Award className="w-8 h-8 opacity-80" />
@@ -157,7 +179,11 @@ const DashboardSLAPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+        <Card 
+          className="bg-gradient-to-br from-orange-500 to-orange-600 text-white cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => navigate('/pendencias')}
+          data-testid="kpi-pendencias"
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <AlertTriangle className="w-8 h-8 opacity-80" />
@@ -169,7 +195,11 @@ const DashboardSLAPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
+        <Card 
+          className="bg-gradient-to-br from-red-500 to-red-600 text-white cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+          onClick={() => navigate('/reembolsos')}
+          data-testid="kpi-reembolsos"
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <XCircle className="w-8 h-8 opacity-80" />

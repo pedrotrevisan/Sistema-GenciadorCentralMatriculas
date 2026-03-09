@@ -282,13 +282,17 @@ const AdminDashboard = () => {
           <CardContent>
             <div className="space-y-3">
               {[
-                { key: 'pendente', label: 'Pendentes', color: 'bg-amber-500' },
-                { key: 'em_analise', label: 'Em Análise', color: 'bg-blue-500' },
-                { key: 'documentacao_pendente', label: 'Doc. Pendente', color: 'bg-red-500' },
-                { key: 'aprovado', label: 'Aprovadas', color: 'bg-green-500' },
-                { key: 'realizado', label: 'Realizadas', color: 'bg-purple-500' },
+                { key: 'pendente', label: 'Pendentes', color: 'bg-amber-500', filter: 'pendente' },
+                { key: 'em_analise', label: 'Em Análise', color: 'bg-blue-500', filter: 'em_analise' },
+                { key: 'documentacao_pendente', label: 'Doc. Pendente', color: 'bg-red-500', filter: 'documentacao_pendente' },
+                { key: 'aprovado', label: 'Aprovadas', color: 'bg-green-500', filter: 'aprovado' },
+                { key: 'realizado', label: 'Realizadas', color: 'bg-purple-500', filter: 'realizado' },
               ].map(status => (
-                <div key={status.key} className="flex items-center justify-between">
+                <div 
+                  key={status.key} 
+                  className="flex items-center justify-between cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors -mx-2"
+                  onClick={() => navigate(`/admin/pedidos?status=${status.filter}`)}
+                >
                   <div className="flex items-center gap-2">
                     <div className={`w-3 h-3 rounded-full ${status.color}`} />
                     <span className="text-sm">{status.label}</span>
