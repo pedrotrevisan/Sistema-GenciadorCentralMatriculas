@@ -149,19 +149,19 @@ class MetricasSLAService:
         )
         pedidos_mes = result.scalar() or 0
         
-        # Pedidos em aberto (não finalizados)
+        # Pedidos em aberto (não finalizados e não aprovados ainda)
         status_abertos = ['pendente', 'inscricao', 'em_analise', 'analise_documental', 
-                         'documentacao_pendente', 'aprovado', 'aguardando_pagamento']
+                         'documentacao_pendente', 'aguardando_pagamento']
         result = await self.session.execute(
             select(func.count(PedidoModel.id))
             .where(PedidoModel.status.in_(status_abertos))
         )
         pedidos_abertos = result.scalar() or 0
         
-        # Taxa de conclusão (matriculados + exportados / total)
+        # Taxa de conclusão (aprovados + matriculados + exportados / total)
         result = await self.session.execute(
             select(func.count(PedidoModel.id))
-            .where(PedidoModel.status.in_(['matriculado', 'realizado', 'exportado']))
+            .where(PedidoModel.status.in_(['aprovado', 'matriculado', 'realizado', 'exportado']))
         )
         pedidos_concluidos = result.scalar() or 0
         taxa_conclusao = (pedidos_concluidos / total_pedidos * 100) if total_pedidos > 0 else 0
@@ -173,10 +173,10 @@ class MetricasSLAService:
         )
         pendencias_ativas = result.scalar() or 0
         
-        # Reembolsos pendentes
+        # Reembolsos pendentes (status que indicam pendência)
         result = await self.session.execute(
             select(func.count(ReembolsoModel.id))
-            .where(ReembolsoModel.status.in_(['solicitado', 'em_analise', 'aprovado']))
+            .where(ReembolsoModel.status.in_(['aberto', 'aguardando_dados', 'solicitado', 'em_analise', 'enviado_financeiro']))
         )
         reembolsos_pendentes = result.scalar() or 0
         
