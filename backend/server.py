@@ -960,6 +960,18 @@ async def get_analytics(
     
     taxa_conversao = (total_aprovados / total_pedidos * 100) if total_pedidos > 0 else 0
     
+    # 9. Contagem por Status (para o card "Solicitações por Status")
+    por_status = {
+        'pendente': funil_data.get('pendente', 0),
+        'em_analise': funil_data.get('em_analise', 0),
+        'documentacao_pendente': funil_data.get('documentacao_pendente', 0),
+        'aprovado': funil_data.get('aprovado', 0),
+        'realizado': funil_data.get('realizado', 0),
+        'exportado': funil_data.get('exportado', 0),
+        'cancelado': funil_data.get('cancelado', 0),
+        'rejeitado': funil_data.get('rejeitado', 0),
+    }
+    
     return {
         "funil": funil,
         "tempo_medio_dias": round(tempo_medio, 1),
@@ -969,7 +981,8 @@ async def get_analytics(
         "total_alunos": total_alunos,
         "matriculas_por_mes": matriculas_por_mes,
         "taxa_conversao": round(taxa_conversao, 1),
-        "total_pedidos": total_pedidos
+        "total_pedidos": total_pedidos,
+        "por_status": por_status
     }
 
 
