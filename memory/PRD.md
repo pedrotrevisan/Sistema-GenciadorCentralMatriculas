@@ -5,6 +5,24 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 
 ## Última Atualização: 2026-03-09
 
+### Módulo Chamados SGC Plus (2026-03-09) - NOVO! ✅
+**Novo módulo para gestão de demandas de matrícula BMP recebidas via SGC Plus:**
+- Página `/chamados-sgc` no menu lateral
+- Dashboard com KPIs (Em Aberto, Críticos, SLA Crítico, Fechados Hoje)
+- Formulário completo baseado no questionário SGC Plus com 6 seções:
+  - **Dados do Chamado:** Nº Ticket, Data Abertura, Solicitante
+  - **Informações do Curso:** Código, Nome, Turno, Período Letivo, Quantidade de Vagas, Modalidade (CAP/IP/CAI/CQPH/CQP), Forma de Pagamento, CONT
+  - **Dados da Empresa:** Nome, Contato, E-mail, Telefone
+  - **Período do Curso:** Data de Início, Data Final
+  - **Documentos e Requisitos:** Documentos Obrigatórios, Requisito de Acesso
+  - **Controle Interno:** Técnico Responsável, SLA (horas), Previsão de Conclusão, Crítico
+- CRUD completo de chamados
+- Gestão de status (Backlog, Em Atendimento, Aguardando Retorno, Concluído, Cancelado)
+- Registro de andamentos automático ao mudar status
+- Sistema de interações/comunicações
+- Registro de esforço (horas)
+- 12/12 testes pytest passando (100%)
+
 ### Auditoria de Produção (2026-03-09) - CONCLUÍDA ✅
 **Todos os testes passaram:**
 - Login de usuários oficiais funcionando
@@ -93,6 +111,7 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - [x] Assistente TOTVS
 - [x] Formatador de Planilhas (BMP)
 - [x] Fluxo de Cancelamento
+- [x] **Módulo Chamados SGC Plus** ✅ (2026-03-09)
 - [x] **Auditoria de Produção** ✅ (2026-03-09)
 
 ### P1 (Próximos)
@@ -108,6 +127,9 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 
 ## Key Files
 - `/app/backend/server.py` - Arquivo principal do FastAPI
+- `/app/backend/src/routers/chamados_sgc.py` - Router para Chamados SGC Plus
+- `/app/backend/src/infrastructure/persistence/models_chamados_sgc.py` - Modelos SQLAlchemy
+- `/app/frontend/src/pages/ChamadosSGCPage.jsx` - Página do módulo Chamados SGC
 - `/app/frontend/src/pages/AssistenteTOTVSPage.jsx` - Assistente TOTVS
 - `/app/frontend/src/pages/PedidoDetalhePage.jsx` - Detalhes do pedido (com botões TOTVS)
 - `/app/frontend/src/pages/TrocarSenhaPrimeiroAcessoPage.jsx` - Primeiro acesso
@@ -149,4 +171,4 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - Reembolsos Pendentes: 25
 
 ## Last Updated
-2026-03-09 - Auditoria completa aprovada. Sistema pronto para produção.
+2026-03-09 - Módulo Chamados SGC Plus implementado e testado. Sistema pronto para produção.
