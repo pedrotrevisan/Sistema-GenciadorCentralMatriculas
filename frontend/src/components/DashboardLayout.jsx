@@ -201,11 +201,11 @@ const DashboardLayout = () => {
       <aside
         className={`
           fixed top-16 left-0 bottom-0 w-64 bg-white border-r border-slate-200 z-40
-          transform transition-transform duration-200 ease-in-out
+          transform transition-transform duration-200 ease-in-out flex flex-col
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 space-y-1 flex-1 overflow-y-auto pb-20">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -224,7 +224,7 @@ const DashboardLayout = () => {
 
         {/* Exportar TOTVS - só para assistente e admin */}
         {hasPermission('pedido:exportar') && (
-          <div className="absolute bottom-4 left-4 right-4">
+          <div className="p-4 border-t border-slate-200 bg-white">
             <Button
               variant="outline"
               className="w-full justify-start gap-2"

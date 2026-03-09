@@ -1,6 +1,7 @@
 """
 Router para processamento de planilhas de matrícula
 Recebe planilha da empresa e retorna formatada/validada
+Padrão BMP (Brasil Mais Produtivo) com correção ortográfica
 """
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse
@@ -8,10 +9,13 @@ from typing import List, Dict
 import pandas as pd
 import io
 from datetime import datetime
+import logging
 
 from src.services.formatador_planilha import FormatadorPlanilha, processar_linha_aluno
+from src.services.formatador_bmp import FormatadorBMP
 
 router = APIRouter(prefix="/formatador", tags=["Formatador de Planilhas"])
+logger = logging.getLogger(__name__)
 
 
 def detectar_cabecalho(df: pd.DataFrame) -> int:

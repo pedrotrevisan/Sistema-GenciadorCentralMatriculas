@@ -9,10 +9,10 @@ import unicodedata
 
 
 class FormatadorPlanilha:
-    """Formatador de dados de matrícula seguindo regras do SYNAPSE"""
+    """Formatador de dados de matrícula seguindo regras do SYNAPSE e padrão BMP"""
     
     # Preposições que devem ficar em minúsculo nos nomes
-    PREPOSICOES = {'da', 'de', 'do', 'das', 'dos', 'e', 'em', 'na', 'no', 'nas', 'nos'}
+    PREPOSICOES = {'da', 'de', 'do', 'das', 'dos', 'e', 'em', 'na', 'no', 'nas', 'nos', 'a', 'o', 'ao', 'aos'}
     
     # Estados brasileiros
     ESTADOS_BR = {
@@ -20,18 +20,46 @@ class FormatadorPlanilha:
         'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC',
         'SP', 'SE', 'TO'
     }
+    
+    # Dicionário de correções ortográficas para nomes brasileiros
+    CORRECOES_NOMES = {
+        'JOAO': 'João', 'JOSE': 'José', 'MARIA': 'Maria',
+        'CONCEICAO': 'Conceição', 'GONCALVES': 'Gonçalves', 
+        'FALCAO': 'Falcão', 'ALCANTARA': 'Alcântara',
+        'FRANCES': 'Francês', 'INES': 'Inês', 'AGNES': 'Agnês',
+        'VALERIA': 'Valéria', 'DEBORA': 'Débora', 'BARBARA': 'Bárbara',
+        'MARCIA': 'Márcia', 'LUCIA': 'Lúcia', 'LUCIO': 'Lúcio',
+        'MARCIO': 'Márcio', 'SERGIO': 'Sérgio', 'ROGERIO': 'Rogério',
+        'ANDRE': 'André', 'CANDIDO': 'Cândido', 'CLAUDIO': 'Cláudio',
+        'FABIO': 'Fábio', 'FLAVIO': 'Flávio', 'JULIO': 'Júlio',
+        'MAURICIO': 'Maurício', 'OTAVIO': 'Otávio', 'ANTONIO': 'Antônio',
+        'THIAGO': 'Thiago', 'MATHEUS': 'Matheus', 'LUCAS': 'Lucas',
+        'GABRIEL': 'Gabriel', 'RAFAEL': 'Rafael', 'DANIEL': 'Daniel',
+        'FERNAO': 'Fernão', 'SIMAO': 'Simão', 'JORDAO': 'Jordão',
+        'ADAO': 'Adão', 'CRISTOVAO': 'Cristóvão', 'SEBASTIAO': 'Sebastião',
+        'CICERO': 'Cícero', 'JERONIMO': 'Jerônimo',
+        'ARAUJO': 'Araújo', 'FRANCA': 'França', 
+        'ASSUNCAO': 'Assunção', 'ENCARNACAO': 'Encarnação',
+        'MERCES': 'Mercês', 'LANCA': 'Lança',
+    }
+
+    @staticmethod
+    def _remover_acentos(texto: str) -> str:
+        """Remove acentos para comparação"""
+        nfkd = unicodedata.normalize('NFKD', texto)
+        return ''.join(c for c in nfkd if not unicodedata.combining(c))
 
     @staticmethod
     def formatar_nome(nome: str) -> Tuple[str, bool, str]:
         """
-        Formata nome próprio seguindo regras brasileiras
+        Formata nome próprio seguindo regras brasileiras com correção ortográfica
         Retorna: (nome_formatado, is_valido, mensagem_erro)
         
         Regras:
         - Primeira letra de cada palavra em maiúscula
         - Preposições (da, de, do, etc.) em minúscula
+        - Correção de acentuação (JOAO → João, FALCAO → Falcão)
         - Remove espaços extras
-        - Mantém acentos
         """
         if not nome or not isinstance(nome, str):
             return "", False, "Nome vazio ou inválido"
@@ -47,13 +75,19 @@ class FormatadorPlanilha:
         if len(palavras) < 2:
             return nome.title(), False, "Nome incompleto (falta sobrenome)"
         
-        # Formatar cada palavra
+        # Formatar cada palavra com correção ortográfica
         palavras_formatadas = []
         for i, palavra in enumerate(palavras):
             palavra_lower = palavra.lower()
+            palavra_upper = palavra.upper()
+            palavra_sem_acento = FormatadorPlanilha._remover_acentos(palavra_upper)
+            
             # Preposições ficam em minúscula (exceto se for a primeira palavra)
             if i > 0 and palavra_lower in FormatadorPlanilha.PREPOSICOES:
                 palavras_formatadas.append(palavra_lower)
+            # Verificar se tem correção ortográfica
+            elif palavra_sem_acento in FormatadorPlanilha.CORRECOES_NOMES:
+                palavras_formatadas.append(FormatadorPlanilha.CORRECOES_NOMES[palavra_sem_acento])
             else:
                 # Primeira letra maiúscula, resto minúscula
                 palavras_formatadas.append(palavra.capitalize())
