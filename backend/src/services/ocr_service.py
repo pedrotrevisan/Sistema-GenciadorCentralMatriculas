@@ -1,13 +1,14 @@
 """
-Serviço de OCR com suporte a múltiplos engines
-- EasyOCR (padrão - offline, gratuito)
-- Tesseract (fallback - offline, leve)
+Serviço de OCR leve para deploy em produção
+- Tesseract (padrão - offline, leve)
 - Google Cloud Vision (opcional - melhor precisão)
+
+Nota: EasyOCR foi removido por requerer muita memória (PyTorch)
 """
 import os
 import re
 import logging
-from typing import Optional, Dict, Tuple, List
+from typing import Optional, Dict, Tuple
 from PIL import Image, ImageEnhance, ImageFilter
 import io
 
@@ -15,28 +16,14 @@ logger = logging.getLogger(__name__)
 
 
 class OCRService:
-    """Serviço unificado de OCR com múltiplos engines"""
+    """Serviço de OCR otimizado para deploy"""
     
     def __init__(self):
-        self.engine = os.getenv('OCR_ENGINE', 'easyocr')
+        self.engine = os.getenv('OCR_ENGINE', 'tesseract')
         self.languages = os.getenv('OCR_LANGUAGES', 'pt,en').split(',')
-        self._easyocr_reader = None
         self._google_vision_client = None
         
         logger.info(f"OCRService iniciado com engine: {self.engine}")
-    
-    def _get_easyocr_reader(self):
-        """Lazy loading do EasyOCR reader"""
-        if self._easyocr_reader is None:
-            try:
-                import easyocr
-                logger.info("Inicializando EasyOCR (pode demorar na primeira vez)...")
-                self._easyocr_reader = easyocr.Reader(self.languages, gpu=False)
-                logger.info("EasyOCR inicializado com sucesso!")
-            except Exception as e:
-                logger.error(f"Erro ao inicializar EasyOCR: {e}")
-                raise
-        return self._easyocr_reader
     
     def _get_google_vision_client(self):
         """Lazy loading do Google Cloud Vision client"""
@@ -76,38 +63,6 @@ class OCRService:
         imagem = imagem.filter(ImageFilter.SHARPEN)
         
         return imagem
-    
-    def extrair_texto_easyocr(self, imagem: Image.Image) -> Tuple[str, float]:
-        """Extrai texto usando EasyOCR"""
-        try:
-            reader = self._get_easyocr_reader()
-            
-            # Converter PIL Image para bytes
-            img_byte_arr = io.BytesIO()
-            imagem.save(img_byte_arr, format='PNG')
-            img_byte_arr.seek(0)
-            
-            # Executar OCR
-            results = reader.readtext(img_byte_arr.read(), paragraph=True)
-            
-            # Combinar todo o texto
-            texto_completo = []
-            confiancas = []
-            
-            for detection in results:
-                bbox, text, confidence = detection
-                texto_completo.append(text)
-                confiancas.append(confidence)
-            
-            texto = '\n'.join(texto_completo)
-            confianca_media = sum(confiancas) / len(confiancas) if confiancas else 0.0
-            
-            logger.info(f"EasyOCR: {len(texto)} caracteres extraídos, confiança: {confianca_media:.2f}")
-            return texto, confianca_media
-            
-        except Exception as e:
-            logger.error(f"Erro no EasyOCR: {e}")
-            raise
     
     def extrair_texto_tesseract(self, imagem: Image.Image) -> Tuple[str, float]:
         """Extrai texto usando Tesseract"""
@@ -176,43 +131,24 @@ class OCRService:
         engine_usado = self.engine
         
         try:
-            if self.engine == 'easyocr':
-                texto, confianca = self.extrair_texto_easyocr(imagem)
-                
-            elif self.engine == 'tesseract':
+            if self.engine == 'tesseract':
                 texto, confianca = self.extrair_texto_tesseract(imagem)
                 
             elif self.engine == 'google_vision':
                 texto, confianca = self.extrair_texto_google_vision(imagem)
                 
             else:
-                raise ValueError(f"Engine OCR desconhecido: {self.engine}")
-            
-            # Se a confiança for muito baixa, tentar fallback
-            if confianca < 0.3 and self.engine != 'tesseract':
-                logger.warning(f"Confiança baixa ({confianca:.2f}), tentando Tesseract como fallback")
-                try:
-                    texto_fallback, confianca_fallback = self.extrair_texto_tesseract(imagem)
-                    if confianca_fallback > confianca:
-                        texto, confianca = texto_fallback, confianca_fallback
-                        engine_usado = 'tesseract (fallback)'
-                except Exception as e:
-                    logger.error(f"Fallback para Tesseract falhou: {e}")
+                # Fallback para tesseract
+                logger.warning(f"Engine {self.engine} não suportado, usando tesseract")
+                texto, confianca = self.extrair_texto_tesseract(imagem)
+                engine_usado = 'tesseract'
             
             return texto, confianca, engine_usado
             
         except Exception as e:
-            # Último recurso: tentar Tesseract
-            if self.engine != 'tesseract':
-                logger.error(f"Engine {self.engine} falhou, tentando Tesseract: {e}")
-                try:
-                    texto, confianca = self.extrair_texto_tesseract(imagem)
-                    return texto, confianca, 'tesseract (fallback de erro)'
-                except Exception as e2:
-                    logger.error(f"Todos os engines falharam: {e2}")
-                    raise Exception(f"Falha ao processar imagem com qualquer engine OCR")
-            else:
-                raise
+            logger.error(f"Erro no OCR: {e}")
+            # Retornar texto vazio em caso de falha
+            return "", 0.0, f"{engine_usado} (erro)"
 
 
 class DocumentParser:

@@ -72,44 +72,45 @@ async def lifespan(app: FastAPI):
     async with async_session() as session:
         usuario_repo = UsuarioRepository(session)
         
-        # Admin
-        admin = await usuario_repo.buscar_por_email("admin@senai.br")
-        if not admin:
-            admin_user = Usuario(
-                id=str(uuid.uuid4()),
-                nome="Administrador",
-                email=Email("admin@senai.br"),
-                senha_hash=jwt_auth.hash_senha("admin123"),
-                role=RoleUsuario.ADMIN
-            )
-            await usuario_repo.salvar(admin_user)
-            logger.info("Usuário admin criado: admin@senai.br / admin123")
+        # Senha padrão para primeiro acesso
+        SENHA_PADRAO = "Senai@2026"
         
-        # Consultor
-        consultor = await usuario_repo.buscar_por_email("consultor@senai.br")
-        if not consultor:
-            consultor_user = Usuario(
-                id=str(uuid.uuid4()),
-                nome="Consultor Exemplo",
-                email=Email("consultor@senai.br"),
-                senha_hash=jwt_auth.hash_senha("consultor123"),
-                role=RoleUsuario.CONSULTOR
-            )
-            await usuario_repo.salvar(consultor_user)
-            logger.info("Usuário consultor criado: consultor@senai.br / consultor123")
+        # Lista de usuários oficiais
+        usuarios_oficiais = [
+            # Administradores
+            {"nome": "Pedro Henrique Trevisan Passos Costa", "email": "pedro.passos@fieb.org.br", "role": RoleUsuario.ADMIN},
+            {"nome": "Cristiane dos Santos Mendes", "email": "cristiane.mendes@fieb.org.br", "role": RoleUsuario.ADMIN},
+            # Assistentes
+            {"nome": "Camila de Deus Mota Reis", "email": "camila.mreis@fieb.org.br", "role": RoleUsuario.ASSISTENTE},
+            {"nome": "Vanessa da Silva Santos", "email": "vanessa.silvasantos@fieb.org.br", "role": RoleUsuario.ASSISTENTE},
+            {"nome": "Saulo Serra Santos", "email": "saulo.serra@fbest.org.br", "role": RoleUsuario.ASSISTENTE},
+            {"nome": "Vitoria Vanessa dos Santos Oliveira", "email": "vitoria.soliveira@fbest.org.br", "role": RoleUsuario.ASSISTENTE},
+            {"nome": "José Hericles Santos de Almeida", "email": "jose.hericles@fieb.org.br", "role": RoleUsuario.ASSISTENTE},
+            # Consultor exemplo
+            {"nome": "Consultor Exemplo", "email": "consultorexemplocimatec@fieb.org.br", "role": RoleUsuario.CONSULTOR},
+        ]
         
-        # Assistente
-        assistente = await usuario_repo.buscar_por_email("assistente@senai.br")
-        if not assistente:
-            assistente_user = Usuario(
-                id=str(uuid.uuid4()),
-                nome="Assistente Exemplo",
-                email=Email("assistente@senai.br"),
-                senha_hash=jwt_auth.hash_senha("assistente123"),
-                role=RoleUsuario.ASSISTENTE
-            )
-            await usuario_repo.salvar(assistente_user)
-            logger.info("Usuário assistente criado: assistente@senai.br / assistente123")
+        for user_data in usuarios_oficiais:
+            existing = await usuario_repo.buscar_por_email(user_data["email"])
+            if not existing:
+                new_user = Usuario(
+                    id=str(uuid.uuid4()),
+                    nome=user_data["nome"],
+                    email=Email(user_data["email"]),
+                    senha_hash=jwt_auth.hash_senha(SENHA_PADRAO),
+                    role=user_data["role"]
+                )
+                await usuario_repo.salvar(new_user)
+                # Marcar como primeiro acesso
+                from sqlalchemy import select as sql_select
+                result = await session.execute(
+                    sql_select(UsuarioModel).where(UsuarioModel.email == user_data["email"])
+                )
+                usuario_model = result.scalar_one_or_none()
+                if usuario_model:
+                    usuario_model.primeiro_acesso = True
+                    await session.commit()
+                logger.info(f"Usuário criado: {user_data['nome']} ({user_data['email']})")
         
         # Seed Cursos
         from sqlalchemy import select, func
@@ -385,6 +386,13 @@ async def login(request: LoginRequest, session: AsyncSession = Depends(get_db_se
             detail="Usuário inativo"
         )
     
+    # Buscar o modelo para verificar primeiro_acesso
+    result = await session.execute(
+        select(UsuarioModel).where(UsuarioModel.email == request.email)
+    )
+    usuario_model = result.scalar_one_or_none()
+    primeiro_acesso = usuario_model.primeiro_acesso if usuario_model else False
+    
     # Registra acesso
     usuario.registrar_acesso()
     await usuario_repo.salvar(usuario)
@@ -405,9 +413,13 @@ async def login(request: LoginRequest, session: AsyncSession = Depends(get_db_se
     # Gera token
     token = jwt_auth.criar_token(usuario)
     
+    # Preparar resposta com primeiro_acesso
+    usuario_dict = usuario.to_dict()
+    usuario_dict["primeiro_acesso"] = primeiro_acesso
+    
     return LoginResponseDTO(
         token=token,
-        usuario=UsuarioResponseDTO(**usuario.to_dict())
+        usuario=UsuarioResponseDTO(**usuario_dict)
     )
 
 
@@ -459,6 +471,64 @@ class AlterarSenhaRequest(BaseModel):
 class AtualizarPerfilRequest(BaseModel):
     nome: Optional[str] = Field(None, min_length=3)
     email: Optional[str] = None
+
+
+class TrocarSenhaPrimeiroAcessoRequest(BaseModel):
+    """Request para troca de senha no primeiro acesso"""
+    nova_senha: str = Field(..., min_length=6)
+    confirmar_senha: str = Field(..., min_length=6)
+
+
+@api_router.post("/auth/trocar-senha-primeiro-acesso", tags=["Auth"])
+async def trocar_senha_primeiro_acesso(
+    request: TrocarSenhaPrimeiroAcessoRequest,
+    token: str = Depends(oauth2_scheme),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """Troca a senha no primeiro acesso (obrigatório)"""
+    usuario = await get_current_user(token, session)
+    usuario_repo = UsuarioRepository(session)
+    
+    # Verifica se é primeiro acesso
+    result = await session.execute(
+        select(UsuarioModel).where(UsuarioModel.id == usuario.id)
+    )
+    usuario_model = result.scalar_one_or_none()
+    
+    if not usuario_model or not usuario_model.primeiro_acesso:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Esta função é apenas para primeiro acesso"
+        )
+    
+    # Verifica confirmação
+    if request.nova_senha != request.confirmar_senha:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nova senha e confirmação não conferem"
+        )
+    
+    # Atualiza senha e marca primeiro_acesso como False
+    usuario.senha_hash = jwt_auth.hash_senha(request.nova_senha)
+    await usuario_repo.salvar(usuario)
+    
+    usuario_model.primeiro_acesso = False
+    await session.commit()
+    
+    # Registrar atividade
+    from src.services.atividade_service import registrar_atividade
+    try:
+        await registrar_atividade(
+            session=session,
+            usuario_id=usuario.id,
+            usuario_nome=usuario.nome,
+            tipo="primeiro_acesso",
+            descricao="Definiu nova senha no primeiro acesso"
+        )
+    except Exception as e:
+        logger.warning(f"Erro ao registrar atividade: {e}")
+    
+    return {"message": "Senha definida com sucesso! Bem-vindo ao SYNAPSE."}
 
 
 @api_router.put("/auth/me/senha", tags=["Auth"])

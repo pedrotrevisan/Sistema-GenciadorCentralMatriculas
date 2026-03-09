@@ -32,6 +32,7 @@ import DashboardSLAPage from "./pages/DashboardSLAPage";
 import FormatadorPlanilhaPage from "./pages/FormatadorPlanilhaPage";
 import CancelamentosPage from "./pages/CancelamentosPage";
 import AssistenteTOTVSPage from "./pages/AssistenteTOTVSPage";
+import TrocarSenhaPrimeiroAcessoPage from "./pages/TrocarSenhaPrimeiroAcessoPage";
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/primeiro-acesso" element={<TrocarSenhaPrimeiroAcessoPage />} />
           
           {/* Consultor Routes */}
           <Route element={<ProtectedRoute allowedRoles={['consultor', 'assistente', 'admin']} />}>

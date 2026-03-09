@@ -80,6 +80,7 @@ class UsuarioResponseDTO(BaseModel):
     email: str
     role: str
     ativo: bool
+    primeiro_acesso: bool = False
     permissoes: List[str]
     created_at: str
     ultimo_acesso: Optional[str]

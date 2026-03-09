@@ -34,6 +34,7 @@ class UsuarioModel(Base):
     senha_hash = Column(String(200), nullable=False)
     role = Column(String(20), nullable=False, default="consultor")
     ativo = Column(Boolean, default=True)
+    primeiro_acesso = Column(Boolean, default=True)  # Requer troca de senha no primeiro login
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     ultimo_acesso = Column(DateTime, nullable=True)

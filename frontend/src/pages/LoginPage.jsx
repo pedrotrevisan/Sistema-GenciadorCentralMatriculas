@@ -22,6 +22,14 @@ const LoginPage = () => {
 
     try {
       const usuario = await login(email, senha);
+      
+      // Verificar se é primeiro acesso
+      if (usuario.primeiro_acesso) {
+        toast.info('Por segurança, defina uma nova senha.');
+        navigate('/primeiro-acesso');
+        return;
+      }
+      
       toast.success(`Bem-vindo, ${usuario.nome}!`);
       
       // Redirect based on role
@@ -119,16 +127,14 @@ const LoginPage = () => {
             </Button>
           </form>
 
-          {/* Demo credentials */}
-          <div className="mt-6 p-4 bg-slate-50 rounded-lg">
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-2 font-semibold">
-              Credenciais de Demonstração
+          {/* Footer institucional */}
+          <div className="mt-6 pt-4 border-t border-slate-200 text-center">
+            <p className="text-xs text-slate-400">
+              SYNAPSE — Hub de Inteligência Operacional
             </p>
-            <div className="space-y-1 text-sm text-slate-600">
-              <p><strong>Admin:</strong> admin@senai.br / admin123</p>
-              <p><strong>Assistente:</strong> assistente@senai.br / assistente123</p>
-              <p><strong>Consultor:</strong> consultor@senai.br / consultor123</p>
-            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              SENAI CIMATEC © {new Date().getFullYear()}
+            </p>
           </div>
         </CardContent>
       </Card>
