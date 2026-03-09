@@ -36,6 +36,8 @@ import TrocarSenhaPrimeiroAcessoPage from "./pages/TrocarSenhaPrimeiroAcessoPage
 import ChamadosSGCPage from "./pages/ChamadosSGCPage";
 import PainelVagasPage from "./pages/PainelVagasPage";
 import ApresentacaoPage from "./pages/ApresentacaoPage";
+import PropostaCristianePage from "./pages/PropostaCristianePage";
+import PropostaNDSIPage from "./pages/PropostaNDSIPage";
 
 function App() {
   return (
@@ -48,6 +50,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/primeiro-acesso" element={<TrocarSenhaPrimeiroAcessoPage />} />
           <Route path="/apresentacao" element={<ApresentacaoPage />} />
+          <Route path="/proposta-cristiane" element={<PropostaCristianePage />} />
+          <Route path="/proposta-ndsi" element={<PropostaNDSIPage />} />
           
           {/* Consultor Routes */}
           <Route element={<ProtectedRoute allowedRoles={['consultor', 'assistente', 'admin']} />}>
