@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
+from src.infrastructure.persistence.database import async_session
 from src.services.cancelamento_service import (
     CancelamentoService,
     TipoCancelamento,
@@ -49,8 +50,6 @@ async def solicitar_cancelamento(request: SolicitarCancelamentoRequest):
     - PRÉ-ANÁLISE / ANÁLISE DOCUMENTAL → CAC (dados bancários + chamado financeiro)
     - MATRICULADO → CAA (orientar Portal do Aluno)
     """
-    from server import async_session
-    
     try:
         tipo = TipoCancelamento(request.tipo)
     except ValueError:
@@ -76,8 +75,6 @@ async def registrar_resposta_nrm(request: RespostaNRMRequest):
     - Se revertido: Matrícula continua normalmente
     - Se não revertido: Prossegue com cancelamento (CAC ou CAA assume)
     """
-    from server import async_session
-    
     async with async_session() as session:
         service = CancelamentoService(session)
         resultado = await service.registrar_resposta_nrm(
@@ -93,8 +90,6 @@ async def verificar_prazo_nrm(pedido_id: str):
     """
     Verifica se prazo de 48h do NRM já expirou.
     """
-    from server import async_session
-    
     async with async_session() as session:
         service = CancelamentoService(session)
         resultado = await service.verificar_prazo_nrm(pedido_id)

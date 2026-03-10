@@ -1,13 +1,8 @@
 """Router para Dashboard de SLA e Métricas - CAC SENAI"""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
-import sys
-import os
 
-# Add parent path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
+from src.infrastructure.persistence.database import async_session
 from src.services.metricas_sla_service import (
     MetricasSLAService, 
     get_tipos_processo_seletivo,
@@ -18,23 +13,14 @@ from src.services.metricas_sla_service import (
 router = APIRouter(prefix="/sla", tags=["Dashboard SLA"])
 
 
-# Dependency para obter sessão do banco
-def get_db_session_dependency():
-    """Import dinâmico para evitar circular import"""
-    from server import get_db_session
-    return get_db_session
-
-
 # ==================== ENDPOINTS DE DASHBOARD ====================
 
 @router.get("/dashboard")
-async def get_dashboard_sla(session: AsyncSession = Depends(lambda: None)):
+async def get_dashboard_sla():
     """
     Dashboard completo de SLA com todas as métricas.
     Inclui: resumo geral, métricas por status, produtividade, alertas.
     """
-    from server import get_db_session, async_session
-    
     async with async_session() as db_session:
         service = MetricasSLAService(db_session)
         return await service.get_dashboard_sla_completo()
@@ -43,8 +29,6 @@ async def get_dashboard_sla(session: AsyncSession = Depends(lambda: None)):
 @router.get("/resumo")
 async def get_resumo_geral():
     """KPIs gerais do sistema"""
-    from server import async_session
-    
     async with async_session() as session:
         service = MetricasSLAService(session)
         return await service.get_resumo_geral()
@@ -53,8 +37,6 @@ async def get_resumo_geral():
 @router.get("/por-status")
 async def get_metricas_por_status():
     """Métricas detalhadas por status de pedido"""
-    from server import async_session
-    
     async with async_session() as session:
         service = MetricasSLAService(session)
         return await service.get_metricas_por_status()
@@ -66,8 +48,6 @@ async def get_produtividade_atendentes():
     Ranking de produtividade por atendente.
     Mostra total atribuído, concluídos, pendentes e taxa de conclusão.
     """
-    from server import async_session
-    
     async with async_session() as session:
         service = MetricasSLAService(session)
         return await service.get_produtividade_atendentes()
@@ -79,8 +59,6 @@ async def get_sla_por_tipo_ps():
     Métricas por tipo de Processo Seletivo.
     Inclui taxa de conversão e cancelamento por tipo.
     """
-    from server import async_session
-    
     async with async_session() as session:
         service = MetricasSLAService(session)
         return await service.get_sla_por_tipo_ps()
@@ -89,8 +67,6 @@ async def get_sla_por_tipo_ps():
 @router.get("/evolucao")
 async def get_evolucao_semanal():
     """Evolução de pedidos nas últimas 4 semanas"""
-    from server import async_session
-    
     async with async_session() as session:
         service = MetricasSLAService(session)
         return await service.get_evolucao_semanal()
@@ -102,8 +78,6 @@ async def get_alertas_sla():
     Lista de alertas de SLA críticos.
     Inclui análises atrasadas e pendências expirando.
     """
-    from server import async_session
-    
     async with async_session() as session:
         service = MetricasSLAService(session)
         return await service.get_alertas_sla()
