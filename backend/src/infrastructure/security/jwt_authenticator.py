@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 import os
 
 from src.domain.entities import Usuario, RoleUsuario
@@ -16,15 +16,18 @@ class JWTAuthenticator:
         self.secret_key = os.environ.get("JWT_SECRET_KEY", "senai-cimatec-central-matriculas-secret-key-2024")
         self.algorithm = "HS256"
         self.access_token_expire_minutes = 60 * 8  # 8 horas
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     def hash_senha(self, senha: str) -> str:
-        """Gera hash da senha"""
-        return self.pwd_context.hash(senha)
+        """Gera hash da senha usando bcrypt diretamente"""
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(senha.encode('utf-8'), salt).decode('utf-8')
 
     def verificar_senha(self, senha: str, hash_senha: str) -> bool:
         """Verifica se a senha corresponde ao hash"""
-        return self.pwd_context.verify(senha, hash_senha)
+        try:
+            return bcrypt.checkpw(senha.encode('utf-8'), hash_senha.encode('utf-8'))
+        except Exception:
+            return False
 
     def criar_token(self, usuario: Usuario) -> str:
         """Cria token JWT para o usuário"""
