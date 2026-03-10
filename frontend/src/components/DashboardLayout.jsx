@@ -38,6 +38,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import AlertaRetornos from './AlertaRetornos';
+import CentralAlertas from './CentralAlertas';
 
 const DashboardLayout = () => {
   const { user, logout, hasPermission } = useAuth();
@@ -160,6 +161,11 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Central de Alertas */}
+            {(user?.role === 'admin' || user?.role === 'assistente') && (
+              <CentralAlertas />
+            )}
+            
             {/* Alerta de Retornos */}
             {(user?.role === 'admin' || user?.role === 'assistente') && (
               <AlertaRetornos variant="popover" />

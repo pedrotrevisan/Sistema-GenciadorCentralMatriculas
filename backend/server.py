@@ -309,6 +309,7 @@ from src.routers.formatador import router as formatador_router
 from src.routers.importacao_matriculas import router as importacao_router
 from src.routers.chamados_sgc import router as chamados_sgc_router
 from src.routers.painel_vagas import router as painel_vagas_router
+from src.routers.alertas import router as alertas_router
 
 # Include core routers
 api_router.include_router(auth_router)
@@ -334,6 +335,7 @@ api_router.include_router(formatador_router)
 api_router.include_router(importacao_router)
 api_router.include_router(chamados_sgc_router)
 api_router.include_router(painel_vagas_router)
+api_router.include_router(alertas_router)
 
 # Mount API router
 app.include_router(api_router)
