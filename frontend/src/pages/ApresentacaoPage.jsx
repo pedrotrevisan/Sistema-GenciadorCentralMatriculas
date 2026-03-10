@@ -41,22 +41,24 @@ export default function ApresentacaoPage() {
       // Se não tem token, usar dados estáticos de demonstração
       if (!token) {
         setDados({
-          pedidos: { total: 413, por_status: { realizado: 380, aprovado: 15, em_analise: 10, pendente: 5, documentacao_pendente: 3 } },
+          pedidos: { total: 413, por_status: { realizado: 350, aprovado: 20, em_analise: 25, pendente: 10, documentacao_pendente: 8 } },
           vagas: { 
-            resumo: { total_turmas: 11, total_vagas: 438, total_ocupadas: 410, vagas_disponiveis: 28, percentual_ocupacao: 93.6, turmas_lotando: 7 },
+            resumo: { total_turmas: 10, total_vagas: 420, total_ocupadas: 376, vagas_disponiveis: 44, percentual_ocupacao: 89.5, turmas_lotando: 6 },
             por_curso: [
-              { curso: 'Técnico em Mecânica', vagas_totais: 40, vagas_ocupadas: 46, percentual: 115 },
-              { curso: 'Técnico em Redes de Computadores', vagas_totais: 40, vagas_ocupadas: 46, percentual: 115 },
+              { curso: 'Técnico em Mecânica', vagas_totais: 42, vagas_ocupadas: 46, percentual: 109.5 },
+              { curso: 'Técnico em Redes de Computadores', vagas_totais: 42, vagas_ocupadas: 46, percentual: 109.5 },
               { curso: 'Técnico em Manutenção Automotiva', vagas_totais: 42, vagas_ocupadas: 42, percentual: 100 },
-              { curso: 'Técnico em Petroquímica', vagas_totais: 40, vagas_ocupadas: 40, percentual: 100 },
+              { curso: 'Técnico em Petroquímica', vagas_totais: 42, vagas_ocupadas: 40, percentual: 95.2 },
               { curso: 'Técnico em Mecatrônica', vagas_totais: 42, vagas_ocupadas: 39, percentual: 92.9 },
-              { curso: 'Técnico em Desenvolvimento de Sistemas', vagas_totais: 40, vagas_ocupadas: 37, percentual: 92.5 },
               { curso: 'Técnico em Eletrotécnica', vagas_totais: 42, vagas_ocupadas: 38, percentual: 90.5 },
-              { curso: 'Mecânico de Usinagem Convencional', vagas_totais: 40, vagas_ocupadas: 34, percentual: 85 }
+              { curso: 'Técnico em Desenvolvimento de Sistemas', vagas_totais: 42, vagas_ocupadas: 37, percentual: 88.1 },
+              { curso: 'Técnico em Logística', vagas_totais: 42, vagas_ocupadas: 34, percentual: 81.0 },
+              { curso: 'Técnico em Multimídia', vagas_totais: 42, vagas_ocupadas: 29, percentual: 69.0 },
+              { curso: 'Técnico em Biotecnologia', vagas_totais: 42, vagas_ocupadas: 25, percentual: 59.5 }
             ]
           },
           reembolsos: { total: 50, total_aberto: 20, total_aguardando: 0, total_enviado: 5, total_pago: 25 },
-          pendencias: { total_pendente: 8, total_aguardando: 5, total_em_analise: 3, total_reenvio: 2, total_aprovado: 380 }
+          pendencias: { total_pendente: 8, total_aguardando: 5, total_em_analise: 3, total_reenvio: 2, total_aprovado: 350 }
         });
         setLoading(false);
         return;
@@ -80,7 +82,7 @@ export default function ApresentacaoPage() {
       // Fallback para dados de demonstração
       setDados({
         pedidos: { total: 413 },
-        vagas: { resumo: { total_turmas: 11, total_vagas: 438, total_ocupadas: 410, vagas_disponiveis: 28, percentual_ocupacao: 93.6, turmas_lotando: 7 }, por_curso: [] },
+        vagas: { resumo: { total_turmas: 10, total_vagas: 420, total_ocupadas: 376, vagas_disponiveis: 44, percentual_ocupacao: 89.5, turmas_lotando: 6 }, por_curso: [] },
         reembolsos: { total: 50 },
         pendencias: { total_pendente: 8 }
       });
@@ -487,7 +489,7 @@ export default function ApresentacaoPage() {
           <div className="text-center mt-10">
             <div className="inline-block bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-8">
               <h3 className="text-2xl font-bold mb-2">Pronto para Produção</h3>
-              <p className="text-blue-200 mb-4">413 matrículas • 50 reembolsos • 11 turmas</p>
+              <p className="text-blue-200 mb-4">413 matrículas • 50 reembolsos • 10 turmas • 89.5% ocupação</p>
               <div className="flex justify-center gap-4">
                 <Badge className="bg-white/20 text-white text-lg px-4 py-2">
                   <Building2 className="h-4 w-4 mr-2 inline" />

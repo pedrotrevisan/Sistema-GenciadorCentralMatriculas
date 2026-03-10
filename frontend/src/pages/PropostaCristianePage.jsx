@@ -143,14 +143,52 @@ export default function PropostaCristianePage() {
                 <p className="text-sm opacity-80">Reembolsos</p>
               </div>
               <div>
-                <p className="text-4xl font-bold">11</p>
+                <p className="text-4xl font-bold">10</p>
                 <p className="text-sm opacity-80">Turmas</p>
               </div>
               <div>
-                <p className="text-4xl font-bold">93.6%</p>
+                <p className="text-4xl font-bold">89.5%</p>
                 <p className="text-sm opacity-80">Ocupação</p>
               </div>
             </div>
+            <div className="mt-4 pt-4 border-t border-white/20 text-center">
+              <p className="text-sm opacity-80">420 vagas totais • 376 ocupadas • 44 disponíveis</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Situação das Turmas */}
+        <Card className="mb-6 border-amber-200 bg-amber-50">
+          <CardContent className="p-6">
+            <h2 className="text-xl font-bold text-amber-700 mb-4 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Situação Atual das Turmas (Dados Reais)
+            </h2>
+            <div className="space-y-2">
+              {[
+                { curso: 'Técnico em Mecânica', ocupadas: 46, vagas: 42, status: 'lotado' },
+                { curso: 'Técnico em Redes de Computadores', ocupadas: 46, vagas: 42, status: 'lotado' },
+                { curso: 'Técnico em Manutenção Automotiva', ocupadas: 42, vagas: 42, status: 'lotado' },
+                { curso: 'Técnico em Petroquímica', ocupadas: 40, vagas: 42, status: 'lotando' },
+                { curso: 'Técnico em Mecatrônica', ocupadas: 39, vagas: 42, status: 'lotando' },
+                { curso: 'Técnico em Eletrotécnica', ocupadas: 38, vagas: 42, status: 'lotando' },
+              ].map((turma, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 bg-white rounded-lg">
+                  <span className="text-slate-700 text-sm">{turma.curso}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{turma.ocupadas}/{turma.vagas}</span>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      turma.status === 'lotado' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {turma.status === 'lotado' ? 'LOTADO' : 'LOTANDO'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-amber-600 mt-3 text-center">
+              * 3 cursos lotados, 3 cursos acima de 90% de ocupação
+            </p>
           </CardContent>
         </Card>
 

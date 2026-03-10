@@ -73,7 +73,7 @@ export default function PropostaNDSIPage() {
             </p>
             <p className="text-slate-300 leading-relaxed">
               O sistema já está operacional com <strong className="text-white">413 matrículas</strong>, 
-              <strong className="text-white"> 50 reembolsos</strong> e <strong className="text-white">11 turmas</strong> cadastradas, 
+              <strong className="text-white"> 50 reembolsos</strong> e <strong className="text-white">10 turmas</strong> cadastradas (420 vagas, 89.5% ocupação), 
               eliminando o uso de planilhas Excel para controle.
             </p>
           </CardContent>

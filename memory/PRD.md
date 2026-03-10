@@ -3,9 +3,30 @@
 ## Problem Statement
 Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligência Operacional" que atua como middleware de front-end entre a CAC (Central de Atendimento ao Cliente) e o TOTVS Educacional. O objetivo é substituir processos manuais para gerenciar solicitações de matrícula, pendências de documentos, reembolsos, e apoio cognitivo para funcionários.
 
-## Última Atualização: 2026-03-09
+## Última Atualização: 2026-03-10
 
-### Cards de KPI Clicáveis (2026-03-09) - NOVO! ✅
+### Refatoração do Backend (2026-03-10) - CONCLUÍDA ✅
+**Melhorias técnicas implementadas:**
+- **server.py:** Reduzido de 1685 linhas para 339 linhas (80% de redução!)
+- **Arquitetura modular:** Rotas movidas para arquivos específicos:
+  - `auth_routes.py` - Autenticação, login, registro, primeiro acesso
+  - `pedidos_routes.py` - CRUD de pedidos, dashboard, analytics, timeline
+  - `usuarios_routes.py` - CRUD de usuários (admin)
+  - `auxiliares.py` - Status de pedido e dados auxiliares
+- **Banco de dados:** Consolidado em `/app/data/database.db` (removido arquivo duplicado)
+- **Limpeza:** Removidos arquivos de backup e duplicatas
+
+### Correção de Dados (2026-03-10) - CONCLUÍDA ✅
+**Sincronização com planilha original CHP 2026.1:**
+- Corrigido número de turmas: 11 → **10 turmas**
+- Corrigido total de vagas: 438 → **420 vagas**
+- Corrigido ocupação: 410 → **376 alunos** (89.5%)
+- Corrigido vagas disponíveis: 28 → **44 vagas**
+- Removida duplicata "Petroquímica/Petroquimíca"
+- Sincronizado painel de vagas com dados reais dos pedidos
+- Atualizado modo apresentação e propostas com números corretos
+
+### Cards de KPI Clicáveis (2026-03-09) - CONCLUÍDO ✅
 **Implementada funcionalidade de cards clicáveis em todas as páginas de dashboard:**
 - **Reembolsos:** Cards de Abertos, Aguardando, No Financeiro, Pagos e Total Geral agora filtram a lista ao clicar
 - **Pendências Documentais:** Cards de Pendentes, Aguardando Aluno, Em Análise, Reenvio, Aprovados e Críticas filtram ao clicar
@@ -14,7 +35,7 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - **Dashboard SLA:** Cards já eram clicáveis e navegam para as páginas correspondentes
 - Efeito visual de hover com scale e shadow para indicar interatividade
 
-### Painel de Vagas (2026-03-09) - NOVO! ✅
+### Painel de Vagas (2026-03-09) - CONCLUÍDO ✅
 **Novo módulo para controle visual de ocupação de vagas por curso/turma:**
 - Dashboard com 6 KPIs: Turmas, Total Vagas, Ocupadas, Disponíveis, Ocupação Geral, Lotando
 - **Barras de ocupação visuais** por curso (ordenadas por % de ocupação)
@@ -22,72 +43,40 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - Alertas de turmas lotando (>= 85%)
 - Lista de turmas com filtros por turno e busca
 - Cadastro de novas turmas
-- **11 cursos do CIMATEC 2026.1 já importados** (438 vagas totais)
-- Substitui a planilha de controle de vagas manual!
+- **10 cursos do CIMATEC 2026.1** (420 vagas totais, 376 ocupadas)
 
-### Módulo Chamados SGC Plus (2026-03-09) - NOVO! ✅
+### Módulo Chamados SGC Plus (2026-03-09) - CONCLUÍDO ✅
 **Novo módulo para gestão de demandas de matrícula BMP recebidas via SGC Plus:**
 - Página `/chamados-sgc` no menu lateral
 - Dashboard com KPIs (Em Aberto, Críticos, SLA Crítico, Fechados Hoje)
-- Formulário completo baseado no questionário SGC Plus com 6 seções:
-  - **Dados do Chamado:** Nº Ticket, Data Abertura, Solicitante
-  - **Informações do Curso:** Código, Nome, Turno, Período Letivo, Quantidade de Vagas, Modalidade (CAP/IP/CAI/CQPH/CQP), Forma de Pagamento, CONT
-  - **Dados da Empresa:** Nome, Contato, E-mail, Telefone
-  - **Período do Curso:** Data de Início, Data Final
-  - **Documentos e Requisitos:** Documentos Obrigatórios, Requisito de Acesso
-  - **Controle Interno:** Técnico Responsável, SLA (horas), Previsão de Conclusão, Crítico
+- Formulário completo baseado no questionário SGC Plus com 6 seções
 - CRUD completo de chamados
-- Gestão de status (Backlog, Em Atendimento, Aguardando Retorno, Concluído, Cancelado)
-- Registro de andamentos automático ao mudar status
-- Sistema de interações/comunicações
-- Registro de esforço (horas)
-- 12/12 testes pytest passando (100%)
-
-### Auditoria de Produção (2026-03-09) - CONCLUÍDA ✅
-**Todos os testes passaram:**
-- Login de usuários oficiais funcionando
-- Fluxo de primeiro acesso com troca de senha obrigatória validado
-- Assistente TOTVS carregando dados corretamente
-- Formatador de Planilhas interface funcionando
-- Menu lateral corrigido (Exportar TOTVS no rodapé)
-- Botão "Assistente TOTVS" adicionado na página de detalhes do pedido
-- Botão "Preencher TOTVS para [Nome]" por aluno implementado
-
-### Botão Assistente TOTVS na Página de Detalhes (2026-03-09) - NOVO! ✅
-**Nova integração do Assistente TOTVS:**
-- Botão "Assistente TOTVS" no header da página de detalhes
-- Botão individual "Preencher TOTVS para [Nome]" em cada card de aluno
-- Navegação direta com dados pré-carregados
-- Disponível para perfis: Assistente, Admin
-
-### Fluxo de Cancelamento de Matrícula (2026-02-27) ✅
-- Nova página `/cancelamentos` no menu lateral
-- Cards de responsabilidades por status (CAC, CAA)
-- Busca de pedido por ID ou protocolo
-- Modal de solicitação de cancelamento com 4 tipos
-- Indicador de prazo NRM com barra de progresso
-- Endpoints: `/api/cancelamento/solicitar`, `/api/cancelamento/resposta-nrm`
-
-### Templates de Mensagem Integrados (2026-02-27) ✅
-- Aba WhatsApp com 9 templates prontos
-- Aba Email com 8 templates HTML
-- Substituição automática de variáveis
-- Botão "Copiar" e "Abrir WhatsApp/Email"
-
-### Formatador de Planilhas (2026-02-27) ✅
-- Página `/formatador` no menu lateral
-- Upload de arquivos .xls e .xlsx
-- Formatação automática de nomes, CPFs, telefones, emails, CEPs, datas
-- Detecta CPFs inválidos automaticamente
-- Regras do programa Brasil Mais Produtivo (BMP)
+- Gestão de status e sistema de interações
 
 ## Architecture
-### Backend (Clean Architecture)
+### Backend (Clean Architecture - Refatorado)
 - **Domain Layer**: Entidades ricas, Value Objects, Interfaces de Repositório
 - **Application Layer**: Use Cases, DTOs
-- **Infrastructure Layer**: Repositórios SQLAlchemy (PostgreSQL/SQLite), JWT Auth
-- **Interface Layer**: Controllers FastAPI, Middlewares
+- **Infrastructure Layer**: Repositórios SQLAlchemy (SQLite), JWT Auth
+- **Interface Layer**: Controllers FastAPI modulares
 - **Services Layer**: Regras de Negócio SENAI, Templates de Mensagem
+
+### Estrutura de Routers Refatorada
+```
+/app/backend/src/routers/
+├── auth_routes.py      # Login, registro, primeiro acesso, painel de conta
+├── pedidos_routes.py   # CRUD pedidos, dashboard, analytics, timeline
+├── usuarios_routes.py  # CRUD usuários (admin)
+├── auxiliares.py       # Status de pedido e dados auxiliares
+├── reembolsos.py       # Módulo de reembolsos
+├── pendencias.py       # Central de pendências
+├── turmas.py           # Gestão de turmas
+├── chamados_sgc.py     # Chamados SGC Plus
+├── painel_vagas.py     # Dashboard de vagas
+├── cadastros.py        # CRUD cursos, projetos, empresas
+├── apoio_cognitivo.py  # Meu Dia, base de conhecimento
+└── ... (outros módulos)
+```
 
 ### Frontend (React)
 - React 19 + Tailwind CSS + Shadcn/UI
@@ -131,67 +120,47 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - [x] Assistente TOTVS
 - [x] Formatador de Planilhas (BMP)
 - [x] Fluxo de Cancelamento
-- [x] **Módulo Chamados SGC Plus** ✅ (2026-03-09)
-- [x] **Painel de Vagas** ✅ (2026-03-09)
-- [x] **Auditoria de Produção** ✅ (2026-03-09)
+- [x] Módulo Chamados SGC Plus
+- [x] Painel de Vagas
+- [x] Auditoria de Produção
+- [x] **Refatoração do server.py** ✅ (2026-03-10)
+- [x] **Consolidação do banco de dados** ✅ (2026-03-10)
 
 ### P1 (Próximos)
 - [ ] Implementar filtros por intervalo de datas nas listagens
 - [ ] Investigar problema da planilha SESI (layout incorreto)
 - [ ] Dashboard de SLA por atendente
+- [ ] Dashboard de Produtividade da equipe (para Cristiane)
 
 ### P2 (Futuro)
-- [ ] Refatorar `server.py` monolítico (dívida técnica)
-- [ ] Padronizar caminho do banco de dados
 - [ ] Integração com Portal do Aluno
 - [ ] Upload de documentos do aluno
+- [ ] Integração com TOTVS via API (aguardando aprovação da TI)
 
 ## Key Files
-- `/app/backend/server.py` - Arquivo principal do FastAPI
+- `/app/backend/server.py` - Arquivo principal do FastAPI (refatorado - 339 linhas)
+- `/app/backend/src/routers/auth_routes.py` - Router de autenticação (novo)
+- `/app/backend/src/routers/pedidos_routes.py` - Router de pedidos (novo)
+- `/app/backend/src/routers/usuarios_routes.py` - Router de usuários (novo)
 - `/app/backend/src/routers/chamados_sgc.py` - Router para Chamados SGC Plus
 - `/app/backend/src/routers/painel_vagas.py` - Router para Painel de Vagas
-- `/app/backend/src/infrastructure/persistence/models_chamados_sgc.py` - Modelos SQLAlchemy
 - `/app/frontend/src/pages/ChamadosSGCPage.jsx` - Página do módulo Chamados SGC
 - `/app/frontend/src/pages/PainelVagasPage.jsx` - Página do Painel de Vagas
-- `/app/frontend/src/pages/AssistenteTOTVSPage.jsx` - Assistente TOTVS
-- `/app/frontend/src/pages/PedidoDetalhePage.jsx` - Detalhes do pedido (com botões TOTVS)
-- `/app/frontend/src/pages/TrocarSenhaPrimeiroAcessoPage.jsx` - Primeiro acesso
-- `/app/frontend/src/components/DashboardLayout.jsx` - Layout com menu lateral
+- `/app/frontend/src/pages/ApresentacaoPage.jsx` - Modo de apresentação
+- `/app/frontend/src/pages/PropostaCristianePage.jsx` - Proposta para coordenação
+- `/app/frontend/src/pages/PropostaNDSIPage.jsx` - Proposta técnica para TI
 
 ## Tech Stack
 - Backend: Python 3.10+, FastAPI, SQLAlchemy, SQLite, Pydantic
 - Frontend: React 19, Tailwind CSS, Shadcn/UI, Axios, Recharts
 - Auth: JWT (python-jose), bcrypt (passlib)
 
-### Importação de Dados das Planilhas (2026-03-09) - CONCLUÍDA ✅
-**Dados importados:**
-- **413 pedidos de matrícula** da planilha "Quantitativo de matrícula CHP 2026.1.xlsx"
-  - 293 PAGANTE
-  - 85 BOLSISTA
-  - 34 CAI
-- **50 reembolsos** da planilha "Controle de Reembolso.xlsx" (aba 2026)
-  - 20 abertos
-  - 25 pagos
-  - 5 em outros status
-
-**Observações:**
-- Dados com campos faltantes marcados com "Extraído de planilha Excel"
-- CPF placeholder: números sequenciais (000.000.000-01, etc)
-- RG placeholder: "IMPORTADO"
-- Endereço placeholder: "Extraído de planilha Excel - Endereço não informado"
-- Todos os pedidos vinculados ao projeto "Importação de Planilha Excel"
-
-### Auditoria de Produção Final (2026-03-09) - APROVADO ✅
-**Sistema validado para uso em produção:**
-- **Backend:** 23 testes pytest passando (100%)
-- **Frontend:** Todos os fluxos UI verificados
-- **Dados reais:** 413 pedidos, 50 reembolsos importados
-
-**KPIs validados:**
-- Total Matrículas: 413
-- Taxa de Conversão: 95.9%
-- Pendências: 0
-- Reembolsos Pendentes: 25
+## Dados Atuais
+- **413 pedidos de matrícula** (293 PAGANTE, 85 BOLSISTA, 34 CAI)
+- **50 reembolsos** (20 abertos, 25 pagos, 5 outros)
+- **10 turmas** com 420 vagas (376 ocupadas, 44 disponíveis)
+- **3 chamados SGC** de teste
+- **11 usuários** cadastrados
 
 ## Last Updated
-2026-03-09 - Módulo Chamados SGC Plus implementado e testado. Sistema pronto para produção.
+2026-03-10 - Refatoração técnica do backend concluída. Sistema 80% mais enxuto e modular.
