@@ -136,8 +136,8 @@ async def dashboard_reembolsos(
         "total": total,
         "total_abertos": total_abertos,
         "total_aberto": contagem_status.get('aberto', 0),
-        "total_aguardando": contagem_status.get('aguardando_dados_bancarios', 0),
-        "total_enviado": contagem_status.get('enviado_financeiro', 0),
+        "total_aguardando": contagem_status.get('aguardando_dados', 0) + contagem_status.get('aguardando_dados_bancarios', 0),
+        "total_enviado": contagem_status.get('enviado_financeiro', 0) + contagem_status.get('no_financeiro', 0),
         "total_pago": contagem_status.get('pago', 0),
         "total_cancelado": contagem_status.get('cancelado', 0)
     }

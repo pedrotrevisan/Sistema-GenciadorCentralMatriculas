@@ -20,8 +20,10 @@ import {
 
 const STATUS_CONFIG = {
   aberto: { label: 'Aberto', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  aguardando_dados: { label: 'Aguardando Dados', color: 'bg-blue-100 text-blue-800', icon: CreditCard },
   aguardando_dados_bancarios: { label: 'Aguardando Dados', color: 'bg-blue-100 text-blue-800', icon: CreditCard },
   enviado_financeiro: { label: 'No Financeiro', color: 'bg-purple-100 text-purple-800', icon: Send },
+  no_financeiro: { label: 'No Financeiro', color: 'bg-purple-100 text-purple-800', icon: Send },
   pago: { label: 'Pago', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   cancelado: { label: 'Cancelado', color: 'bg-red-100 text-red-800', icon: XCircle }
 };
@@ -388,7 +390,7 @@ export default function ReembolsosPage() {
           
           <Card 
             className="bg-blue-50 border-blue-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
-            onClick={() => { setFiltroStatus('aguardando_dados_bancarios'); carregarReembolsos(1, 'aguardando_dados_bancarios'); }}
+            onClick={() => { setFiltroStatus('aguardando_dados'); carregarReembolsos(1, 'aguardando_dados'); }}
             data-testid="card-aguardando"
           >
             <CardContent className="p-4 text-center">
