@@ -148,20 +148,28 @@ async def bi_completo(usuario: Usuario = Depends(get_current_user)):
 
     return {
         "matriculas": {
-            "total": total_pedidos, "pendentes": pendentes, "em_analise": em_analise,
+            "total": total_pedidos, "total_pedidos": total_pedidos,
+            "pendentes": pendentes, "em_analise": em_analise,
             "aprovados": aprovados, "realizados": realizados, "exportados": exportados,
             "cancelados": cancelados, "taxa_conversao": taxa_conversao,
             "por_status": por_status
         },
         "evolucao_mensal": evolucao_mensal,
         "reembolsos": {
-            "total": total_reemb, "pendentes": reemb_pendentes,
+            "total": total_reemb,
+            "pendentes": reemb_pendentes, "abertos": reemb_pendentes,
             "pagos": reemb_pagos, "rejeitados": reemb_rejeitados,
+            "no_financeiro": por_status_reemb.get("no_financeiro", 0),
+            "aguardando": por_status_reemb.get("aguardando_dados_bancarios", 0),
+            "com_retencao": 0,
+            "cancelados": por_status_reemb.get("cancelado", 0),
             "valor_total": round(valor_total, 2),
             "por_status": por_status_reemb
         },
         "pendencias": {
-            "total": total_pend, "pendentes": pend_pendentes,
+            "total": total_pend,
+            "pendentes": pend_pendentes, "em_aberto": pend_pendentes,
+            "em_analise": por_status_pend.get("enviado", 0),
             "aprovados": pend_resolvidas, "taxa_aprovacao": taxa_aprov_pend,
             "por_status": por_status_pend
         },

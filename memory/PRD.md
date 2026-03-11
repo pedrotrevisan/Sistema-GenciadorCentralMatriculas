@@ -80,6 +80,12 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - [x] Filtro por Período Letivo (Painel de Vagas) + Duplicação de Período
 - [x] **Migração SQLite → MongoDB** (2026-03-11) - Deploy na Emergent desbloqueado
 - [x] Normalização de campos boolean no MongoDB (2026-03-11)
+- [x] **Correção de módulos pós-migração** (2026-03-11):
+  - Dashboard BI: endpoint `/bi/completo` criado com todos os KPIs
+  - Dashboard SLA: campos corrigidos (pedidos_abertos, taxa_conclusao, metricas_por_status, evolucao_semanal, alertas_sla)
+  - Chamados SGC: dashboard com total_abertos, sla_critico, fechados_hoje; estrutura nested no detalhe
+  - Caixa de Entrada: endpoint `/atribuicoes/resumo` criado
+  - BI endpoints adicionais: `/bi/matriculas`, `/bi/reembolsos`, `/bi/pendencias`, `/bi/evolucao`
 
 ### P1 (Próximos)
 - [ ] Integração com TOTVS via API (aguardando TI SENAI)

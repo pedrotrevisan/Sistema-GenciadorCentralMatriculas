@@ -188,9 +188,9 @@ async def buscar_chamado(chamado_id: str, usuario: Usuario = Depends(get_current
     doc = await db.chamados_sgc.find_one({"id": chamado_id}, {"_id": 0})
     if not doc:
         raise HTTPException(404, "Chamado não encontrado")
-    interacoes = await db.chamados_sgc_interacoes.find({"chamado_id": chamado_id}, {"_id": 0}).sort("created_at", -1).to_list(200)
-    doc["interacoes"] = interacoes
-    return doc
+    interacoes = await db.chamados_sgc_interacoes.find({"chamado_id": chamado_id}, {"_id": 0}).sort("created_at", 1).to_list(200)
+    # Retornar estrutura nested esperada pelo frontend
+    return {"chamado": doc, "andamentos": [], "interacoes": interacoes}
 
 
 @router.put("/{chamado_id}")

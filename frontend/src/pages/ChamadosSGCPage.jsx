@@ -204,9 +204,9 @@ const ChamadosSGCPage = () => {
     if (!novaInteracao.trim()) return;
     
     try {
-      await api.post(`/chamados-sgc/${chamadoSelecionado.chamado.id}/interacao`, {
-        tipo: 'comunicacao',
-        mensagem: novaInteracao
+      await api.post(`/chamados-sgc/${chamadoSelecionado.chamado.id}/interacoes`, {
+        tipo: 'comentario',
+        conteudo: novaInteracao
       });
       toast.success('Interação adicionada!');
       setNovaInteracao('');

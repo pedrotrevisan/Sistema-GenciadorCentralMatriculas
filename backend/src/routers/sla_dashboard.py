@@ -78,13 +78,29 @@ async def get_dashboard_sla():
         })
         evolucao_semanal.append({"semana": f"Semana {4-i}", "criados": criados, "concluidos": concl_sem})
 
-    # SLA por tipo PS
+    # SLA por tipo PS com campos completos para o frontend
     tipo_ps_pipeline = [
         {"$match": {"tipo_processo_seletivo": {"$nin": [None, ""]}}},
-        {"$group": {"_id": "$tipo_processo_seletivo", "total": {"$sum": 1}}}
+        {"$group": {
+            "_id": "$tipo_processo_seletivo",
+            "total": {"$sum": 1},
+            "concluidos": {"$sum": {"$cond": [{"$in": ["$status", ["aprovado", "realizado", "exportado"]]}, 1, 0]}},
+            "cancelados": {"$sum": {"$cond": [{"$eq": ["$status", "cancelado"]}, 1, 0]}}
+        }}
     ]
     tipo_ps_result = await db.pedidos.aggregate(tipo_ps_pipeline).to_list(20)
-    sla_por_tipo_ps = [{"tipo": r["_id"], "total": r["total"]} for r in tipo_ps_result]
+    TIPOS_PS_LABELS = {
+        "ps_pagante": "PS Pagante", "ps_bolsista": "PS Bolsista", "ps_949": "PS 949",
+        "ps_950": "PS 950", "ps_951": "PS 951", "matricula_direta": "Matrícula Direta",
+        "reingresso": "Reingresso"
+    }
+    sla_por_tipo_ps = [{
+        "tipo": r["_id"], "tipo_ps": r["_id"],
+        "label": TIPOS_PS_LABELS.get(r["_id"], r["_id"]),
+        "total": r["total"], "quantidade": r["total"],
+        "concluidos": r["concluidos"], "cancelados": r["cancelados"],
+        "taxa_conversao": round((r["concluidos"] / r["total"] * 100) if r["total"] > 0 else 0, 1)
+    } for r in tipo_ps_result]
 
     # Alertas SLA
     limite_48h = (now - timedelta(hours=48)).isoformat()
