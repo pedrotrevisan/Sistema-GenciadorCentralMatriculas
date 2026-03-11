@@ -23,7 +23,8 @@ import {
   CheckCircle,
   BarChart3,
   Download,
-  Calendar
+  Calendar,
+  Copy
 } from 'lucide-react';
 
 export default function PainelVagasPage() {
@@ -35,6 +36,9 @@ export default function PainelVagasPage() {
   const [periodos, setPeriodos] = useState([]);
   const [busca, setBusca] = useState('');
   const [showNovaTurma, setShowNovaTurma] = useState(false);
+  const [showDuplicar, setShowDuplicar] = useState(false);
+  const [duplicarDestino, setDuplicarDestino] = useState('');
+  const [duplicarLoading, setDuplicarLoading] = useState(false);
   const [novaTurma, setNovaTurma] = useState({
     codigo_turma: '',
     nome_curso: '',
@@ -141,6 +145,33 @@ export default function PainelVagasPage() {
     }
   };
 
+  const duplicarPeriodo = async () => {
+    if (!duplicarDestino.trim()) {
+      toast.error('Informe o período de destino');
+      return;
+    }
+    if (!filtroPeriodo) {
+      toast.error('Selecione um período de origem no filtro');
+      return;
+    }
+    setDuplicarLoading(true);
+    try {
+      const res = await api.post('/painel-vagas/duplicar-periodo', null, {
+        params: { periodo_origem: filtroPeriodo, periodo_destino: duplicarDestino.trim() }
+      });
+      toast.success(res.data.message);
+      setShowDuplicar(false);
+      setDuplicarDestino('');
+      await carregarPeriodos();
+      setFiltroPeriodo(duplicarDestino.trim());
+    } catch (error) {
+      const msg = error.response?.data?.detail || 'Erro ao duplicar período';
+      toast.error(msg);
+    } finally {
+      setDuplicarLoading(false);
+    }
+  };
+
   const getCorOcupacao = (percentual) => {
     if (percentual >= 100) return 'bg-red-500';
     if (percentual >= 85) return 'bg-amber-500';
@@ -201,6 +232,10 @@ export default function PainelVagasPage() {
           <Button onClick={() => setShowNovaTurma(true)} data-testid="btn-nova-turma">
             <Plus className="h-4 w-4 mr-2" />
             Nova Turma
+          </Button>
+          <Button variant="outline" onClick={() => setShowDuplicar(true)} data-testid="btn-duplicar-periodo">
+            <Copy className="h-4 w-4 mr-2" />
+            Novo Período
           </Button>
         </div>
       </div>
@@ -545,6 +580,55 @@ export default function PainelVagasPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowNovaTurma(false)}>Cancelar</Button>
             <Button onClick={criarTurma}>Criar Turma</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Duplicar Período */}
+      <Dialog open={showDuplicar} onOpenChange={setShowDuplicar}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Copy className="h-5 w-5 text-[#004587]" />
+              Duplicar Turmas para Novo Período
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+              Todas as turmas do período de origem serão copiadas para o novo período com <strong>vagas ocupadas zeradas</strong>.
+            </div>
+            <div>
+              <Label>Período de Origem</Label>
+              <Input
+                value={filtroPeriodo || 'Nenhum selecionado'}
+                disabled
+                className="bg-slate-50"
+                data-testid="duplicar-origem"
+              />
+              {!filtroPeriodo && (
+                <p className="text-xs text-red-500 mt-1">Selecione um período no filtro principal primeiro</p>
+              )}
+            </div>
+            <div>
+              <Label>Novo Período de Destino *</Label>
+              <Input
+                placeholder="Ex: 2026.2"
+                value={duplicarDestino}
+                onChange={(e) => setDuplicarDestino(e.target.value)}
+                data-testid="duplicar-destino"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDuplicar(false)}>Cancelar</Button>
+            <Button
+              onClick={duplicarPeriodo}
+              disabled={duplicarLoading || !filtroPeriodo || !duplicarDestino.trim()}
+              data-testid="btn-confirmar-duplicar"
+            >
+              {duplicarLoading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Copy className="h-4 w-4 mr-2" />}
+              Duplicar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

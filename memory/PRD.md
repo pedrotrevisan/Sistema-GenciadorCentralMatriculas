@@ -30,6 +30,8 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - Novo endpoint `/api/painel-vagas/periodos` para listar períodos disponíveis
 - Coluna "Período" adicionada à tabela de turmas
 - Badge visual no subtítulo mostrando período ativo
+- **Botão "Novo Período"**: Duplica todas as turmas de um período para outro com vagas zeradas
+- Endpoint `POST /api/painel-vagas/duplicar-periodo` com validação (admin only, impede duplicatas)
 
 ### Limpeza de Nomes de Cursos (2026-03-11) - CONCLUÍDO
 - 3 cursos limpos: removidos prefixos numéricos indevidos

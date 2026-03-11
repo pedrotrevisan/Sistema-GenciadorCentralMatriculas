@@ -436,3 +436,69 @@ async def importar_cursos_cimatec(
         "atualizados": atualizados,
         "total": len(cursos)
     }
+
+
+@router.post("/duplicar-periodo")
+async def duplicar_turmas_periodo(
+    periodo_origem: str = Query(..., description="Período de origem (ex: 2026.1)"),
+    periodo_destino: str = Query(..., description="Novo período (ex: 2026.2)"),
+    current_user: Usuario = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """Duplica todas as turmas de um período para outro, zerando a ocupação"""
+    await init_painel_turmas(session)
+
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(status_code=403, detail="Apenas administradores podem duplicar períodos")
+
+    # Check if destination already has turmas
+    existing = await session.execute(
+        text("SELECT COUNT(*) FROM painel_turmas WHERE periodo_letivo = :dest"),
+        {"dest": periodo_destino}
+    )
+    if (existing.scalar() or 0) > 0:
+        raise HTTPException(status_code=409, detail=f"O período {periodo_destino} já possui turmas cadastradas")
+
+    # Get source turmas
+    result = await session.execute(
+        text("SELECT codigo_turma, nome_curso, turno, vagas_totais, modalidade FROM painel_turmas WHERE periodo_letivo = :origem"),
+        {"origem": periodo_origem}
+    )
+    turmas_origem = result.fetchall()
+
+    if not turmas_origem:
+        raise HTTPException(status_code=404, detail=f"Nenhuma turma encontrada no período {periodo_origem}")
+
+    now = datetime.now(timezone.utc).isoformat()
+    criadas = 0
+
+    for t in turmas_origem:
+        novo_codigo = f"{t[0]}-{periodo_destino.replace('.', '')}"
+        await session.execute(
+            text("""
+                INSERT INTO painel_turmas (
+                    id, codigo_turma, nome_curso, turno, vagas_totais,
+                    vagas_ocupadas, periodo_letivo, modalidade, status,
+                    created_at, updated_at
+                ) VALUES (
+                    :id, :codigo, :nome, :turno, :vagas,
+                    0, :periodo, :modalidade, 'aberto', :created, :updated
+                )
+            """),
+            {
+                "id": str(uuid.uuid4()), "codigo": novo_codigo,
+                "nome": t[1], "turno": t[2], "vagas": t[3],
+                "periodo": periodo_destino, "modalidade": t[4] or "CHP",
+                "created": now, "updated": now
+            }
+        )
+        criadas += 1
+
+    await session.commit()
+
+    return {
+        "message": f"{criadas} turmas duplicadas para o período {periodo_destino}",
+        "periodo_origem": periodo_origem,
+        "periodo_destino": periodo_destino,
+        "turmas_criadas": criadas
+    }
