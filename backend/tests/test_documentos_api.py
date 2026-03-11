@@ -13,7 +13,7 @@ import requests
 import os
 from uuid import uuid4
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://backend-upgrade-14.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://mongodb-migration-6.preview.emergentagent.com').rstrip('/')
 
 
 @pytest.fixture(scope="module")
