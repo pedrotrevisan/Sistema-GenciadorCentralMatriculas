@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://matriculas-core.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://synapse-tutorial.preview.emergentagent.com')
 
 # Credenciais oficiais de produção
 TEST_EMAIL = "pedro.passos@fieb.org.br"
