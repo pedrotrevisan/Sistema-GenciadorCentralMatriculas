@@ -7,6 +7,7 @@ import { Progress } from '../components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Label } from '../components/ui/label';
+import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import api from '../services/api';
 import {
@@ -38,6 +39,8 @@ export default function PainelVagasPage() {
   const [showNovaTurma, setShowNovaTurma] = useState(false);
   const [showDuplicar, setShowDuplicar] = useState(false);
   const [duplicarDestino, setDuplicarDestino] = useState('');
+  const [duplicarOrigem, setDuplicarOrigem] = useState('');
+  const [querDuplicar, setQuerDuplicar] = useState(true);
   const [duplicarLoading, setDuplicarLoading] = useState(false);
   const [novaTurma, setNovaTurma] = useState({
     codigo_turma: '',
@@ -150,22 +153,27 @@ export default function PainelVagasPage() {
       toast.error('Informe o período de destino');
       return;
     }
-    if (!filtroPeriodo) {
-      toast.error('Selecione um período de origem no filtro');
+    if (querDuplicar && !duplicarOrigem) {
+      toast.error('Selecione o período de origem');
       return;
     }
     setDuplicarLoading(true);
     try {
-      const res = await api.post('/painel-vagas/duplicar-periodo', null, {
-        params: { periodo_origem: filtroPeriodo, periodo_destino: duplicarDestino.trim() }
-      });
-      toast.success(res.data.message);
+      if (querDuplicar) {
+        const res = await api.post('/painel-vagas/duplicar-periodo', null, {
+          params: { periodo_origem: duplicarOrigem, periodo_destino: duplicarDestino.trim() }
+        });
+        toast.success(res.data.message);
+      } else {
+        toast.success(`Período ${duplicarDestino.trim()} pronto! Adicione turmas manualmente.`);
+      }
       setShowDuplicar(false);
       setDuplicarDestino('');
+      setQuerDuplicar(true);
       await carregarPeriodos();
       setFiltroPeriodo(duplicarDestino.trim());
     } catch (error) {
-      const msg = error.response?.data?.detail || 'Erro ao duplicar período';
+      const msg = error.response?.data?.detail || 'Erro ao criar período';
       toast.error(msg);
     } finally {
       setDuplicarLoading(false);
@@ -233,7 +241,7 @@ export default function PainelVagasPage() {
             <Plus className="h-4 w-4 mr-2" />
             Nova Turma
           </Button>
-          <Button variant="outline" onClick={() => setShowDuplicar(true)} data-testid="btn-duplicar-periodo">
+          <Button variant="outline" onClick={() => { setDuplicarOrigem(filtroPeriodo); setShowDuplicar(true); }} data-testid="btn-duplicar-periodo">
             <Copy className="h-4 w-4 mr-2" />
             Novo Período
           </Button>
@@ -584,33 +592,18 @@ export default function PainelVagasPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal Duplicar Período */}
+      {/* Modal Novo Período */}
       <Dialog open={showDuplicar} onOpenChange={setShowDuplicar}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Copy className="h-5 w-5 text-[#004587]" />
-              Duplicar Turmas para Novo Período
+              Criar Novo Período Letivo
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-              Todas as turmas do período de origem serão copiadas para o novo período com <strong>vagas ocupadas zeradas</strong>.
-            </div>
             <div>
-              <Label>Período de Origem</Label>
-              <Input
-                value={filtroPeriodo || 'Nenhum selecionado'}
-                disabled
-                className="bg-slate-50"
-                data-testid="duplicar-origem"
-              />
-              {!filtroPeriodo && (
-                <p className="text-xs text-red-500 mt-1">Selecione um período no filtro principal primeiro</p>
-              )}
-            </div>
-            <div>
-              <Label>Novo Período de Destino *</Label>
+              <Label>Novo Período *</Label>
               <Input
                 placeholder="Ex: 2026.2"
                 value={duplicarDestino}
@@ -618,16 +611,55 @@ export default function PainelVagasPage() {
                 data-testid="duplicar-destino"
               />
             </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg border bg-slate-50">
+              <Checkbox
+                id="quer-duplicar"
+                checked={querDuplicar}
+                onCheckedChange={setQuerDuplicar}
+                data-testid="checkbox-duplicar"
+              />
+              <div>
+                <label htmlFor="quer-duplicar" className="text-sm font-medium cursor-pointer">
+                  Duplicar turmas de um período anterior
+                </label>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  As turmas serão copiadas com vagas ocupadas zeradas
+                </p>
+              </div>
+            </div>
+
+            {querDuplicar && (
+              <div>
+                <Label>Copiar turmas de</Label>
+                <Select value={duplicarOrigem || ''} onValueChange={setDuplicarOrigem}>
+                  <SelectTrigger data-testid="duplicar-origem-select">
+                    <SelectValue placeholder="Selecione o período" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {periodos.map(p => (
+                      <SelectItem key={p} value={p}>{p}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {!querDuplicar && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                O período será criado vazio. Você poderá adicionar turmas manualmente depois.
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDuplicar(false)}>Cancelar</Button>
             <Button
               onClick={duplicarPeriodo}
-              disabled={duplicarLoading || !filtroPeriodo || !duplicarDestino.trim()}
+              disabled={duplicarLoading || !duplicarDestino.trim() || (querDuplicar && !duplicarOrigem)}
               data-testid="btn-confirmar-duplicar"
             >
-              {duplicarLoading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Copy className="h-4 w-4 mr-2" />}
-              Duplicar
+              {duplicarLoading && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
+              {querDuplicar ? 'Duplicar e Criar' : 'Criar Vazio'}
             </Button>
           </DialogFooter>
         </DialogContent>
