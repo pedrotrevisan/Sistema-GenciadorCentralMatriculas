@@ -136,6 +136,26 @@ async def enviar_notificacao(req: NotificacaoRequest, usuario: Usuario = Depends
     return {"message": "Notificação enviada", "id": doc["id"]}
 
 
+@router.get("/resumo")
+async def resumo_caixa(usuario: Usuario = Depends(get_current_user)):
+    """Resumo da caixa de entrada do usuário atual"""
+    pedidos_atribuidos = await db.pedidos.count_documents({"responsavel_id": usuario.id})
+    pendencias_atribuidas = await db.pendencias.count_documents({"responsavel_id": usuario.id})
+    reembolsos_atribuidos = await db.reembolsos.count_documents({"responsavel_id": usuario.id})
+
+    pedidos_pendentes = await db.pedidos.count_documents({"responsavel_id": usuario.id, "status": {"$in": ["pendente", "em_analise", "documentacao_pendente"]}})
+    total = pedidos_atribuidos + pendencias_atribuidas + reembolsos_atribuidos
+
+    return {
+        "total": total,
+        "pedidos": pedidos_atribuidos,
+        "pendencias": pendencias_atribuidas,
+        "reembolsos": reembolsos_atribuidos,
+        "pendentes": pedidos_pendentes,
+        "usuario": usuario.nome
+    }
+
+
 @router.get("/responsaveis")
 async def listar_responsaveis(usuario: Usuario = Depends(get_current_user)):
     users = await db.usuarios.find({"ativo": True, "role": {"$in": ["admin", "assistente"]}},

@@ -1,0 +1,98 @@
+{
+  "summary": "Validação pós-correção dos 5 módulos: BI Dashboard, SLA Dashboard, Chamados SGC, Caixa de Entrada, labels dos cards. Backend 100% (31/31). Frontend: BI e SLA carregam corretamente; Caixa de Entrada OK (vazia para Pedro, esperado). CRÍTICO: modal de detalhes do Chamado SGC crasha com TypeError ao clicar em qualquer chamado da lista. Dois bugs de display menores no BI Dashboard (fields mismatch API↔frontend).",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/documentos/bi/completo",
+        "issue": "Campo 'matriculas.total' (API) vs 'matriculas.total_pedidos' (frontend). Campo 'reembolsos.pendentes' (API) vs 'reembolsos.abertos' (frontend). Campos 'reembolsos.no_financeiro', 'reembolsos.com_retencao', 'reembolsos.aguardando', 'reembolsos.cancelados' não existem na resposta. Campo 'pendencias.pendentes' (API) vs 'pendencias.em_aberto' (frontend). Campo 'pendencias.em_analise' não existe na resposta."
+      },
+      {
+        "endpoint": "GET /api/sla/dashboard → sla_por_tipo_ps",
+        "issue": "Items têm keys 'tipo' e 'total' mas frontend espera 'label', 'tipo_ps', 'quantidade', 'concluidos', 'cancelados', 'taxa_conversao'. Gráfico de pizza na tab 'Por Tipo PS' fica vazio (dataKey='quantidade' mas API retorna 'total')."
+      },
+      {
+        "endpoint": "GET /api/chamados-sgc/{id}",
+        "issue": "API retorna documento flat { id, numero_ticket, ..., interacoes: [] } mas frontend espera { chamado: {...}, andamentos: [], interacoes: [] }. Causa crash CRÍTICO no modal de detalhes (ver frontend_issues)."
+      }
+    ]
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "ChamadosSGCPage - Modal de Detalhes",
+        "issue": "CRASH: TypeError: Cannot read properties of undefined (reading 'numero_ticket'). Ao clicar em qualquer chamado da lista, o app quebra completamente. O modal não abre.",
+        "selector": "data-testid starts with 'chamado-'",
+        "priority": "CRITICAL",
+        "rca": "Linha 721: 'chamadoSelecionado.chamado.numero_ticket' - a função abrirDetalhes() faz setChamadoSelecionado(response.data) onde response.data é o documento flat da API. O código tenta acessar .chamado.numero_ticket em um objeto que não tem a chave 'chamado'. A API retorna o chamado diretamente, mas o frontend espera { chamado: {...}, andamentos: [...] }."
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "BIDashboardPage - Resumo de Módulos (Visão Geral tab, cards inferiores)",
+        "issue": "Campo 'matriculas.total_pedidos' undefined (API retorna 'total') → mostra '---'. Campos 'reembolsos.abertos', 'no_financeiro', 'aguardando', 'cancelados', 'com_retencao' undefined → todos mostram '---'. Campo 'pendencias.em_aberto' undefined (API retorna 'pendentes') → mostra '---'. Campo 'pendencias.em_analise' não existe na API.",
+        "affected_selectors": ["Matrículas card (Total)", "Reembolsos card (Abertos, No Financeiro, Pagos OK)", "Pendências Documentais card (Em Aberto, Em Análise)"]
+      },
+      {
+        "flow": "DashboardSLAPage - Tab Por Tipo PS",
+        "issue": "Gráfico de pizza usa dataKey='quantidade' mas API retorna 'total'. Cards de detalhes mostram 'concluidos', 'cancelados', 'taxa_conversao' todos undefined (0 ou vazio). O campo 'label' e 'tipo_ps' não existem nos itens da API.",
+        "affected_selectors": ["PieChart Por Tipo PS", "Métricas por Processo Seletivo cards"]
+      }
+    ],
+    "design_issues": []
+  },
+
+  "confirmed_working": {
+    "bi_dashboard": "PASS - Total Matrículas (414), Taxa Conversão (95.7%), Pendências Abertas (0), Reembolsos Pendentes (20), gráfico evolução mensal, distribuição por status, todos os 5 tabs visíveis e funcionais",
+    "sla_dashboard": "PASS - 7 KPIs corretos (414, 413, 17, 396, 95.7%, 0, 20), 4 tabs funcionais, gráficos de evolução semanal e por status carregando",
+    "chamados_sgc_list": "PASS - 4 cards (Em Aberto=3, Críticos=0, SLA Crítico=0, Fechados Hoje=0), lista com 3 registros, status badges corretos (Em Atendimento, Aguardando Retorno)",
+    "chamados_sgc_label": "PASS - Card azul diz 'Em Aberto' (não 'Em Atendimento'). Status badges dos chamados mostram 'Em Atendimento' corretamente, sem confusão",
+    "caixa_entrada": "PASS - Carrega sem crash, cards de resumo (Total 0, Matrículas 0, Pendências 0, Reembolsos 0), empty state exibido corretamente para admin Pedro",
+    "navigation_all_modules": "PASS - Todos os módulos navegam sem 404: /admin, /bi, /sla, /chamados-sgc, /caixa-entrada"
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_iteration18_modules.py",
+    "/app/test_reports/pytest/pytest_iteration18.xml"
+  ],
+
+  "action_items": [
+    "CRITICAL: Fix ChamadosSGCPage.jsx - The modal accesses chamadoSelecionado.chamado.xxx and chamadoSelecionado.andamentos but API returns flat document. Either: (A) Change the API endpoint GET /api/chamados-sgc/{id} to return nested structure { chamado: {...}, andamentos: [], interacoes: [] }, OR (B) Change ChamadosSGCPage.jsx to use flat structure directly (chamadoSelecionado.numero_ticket, etc.)",
+    "MEDIUM: Fix BIDashboardPage.jsx field mismatches in Resumo de Módulos section: matriculas.total_pedidos → matriculas.total; reembolsos.abertos → reembolsos.pendentes; pendencias.em_aberto → pendencias.pendentes; add reembolsos.no_financeiro and reembolsos.cancelados to API or remove those fields from frontend",
+    "MINOR: Fix DashboardSLAPage.jsx tab Por Tipo PS: change PieChart dataKey from 'quantidade' to 'total'; the sla_por_tipo_ps API returns {tipo, total} but frontend expects {label, tipo_ps, quantidade, concluidos, cancelados, taxa_conversao}"
+  ],
+
+  "critical_code_review_comments": [
+    "ChamadosSGCPage.jsx: abrirDetalhes function at line ~178 sets setChamadoSelecionado(response.data) but template at line ~716 uses chamadoSelecionado.chamado.xxx. This is a structural mismatch that causes a hard crash.",
+    "ChamadosSGCPage.jsx: adicionarInteracao function calls /chamados-sgc/{id}/interacao but backend endpoint is /chamados-sgc/{id}/interacoes (plural). This would also fail.",
+    "BIDashboardPage.jsx: Multiple field names don't match API response. The visao-geral tab cards at lines 415-485 reference matriculas.total_pedidos, pendencias.em_aberto, pendencias.em_analise, reembolsos.abertos, reembolsos.no_financeiro, reembolsos.com_retencao, reembolsos.aguardando, reembolsos.cancelados - none of which exist in the API response.",
+    "DashboardSLAPage.jsx: sla_por_tipo_ps array items from API have only {tipo, total} but frontend template at lines 439-489 expects {tipo_ps, label, quantidade, concluidos, cancelados, taxa_conversao}."
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_iteration18_modules.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (31/31 testes passaram)",
+    "frontend": "60% - BI e SLA carregam OK com dados corretos; Caixa de Entrada OK; Chamados SGC lista OK mas modal crasha; alguns campos undefined nos cards do BI Dashboard"
+  },
+
+  "test_credentials": "pedro.passos@fieb.org.br / Pedro@2026",
+  "seed_data_creation": "Nenhum dado criado nesta iteração de teste",
+
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "Iteração 18: Backend 100% OK. Módulos BI e SLA corrigidos e funcionando. Caixa de Entrada OK. CRÍTICO não resolvido: Chamados SGC modal crasha ao clicar em chamado (TypeError: chamadoSelecionado.chamado is undefined). API retorna documento flat mas frontend espera nested {chamado:{...}, andamentos:[...]}. Dois bugs de display menores no BI Dashboard (campo mismatches). Dados: 414 pedidos, Taxa 95.7%, 3 chamados (em_atendimento x2, aguardando_retorno x1).",
+
+  "rca_chamados_sgc_crash": {
+    "bug": "TypeError: Cannot read properties of undefined (reading 'numero_ticket') em ChamadosSGCPage.jsx",
+    "root_cause": "A função abrirDetalhes() faz 'setChamadoSelecionado(response.data)' onde response.data é {id, numero_ticket, ..., interacoes:[]}. O template do modal acessa 'chamadoSelecionado.chamado.xxx' e 'chamadoSelecionado.andamentos' que são undefined pois o documento é flat, não nested.",
+    "reproduction": "1. Login como admin Pedro. 2. Navegar para /chamados-sgc. 3. Clicar em qualquer chamado da lista. 4. App crasha com TypeError.",
+    "fix_option_a": "Alterar a API GET /api/chamados-sgc/{id} para retornar { chamado: {...}, andamentos: [], interacoes: [...] }",
+    "fix_option_b": "Alterar ChamadosSGCPage.jsx linhas 716-854 para usar chamadoSelecionado.numero_ticket (sem .chamado) e chamadoSelecionado.interacoes (já existe na resposta flat)"
+  }
+}

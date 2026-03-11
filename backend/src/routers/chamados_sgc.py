@@ -119,18 +119,39 @@ async def listar_chamados(
 
 @router.get("/dashboard")
 async def dashboard_chamados(usuario: Usuario = Depends(get_current_user)):
+    now = datetime.now(timezone.utc)
     pipeline = [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
     result = await db.chamados_sgc.aggregate(pipeline).to_list(20)
     por_status = {r["_id"]: r["count"] for r in result}
     total = sum(por_status.values())
-    abertos = total - por_status.get("fechado", 0) - por_status.get("cancelado", 0)
-    criticos = await db.chamados_sgc.count_documents({"critico": True, "status": {"$nin": ["fechado", "cancelado"]}})
+    abertos = total - por_status.get("concluido", 0) - por_status.get("cancelado", 0)
+
+    # critico pode ser boolean True ou int 1
+    criticos = await db.chamados_sgc.count_documents(
+        {"critico": {"$in": [True, 1]}, "status": {"$nin": ["concluido", "cancelado"]}}
+    )
+
+    # SLA critico: chamados com data_previsao_fim expirada e ainda abertos
+    now_iso = now.isoformat()
+    sla_critico = await db.chamados_sgc.count_documents({
+        "data_previsao_fim": {"$lt": now_iso, "$ne": None},
+        "status": {"$nin": ["concluido", "cancelado"]}
+    })
+
+    # Fechados hoje
+    hoje_inicio = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    fechados_hoje = await db.chamados_sgc.count_documents({
+        "updated_at": {"$gte": hoje_inicio},
+        "status": "concluido"
+    })
 
     pipeline_mod = [{"$match": {"modalidade": {"$ne": None}}},
                     {"$group": {"_id": "$modalidade", "count": {"$sum": 1}}}]
     por_modalidade = {r["_id"]: r["count"] for r in await db.chamados_sgc.aggregate(pipeline_mod).to_list(20)}
 
-    return {"total": total, "abertos": abertos, "criticos": criticos,
+    return {"total": total, "abertos": abertos, "total_abertos": abertos,
+            "criticos": criticos, "sla_critico": sla_critico,
+            "fechados_hoje": fechados_hoje,
             "por_status": por_status, "por_modalidade": por_modalidade}
 
 
@@ -142,7 +163,7 @@ async def criar_chamado(dto: ChamadoCreate, usuario: Usuario = Depends(get_curre
     now = datetime.now(timezone.utc).isoformat()
     doc = {
         "id": str(uuid.uuid4()), **dto.model_dump(),
-        "status": "aberto", "sla_pausado": False,
+        "status": "backlog", "sla_pausado": False,
         "criado_por_id": usuario.id, "criado_por_nome": usuario.nome,
         "created_at": now, "updated_at": now
     }
@@ -157,7 +178,7 @@ async def criar_chamado(dto: ChamadoCreate, usuario: Usuario = Depends(get_curre
 @router.get("/opcoes")
 async def opcoes_chamado():
     return {"modalidades": MODALIDADES_BMP, "formas_pagamento": FORMAS_PAGAMENTO,
-            "status": ["aberto", "em_andamento", "aguardando_info", "resolvido", "fechado", "cancelado"],
+            "status": ["backlog", "em_atendimento", "aguardando_retorno", "concluido", "cancelado"],
             "prioridades": [{"valor": 0, "label": "Normal"}, {"valor": 1, "label": "Alta"},
                            {"valor": 2, "label": "Urgente"}, {"valor": 3, "label": "Crítico"}]}
 
