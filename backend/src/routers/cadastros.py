@@ -1,23 +1,19 @@
-"""Router de Cadastros (Cursos, Projetos, Empresas)"""
+"""Router de Cadastros (Cursos, Projetos, Empresas) - MongoDB version"""
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
-from sqlalchemy import select, or_, func
-from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 import io
+import re
 
-from src.infrastructure.persistence.models import CursoModel, ProjetoModel, EmpresaModel
+from src.domain.entities import Usuario
 from src.domain.value_objects import StatusPedido
-
-from .dependencies import get_db_session, require_permission
+from src.infrastructure.persistence.mongodb import db
+from src.routers.dependencies import get_current_user
 
 router = APIRouter(tags=["Cadastros"])
-
-
-# ==================== TIPOS E OPÇÕES ====================
 
 TIPOS_CURSO = [
     {"value": "tecnico", "label": "Escola Técnica"},
@@ -27,13 +23,11 @@ TIPOS_CURSO = [
     {"value": "aperfeicoamento", "label": "Aperfeiçoamento"},
     {"value": "livre", "label": "Curso Livre"},
 ]
-
 MODALIDADES_CURSO = [
     {"value": "presencial", "label": "Presencial"},
     {"value": "ead", "label": "EAD"},
     {"value": "hibrido", "label": "Híbrido"},
 ]
-
 AREAS_CURSO = [
     {"value": "tecnologia", "label": "Tecnologia da Informação"},
     {"value": "industria", "label": "Indústria e Manufatura"},
@@ -48,443 +42,22 @@ AREAS_CURSO = [
 ]
 
 
-# ==================== CURSOS ====================
-
 class CursoRequest(BaseModel):
     nome: str = Field(..., min_length=3, max_length=200)
     descricao: Optional[str] = None
-    tipo: Optional[str] = None  # tecnico, graduacao, pos_graduacao, livre
-    modalidade: Optional[str] = None  # presencial, ead, hibrido
-    area: Optional[str] = None
-    carga_horaria: Optional[str] = None
-    duracao: Optional[str] = None
-
-
-class CursoResponse(BaseModel):
-    id: str
-    nome: str
-    descricao: Optional[str] = None
     tipo: Optional[str] = None
-    tipo_label: Optional[str] = None
     modalidade: Optional[str] = None
-    modalidade_label: Optional[str] = None
     area: Optional[str] = None
-    area_label: Optional[str] = None
     carga_horaria: Optional[str] = None
     duracao: Optional[str] = None
-    ativo: bool = True
-
-
-def get_label(lista: List[dict], value: str) -> Optional[str]:
-    """Retorna o label de um valor em uma lista de opções"""
-    if not value:
-        return None
-    for item in lista:
-        if item["value"] == value:
-            return item["label"]
-    return value
-
-
-@router.get("/cursos/opcoes", tags=["Cursos"])
-async def listar_opcoes_cursos():
-    """Lista todas as opções disponíveis para cursos"""
-    return {
-        "tipos": TIPOS_CURSO,
-        "modalidades": MODALIDADES_CURSO,
-        "areas": AREAS_CURSO
-    }
-
-
-@router.get("/cursos", tags=["Cursos"])
-async def listar_cursos(
-    ativo: Optional[bool] = None,
-    tipo: Optional[str] = None,
-    modalidade: Optional[str] = None,
-    area: Optional[str] = None,
-    busca: Optional[str] = None,
-    session: AsyncSession = Depends(get_db_session)
-):
-    """Lista todos os cursos com filtros"""
-    query = select(CursoModel)
-    
-    # Filtros
-    if ativo is not None:
-        query = query.where(CursoModel.ativo == ativo)
-    if tipo:
-        query = query.where(CursoModel.tipo == tipo)
-    if modalidade:
-        query = query.where(CursoModel.modalidade == modalidade)
-    if area:
-        query = query.where(CursoModel.area == area)
-    if busca:
-        query = query.where(
-            or_(
-                CursoModel.nome.ilike(f'%{busca}%'),
-                CursoModel.descricao.ilike(f'%{busca}%')
-            )
-        )
-    
-    query = query.order_by(CursoModel.tipo, CursoModel.nome)
-    result = await session.execute(query)
-    cursos = result.scalars().all()
-    
-    return [
-        {
-            "id": c.id, 
-            "nome": c.nome, 
-            "descricao": c.descricao, 
-            "tipo": c.tipo,
-            "tipo_label": get_label(TIPOS_CURSO, c.tipo),
-            "modalidade": c.modalidade,
-            "modalidade_label": get_label(MODALIDADES_CURSO, c.modalidade),
-            "area": c.area,
-            "area_label": get_label(AREAS_CURSO, c.area),
-            "carga_horaria": c.carga_horaria,
-            "duracao": c.duracao,
-            "ativo": c.ativo
-        } 
-        for c in cursos
-    ]
-
-
-@router.get("/cursos/estatisticas", tags=["Cursos"])
-async def estatisticas_cursos(
-    session: AsyncSession = Depends(get_db_session)
-):
-    """Retorna estatísticas dos cursos cadastrados"""
-    from sqlalchemy import func
-    
-    # Total por tipo
-    tipo_query = await session.execute(
-        select(CursoModel.tipo, func.count(CursoModel.id))
-        .where(CursoModel.ativo == True)
-        .group_by(CursoModel.tipo)
-    )
-    por_tipo = {row[0] or "sem_tipo": row[1] for row in tipo_query.fetchall()}
-    
-    # Total por modalidade
-    modalidade_query = await session.execute(
-        select(CursoModel.modalidade, func.count(CursoModel.id))
-        .where(CursoModel.ativo == True)
-        .group_by(CursoModel.modalidade)
-    )
-    por_modalidade = {row[0] or "sem_modalidade": row[1] for row in modalidade_query.fetchall()}
-    
-    # Total geral
-    total_query = await session.execute(
-        select(func.count(CursoModel.id)).where(CursoModel.ativo == True)
-    )
-    total = total_query.scalar() or 0
-    
-    return {
-        "total": total,
-        "por_tipo": por_tipo,
-        "por_modalidade": por_modalidade
-    }
-
-
-@router.post("/cursos", response_model=CursoResponse, status_code=201, tags=["Cursos"])
-async def criar_curso(
-    request: CursoRequest,
-    deps: tuple = Depends(require_permission("usuario:gerenciar"))
-):
-    """Cria um novo curso (Admin)"""
-    usuario, session = deps
-    
-    result = await session.execute(select(CursoModel).where(CursoModel.nome == request.nome))
-    if result.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail="Curso já existe")
-    
-    curso = CursoModel(
-        id=str(uuid.uuid4()),
-        nome=request.nome,
-        descricao=request.descricao,
-        tipo=request.tipo,
-        modalidade=request.modalidade,
-        area=request.area,
-        carga_horaria=request.carga_horaria,
-        duracao=request.duracao
-    )
-    session.add(curso)
-    await session.commit()
-    
-    return {
-        "id": curso.id, 
-        "nome": curso.nome, 
-        "descricao": curso.descricao,
-        "tipo": curso.tipo,
-        "tipo_label": get_label(TIPOS_CURSO, curso.tipo),
-        "modalidade": curso.modalidade,
-        "modalidade_label": get_label(MODALIDADES_CURSO, curso.modalidade),
-        "area": curso.area,
-        "area_label": get_label(AREAS_CURSO, curso.area),
-        "carga_horaria": curso.carga_horaria,
-        "duracao": curso.duracao,
-        "ativo": curso.ativo
-    }
-
-
-@router.put("/cursos/{curso_id}", response_model=CursoResponse, tags=["Cursos"])
-async def atualizar_curso(
-    curso_id: str,
-    request: CursoRequest,
-    deps: tuple = Depends(require_permission("usuario:gerenciar"))
-):
-    """Atualiza um curso (Admin)"""
-    usuario, session = deps
-    
-    result = await session.execute(select(CursoModel).where(CursoModel.id == curso_id))
-    curso = result.scalar_one_or_none()
-    if not curso:
-        raise HTTPException(status_code=404, detail="Curso não encontrado")
-    
-    curso.nome = request.nome
-    curso.descricao = request.descricao
-    curso.tipo = request.tipo
-    curso.modalidade = request.modalidade
-    curso.area = request.area
-    curso.carga_horaria = request.carga_horaria
-    curso.duracao = request.duracao
-    curso.updated_at = datetime.now(timezone.utc)
-    await session.commit()
-    
-    return {
-        "id": curso.id, 
-        "nome": curso.nome, 
-        "descricao": curso.descricao,
-        "tipo": curso.tipo,
-        "tipo_label": get_label(TIPOS_CURSO, curso.tipo),
-        "modalidade": curso.modalidade,
-        "modalidade_label": get_label(MODALIDADES_CURSO, curso.modalidade),
-        "area": curso.area,
-        "area_label": get_label(AREAS_CURSO, curso.area),
-        "carga_horaria": curso.carga_horaria,
-        "duracao": curso.duracao,
-        "ativo": curso.ativo
-    }
-
-
-@router.patch("/cursos/{curso_id}/ativar", tags=["Cursos"])
-async def ativar_curso(
-    curso_id: str,
-    deps: tuple = Depends(require_permission("usuario:gerenciar"))
-):
-    """Ativa um curso desativado (Admin)"""
-    usuario, session = deps
-    
-    result = await session.execute(select(CursoModel).where(CursoModel.id == curso_id))
-    curso = result.scalar_one_or_none()
-    if not curso:
-        raise HTTPException(status_code=404, detail="Curso não encontrado")
-    
-    curso.ativo = True
-    curso.updated_at = datetime.now(timezone.utc)
-    await session.commit()
-    return {"message": "Curso ativado com sucesso"}
-
-
-@router.delete("/cursos/{curso_id}", tags=["Cursos"])
-async def deletar_curso(
-    curso_id: str,
-    deps: tuple = Depends(require_permission("usuario:gerenciar"))
-):
-    """Desativa um curso (Admin)"""
-    usuario, session = deps
-    
-    result = await session.execute(select(CursoModel).where(CursoModel.id == curso_id))
-    curso = result.scalar_one_or_none()
-    if not curso:
-        raise HTTPException(status_code=404, detail="Curso não encontrado")
-    
-    curso.ativo = False
-    curso.updated_at = datetime.now(timezone.utc)
-    await session.commit()
-    return {"message": "Curso desativado com sucesso"}
-
-
-# ==================== PROJETOS ====================
 
 class ProjetoRequest(BaseModel):
     nome: str = Field(..., min_length=3, max_length=200)
     descricao: Optional[str] = None
 
-
-class ProjetoResponse(BaseModel):
-    id: str
-    nome: str
-    descricao: Optional[str] = None
-    ativo: bool = True
-
-
-@router.get("/projetos", tags=["Projetos"])
-async def listar_projetos(
-    ativo: Optional[bool] = None,
-    session: AsyncSession = Depends(get_db_session)
-):
-    """Lista todos os projetos"""
-    query = select(ProjetoModel)
-    if ativo is not None:
-        query = query.where(ProjetoModel.ativo == ativo)
-    query = query.order_by(ProjetoModel.nome)
-    result = await session.execute(query)
-    projetos = result.scalars().all()
-    return [{"id": p.id, "nome": p.nome, "descricao": p.descricao, "ativo": p.ativo} for p in projetos]
-
-
-@router.post("/projetos", response_model=ProjetoResponse, status_code=201, tags=["Projetos"])
-async def criar_projeto(
-    request: ProjetoRequest,
-    deps: tuple = Depends(require_permission("usuario:gerenciar"))
-):
-    """Cria um novo projeto (Admin)"""
-    usuario, session = deps
-    
-    result = await session.execute(select(ProjetoModel).where(ProjetoModel.nome == request.nome))
-    if result.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail="Projeto já existe")
-    
-    projeto = ProjetoModel(
-        id=str(uuid.uuid4()),
-        nome=request.nome,
-        descricao=request.descricao
-    )
-    session.add(projeto)
-    await session.commit()
-    return {"id": projeto.id, "nome": projeto.nome, "descricao": projeto.descricao, "ativo": projeto.ativo}
-
-
-@router.put("/projetos/{projeto_id}", response_model=ProjetoResponse, tags=["Projetos"])
-async def atualizar_projeto(
-    projeto_id: str,
-    request: ProjetoRequest,
-    deps: tuple = Depends(require_permission("usuario:gerenciar"))
-):
-    """Atualiza um projeto (Admin)"""
-    usuario, session = deps
-    
-    result = await session.execute(select(ProjetoModel).where(ProjetoModel.id == projeto_id))
-    projeto = result.scalar_one_or_none()
-    if not projeto:
-        raise HTTPException(status_code=404, detail="Projeto não encontrado")
-    
-    projeto.nome = request.nome
-    projeto.descricao = request.descricao
-    projeto.updated_at = datetime.now(timezone.utc)
-    await session.commit()
-    return {"id": projeto.id, "nome": projeto.nome, "descricao": projeto.descricao, "ativo": projeto.ativo}
-
-
-@router.delete("/projetos/{projeto_id}", tags=["Projetos"])
-async def deletar_projeto(
-    projeto_id: str,
-    deps: tuple = Depends(require_permission("usuario:gerenciar"))
-):
-    """Desativa um projeto (Admin)"""
-    usuario, session = deps
-    
-    result = await session.execute(select(ProjetoModel).where(ProjetoModel.id == projeto_id))
-    projeto = result.scalar_one_or_none()
-    if not projeto:
-        raise HTTPException(status_code=404, detail="Projeto não encontrado")
-    
-    projeto.ativo = False
-    projeto.updated_at = datetime.now(timezone.utc)
-    await session.commit()
-    return {"message": "Projeto desativado com sucesso"}
-
-
-# ==================== EMPRESAS ====================
-
 class EmpresaRequest(BaseModel):
     nome: str = Field(..., min_length=3, max_length=200)
     cnpj: Optional[str] = None
-
-
-class EmpresaResponse(BaseModel):
-    id: str
-    nome: str
-    cnpj: Optional[str] = None
-    ativo: bool = True
-
-
-@router.get("/empresas", tags=["Empresas"])
-async def listar_empresas(
-    ativo: Optional[bool] = None,
-    session: AsyncSession = Depends(get_db_session)
-):
-    """Lista todas as empresas"""
-    query = select(EmpresaModel)
-    if ativo is not None:
-        query = query.where(EmpresaModel.ativo == ativo)
-    query = query.order_by(EmpresaModel.nome)
-    result = await session.execute(query)
-    empresas = result.scalars().all()
-    return [{"id": e.id, "nome": e.nome, "cnpj": e.cnpj, "ativo": e.ativo} for e in empresas]
-
-
-@router.post("/empresas", response_model=EmpresaResponse, status_code=201, tags=["Empresas"])
-async def criar_empresa(
-    request: EmpresaRequest,
-    deps: tuple = Depends(require_permission("usuario:gerenciar"))
-):
-    """Cria uma nova empresa (Admin)"""
-    usuario, session = deps
-    
-    result = await session.execute(select(EmpresaModel).where(EmpresaModel.nome == request.nome))
-    if result.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail="Empresa já existe")
-    
-    empresa = EmpresaModel(
-        id=str(uuid.uuid4()),
-        nome=request.nome,
-        cnpj=request.cnpj
-    )
-    session.add(empresa)
-    await session.commit()
-    return {"id": empresa.id, "nome": empresa.nome, "cnpj": empresa.cnpj, "ativo": empresa.ativo}
-
-
-@router.put("/empresas/{empresa_id}", response_model=EmpresaResponse, tags=["Empresas"])
-async def atualizar_empresa(
-    empresa_id: str,
-    request: EmpresaRequest,
-    deps: tuple = Depends(require_permission("usuario:gerenciar"))
-):
-    """Atualiza uma empresa (Admin)"""
-    usuario, session = deps
-    
-    result = await session.execute(select(EmpresaModel).where(EmpresaModel.id == empresa_id))
-    empresa = result.scalar_one_or_none()
-    if not empresa:
-        raise HTTPException(status_code=404, detail="Empresa não encontrada")
-    
-    empresa.nome = request.nome
-    empresa.cnpj = request.cnpj
-    empresa.updated_at = datetime.now(timezone.utc)
-    await session.commit()
-    return {"id": empresa.id, "nome": empresa.nome, "cnpj": empresa.cnpj, "ativo": empresa.ativo}
-
-
-@router.delete("/empresas/{empresa_id}", tags=["Empresas"])
-async def deletar_empresa(
-    empresa_id: str,
-    deps: tuple = Depends(require_permission("usuario:gerenciar"))
-):
-    """Desativa uma empresa (Admin)"""
-    usuario, session = deps
-    
-    result = await session.execute(select(EmpresaModel).where(EmpresaModel.id == empresa_id))
-    empresa = result.scalar_one_or_none()
-    if not empresa:
-        raise HTTPException(status_code=404, detail="Empresa não encontrada")
-    
-    empresa.ativo = False
-    empresa.updated_at = datetime.now(timezone.utc)
-    await session.commit()
-    return {"message": "Empresa desativada com sucesso"}
-
-
-# ==================== IMPORTAÇÃO DE CURSOS ====================
 
 class ImportacaoCursosResponse(BaseModel):
     total_linhas: int
@@ -494,269 +67,315 @@ class ImportacaoCursosResponse(BaseModel):
     detalhes: List[dict]
 
 
+def get_label(lista, value):
+    if not value:
+        return None
+    for item in lista:
+        if item["value"] == value:
+            return item["label"]
+    return value
+
+
+def _curso_response(c):
+    return {
+        "id": c["id"], "nome": c["nome"], "descricao": c.get("descricao"),
+        "tipo": c.get("tipo"), "tipo_label": get_label(TIPOS_CURSO, c.get("tipo")),
+        "modalidade": c.get("modalidade"), "modalidade_label": get_label(MODALIDADES_CURSO, c.get("modalidade")),
+        "area": c.get("area"), "area_label": get_label(AREAS_CURSO, c.get("area")),
+        "carga_horaria": c.get("carga_horaria"), "duracao": c.get("duracao"),
+        "ativo": c.get("ativo", True)
+    }
+
+
+# ==================== CURSOS ====================
+
+@router.get("/cursos/opcoes", tags=["Cursos"])
+async def listar_opcoes_cursos():
+    return {"tipos": TIPOS_CURSO, "modalidades": MODALIDADES_CURSO, "areas": AREAS_CURSO}
+
+
+@router.get("/cursos", tags=["Cursos"])
+async def listar_cursos(
+    ativo: Optional[bool] = None, tipo: Optional[str] = None,
+    modalidade: Optional[str] = None, area: Optional[str] = None,
+    busca: Optional[str] = None,
+    current_user: Usuario = Depends(get_current_user)
+):
+    query = {}
+    if ativo is not None:
+        query["ativo"] = ativo
+    if tipo:
+        query["tipo"] = tipo
+    if modalidade:
+        query["modalidade"] = modalidade
+    if area:
+        query["area"] = area
+    if busca:
+        query["nome"] = {"$regex": busca, "$options": "i"}
+
+    cursor = db.cursos.find(query, {"_id": 0}).sort([("tipo", 1), ("nome", 1)])
+    cursos = await cursor.to_list(length=10000)
+    return [_curso_response(c) for c in cursos]
+
+
+@router.get("/cursos/estatisticas", tags=["Cursos"])
+async def estatisticas_cursos(current_user: Usuario = Depends(get_current_user)):
+    pipeline_tipo = [
+        {"$match": {"ativo": {"$ne": False}}},
+        {"$group": {"_id": {"$ifNull": ["$tipo", "sem_tipo"]}, "count": {"$sum": 1}}}
+    ]
+    por_tipo = {r["_id"]: r["count"] for r in await db.cursos.aggregate(pipeline_tipo).to_list(100)}
+
+    pipeline_mod = [
+        {"$match": {"ativo": {"$ne": False}}},
+        {"$group": {"_id": {"$ifNull": ["$modalidade", "sem_modalidade"]}, "count": {"$sum": 1}}}
+    ]
+    por_modalidade = {r["_id"]: r["count"] for r in await db.cursos.aggregate(pipeline_mod).to_list(100)}
+
+    total = await db.cursos.count_documents({"ativo": {"$ne": False}})
+    return {"total": total, "por_tipo": por_tipo, "por_modalidade": por_modalidade}
+
+
+@router.post("/cursos", status_code=201, tags=["Cursos"])
+async def criar_curso(request: CursoRequest, current_user: Usuario = Depends(get_current_user)):
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    existing = await db.cursos.find_one({"nome": request.nome})
+    if existing:
+        raise HTTPException(409, "Curso já existe")
+
+    doc = {"id": str(uuid.uuid4()), "nome": request.nome, "descricao": request.descricao,
+           "tipo": request.tipo, "modalidade": request.modalidade, "area": request.area,
+           "carga_horaria": request.carga_horaria, "duracao": request.duracao,
+           "ativo": True, "created_at": datetime.now(timezone.utc).isoformat(),
+           "updated_at": datetime.now(timezone.utc).isoformat()}
+    await db.cursos.insert_one(doc)
+    return _curso_response(doc)
+
+
+@router.put("/cursos/{curso_id}", tags=["Cursos"])
+async def atualizar_curso(curso_id: str, request: CursoRequest, current_user: Usuario = Depends(get_current_user)):
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    result = await db.cursos.update_one({"id": curso_id}, {"$set": {
+        "nome": request.nome, "descricao": request.descricao, "tipo": request.tipo,
+        "modalidade": request.modalidade, "area": request.area,
+        "carga_horaria": request.carga_horaria, "duracao": request.duracao,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Curso não encontrado")
+    doc = await db.cursos.find_one({"id": curso_id}, {"_id": 0})
+    return _curso_response(doc)
+
+
+@router.patch("/cursos/{curso_id}/ativar", tags=["Cursos"])
+async def ativar_curso(curso_id: str, current_user: Usuario = Depends(get_current_user)):
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    result = await db.cursos.update_one({"id": curso_id}, {"$set": {"ativo": True}})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Curso não encontrado")
+    return {"message": "Curso ativado com sucesso"}
+
+
+@router.delete("/cursos/{curso_id}", tags=["Cursos"])
+async def deletar_curso(curso_id: str, current_user: Usuario = Depends(get_current_user)):
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    result = await db.cursos.update_one({"id": curso_id}, {"$set": {"ativo": False}})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Curso não encontrado")
+    return {"message": "Curso desativado com sucesso"}
+
+
+# ==================== PROJETOS ====================
+
+@router.get("/projetos", tags=["Projetos"])
+async def listar_projetos(ativo: Optional[bool] = None, current_user: Usuario = Depends(get_current_user)):
+    query = {}
+    if ativo is not None:
+        query["ativo"] = ativo
+    projetos = await db.projetos.find(query, {"_id": 0}).sort("nome", 1).to_list(1000)
+    return [{"id": p["id"], "nome": p["nome"], "descricao": p.get("descricao"), "ativo": p.get("ativo", True)} for p in projetos]
+
+
+@router.post("/projetos", status_code=201, tags=["Projetos"])
+async def criar_projeto(request: ProjetoRequest, current_user: Usuario = Depends(get_current_user)):
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    if await db.projetos.find_one({"nome": request.nome}):
+        raise HTTPException(409, "Projeto já existe")
+    doc = {"id": str(uuid.uuid4()), "nome": request.nome, "descricao": request.descricao, "ativo": True,
+           "created_at": datetime.now(timezone.utc).isoformat(), "updated_at": datetime.now(timezone.utc).isoformat()}
+    await db.projetos.insert_one(doc)
+    return {"id": doc["id"], "nome": doc["nome"], "descricao": doc.get("descricao"), "ativo": True}
+
+
+@router.put("/projetos/{projeto_id}", tags=["Projetos"])
+async def atualizar_projeto(projeto_id: str, request: ProjetoRequest, current_user: Usuario = Depends(get_current_user)):
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    result = await db.projetos.update_one({"id": projeto_id}, {"$set": {"nome": request.nome, "descricao": request.descricao, "updated_at": datetime.now(timezone.utc).isoformat()}})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Projeto não encontrado")
+    doc = await db.projetos.find_one({"id": projeto_id}, {"_id": 0})
+    return {"id": doc["id"], "nome": doc["nome"], "descricao": doc.get("descricao"), "ativo": doc.get("ativo", True)}
+
+
+@router.delete("/projetos/{projeto_id}", tags=["Projetos"])
+async def deletar_projeto(projeto_id: str, current_user: Usuario = Depends(get_current_user)):
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    result = await db.projetos.update_one({"id": projeto_id}, {"$set": {"ativo": False}})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Projeto não encontrado")
+    return {"message": "Projeto desativado com sucesso"}
+
+
+# ==================== EMPRESAS ====================
+
+@router.get("/empresas", tags=["Empresas"])
+async def listar_empresas(ativo: Optional[bool] = None, current_user: Usuario = Depends(get_current_user)):
+    query = {}
+    if ativo is not None:
+        query["ativo"] = ativo
+    empresas = await db.empresas.find(query, {"_id": 0}).sort("nome", 1).to_list(1000)
+    return [{"id": e["id"], "nome": e["nome"], "cnpj": e.get("cnpj"), "ativo": e.get("ativo", True)} for e in empresas]
+
+
+@router.post("/empresas", status_code=201, tags=["Empresas"])
+async def criar_empresa(request: EmpresaRequest, current_user: Usuario = Depends(get_current_user)):
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    if await db.empresas.find_one({"nome": request.nome}):
+        raise HTTPException(409, "Empresa já existe")
+    doc = {"id": str(uuid.uuid4()), "nome": request.nome, "cnpj": request.cnpj, "ativo": True,
+           "created_at": datetime.now(timezone.utc).isoformat(), "updated_at": datetime.now(timezone.utc).isoformat()}
+    await db.empresas.insert_one(doc)
+    return {"id": doc["id"], "nome": doc["nome"], "cnpj": doc.get("cnpj"), "ativo": True}
+
+
+@router.put("/empresas/{empresa_id}", tags=["Empresas"])
+async def atualizar_empresa(empresa_id: str, request: EmpresaRequest, current_user: Usuario = Depends(get_current_user)):
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    result = await db.empresas.update_one({"id": empresa_id}, {"$set": {"nome": request.nome, "cnpj": request.cnpj, "updated_at": datetime.now(timezone.utc).isoformat()}})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Empresa não encontrada")
+    doc = await db.empresas.find_one({"id": empresa_id}, {"_id": 0})
+    return {"id": doc["id"], "nome": doc["nome"], "cnpj": doc.get("cnpj"), "ativo": doc.get("ativo", True)}
+
+
+@router.delete("/empresas/{empresa_id}", tags=["Empresas"])
+async def deletar_empresa(empresa_id: str, current_user: Usuario = Depends(get_current_user)):
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    result = await db.empresas.update_one({"id": empresa_id}, {"$set": {"ativo": False}})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Empresa não encontrada")
+    return {"message": "Empresa desativada com sucesso"}
+
+
+# ==================== IMPORTAÇÃO CURSOS ====================
+
 @router.get("/cursos/importacao/template", tags=["Cursos - Importação"])
 async def download_template_cursos():
-    """Download do template Excel para importação de cursos"""
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-    
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Cursos"
-    
-    # Cabeçalhos
     headers = ["Código", "Nome", "Descrição", "Tipo", "Modalidade", "Área", "Carga Horária", "Duração"]
     header_fill = PatternFill(start_color="004587", end_color="004587", fill_type="solid")
     header_font = Font(color="FFFFFF", bold=True)
-    thin_border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
-    )
-    
+    thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=header)
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = Alignment(horizontal='center')
         cell.border = thin_border
-    
-    # Exemplos
-    exemplos = [
-        ["0001", "Eletricista de Automóveis - EAD", "Curso de eletricista para veículos", "tecnico", "ead", "eletrica", "200h", "6 meses"],
-        ["0002", "Técnico em Mecatrônica", "Formação técnica em mecatrônica", "tecnico", "presencial", "automacao", "1200h", "2 anos"],
-    ]
-    
-    for row_num, exemplo in enumerate(exemplos, 2):
-        for col, valor in enumerate(exemplo, 1):
-            cell = ws.cell(row=row_num, column=col, value=valor)
-            cell.border = thin_border
-    
-    # Ajustar larguras
-    ws.column_dimensions['A'].width = 10
-    ws.column_dimensions['B'].width = 50
-    ws.column_dimensions['C'].width = 40
-    ws.column_dimensions['D'].width = 15
-    ws.column_dimensions['E'].width = 15
-    ws.column_dimensions['F'].width = 15
-    ws.column_dimensions['G'].width = 15
-    ws.column_dimensions['H'].width = 15
-    
-    # Aba de referência
-    ws_ref = wb.create_sheet("Referência")
-    ws_ref['A1'] = "Tipos Válidos"
-    ws_ref['B1'] = "Modalidades Válidas"
-    ws_ref['C1'] = "Áreas Válidas"
-    for cell in [ws_ref['A1'], ws_ref['B1'], ws_ref['C1']]:
-        cell.font = Font(bold=True)
-    
-    for i, tipo in enumerate(TIPOS_CURSO, 2):
-        ws_ref.cell(row=i, column=1, value=tipo['value'])
-    for i, mod in enumerate(MODALIDADES_CURSO, 2):
-        ws_ref.cell(row=i, column=2, value=mod['value'])
-    for i, area in enumerate(AREAS_CURSO, 2):
-        ws_ref.cell(row=i, column=3, value=area['value'])
-    
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
-    
-    return StreamingResponse(
-        output,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=template_cursos_senai.xlsx"}
-    )
+    return StreamingResponse(output, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                             headers={"Content-Disposition": "attachment; filename=template_cursos_senai.xlsx"})
 
 
 @router.post("/cursos/importacao/validar", tags=["Cursos - Importação"])
-async def validar_importacao_cursos(
-    arquivo: UploadFile = File(...),
-    session: AsyncSession = Depends(get_db_session)
-):
-    """Valida arquivo Excel antes da importação"""
+async def validar_importacao_cursos(arquivo: UploadFile = File(...), current_user: Usuario = Depends(get_current_user)):
     import pandas as pd
-    
     if not arquivo.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="Arquivo deve ser Excel (.xlsx ou .xls)")
-    
-    try:
-        conteudo = await arquivo.read()
-        df = pd.read_excel(io.BytesIO(conteudo))
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Erro ao ler arquivo: {str(e)}")
-    
-    # Identificar colunas
+        raise HTTPException(400, "Arquivo deve ser Excel")
+    conteudo = await arquivo.read()
+    df = pd.read_excel(io.BytesIO(conteudo))
     colunas_lower = {col.lower().strip(): col for col in df.columns}
-    col_codigo = colunas_lower.get('código') or colunas_lower.get('codigo')
     col_nome = colunas_lower.get('nome')
-    
     if not col_nome:
-        raise HTTPException(status_code=400, detail="Coluna 'Nome' é obrigatória")
-    
-    # Buscar cursos existentes
-    result = await session.execute(select(CursoModel.nome))
-    cursos_existentes = {c.lower() for c in result.scalars().all()}
-    
-    validados = []
-    duplicados = []
-    erros = []
-    
+        raise HTTPException(400, "Coluna 'Nome' é obrigatória")
+
+    existing = await db.cursos.distinct("nome")
+    cursos_existentes = {c.lower() for c in existing}
+
+    validados, duplicados, erros = [], [], []
     for idx, row in df.iterrows():
         nome = str(row[col_nome]).strip() if pd.notna(row[col_nome]) else None
-        codigo = str(row[col_codigo]).strip() if col_codigo and pd.notna(row.get(col_codigo)) else None
-        
         if not nome or nome.lower() == 'nan':
             erros.append({"linha": idx + 2, "erro": "Nome vazio"})
             continue
-        
         if nome.lower() in cursos_existentes:
-            duplicados.append({"linha": idx + 2, "nome": nome, "motivo": "Já existe no sistema"})
+            duplicados.append({"linha": idx + 2, "nome": nome, "motivo": "Já existe"})
             continue
-        
-        # Verificar duplicata na planilha
-        nomes_validados = [v['nome'].lower() for v in validados]
-        if nome.lower() in nomes_validados:
-            duplicados.append({"linha": idx + 2, "nome": nome, "motivo": "Duplicado na planilha"})
-            continue
-        
-        validados.append({
-            "linha": idx + 2,
-            "codigo": codigo,
-            "nome": nome
-        })
-    
-    return {
-        "total_linhas": len(df),
-        "validos": len(validados),
-        "duplicados": len(duplicados),
-        "erros": len(erros),
-        "preview": validados[:10],
-        "duplicados_lista": duplicados[:10],
-        "erros_lista": erros[:10]
-    }
+        validados.append({"linha": idx + 2, "nome": nome})
+
+    return {"total_linhas": len(df), "validos": len(validados), "duplicados": len(duplicados),
+            "erros": len(erros), "preview": validados[:10], "duplicados_lista": duplicados[:10], "erros_lista": erros[:10]}
 
 
-@router.post("/cursos/importacao/executar", response_model=ImportacaoCursosResponse, tags=["Cursos - Importação"])
-async def executar_importacao_cursos(
-    arquivo: UploadFile = File(...),
-    deps: tuple = Depends(require_permission("usuario:gerenciar"))
-):
-    """Executa a importação de cursos do arquivo Excel (Admin)"""
+@router.post("/cursos/importacao/executar", tags=["Cursos - Importação"])
+async def executar_importacao_cursos(arquivo: UploadFile = File(...), current_user: Usuario = Depends(get_current_user)):
     import pandas as pd
-    
-    usuario, session = deps
-    
+    if current_user.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
     if not arquivo.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="Arquivo deve ser Excel (.xlsx ou .xls)")
-    
-    try:
-        conteudo = await arquivo.read()
-        df = pd.read_excel(io.BytesIO(conteudo))
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Erro ao ler arquivo: {str(e)}")
-    
-    # Identificar colunas
+        raise HTTPException(400, "Arquivo deve ser Excel")
+    conteudo = await arquivo.read()
+    df = pd.read_excel(io.BytesIO(conteudo))
     colunas_lower = {col.lower().strip(): col for col in df.columns}
-    col_codigo = colunas_lower.get('código') or colunas_lower.get('codigo')
     col_nome = colunas_lower.get('nome')
-    col_descricao = colunas_lower.get('descricao') or colunas_lower.get('descrição')
-    col_tipo = colunas_lower.get('tipo')
-    col_modalidade = colunas_lower.get('modalidade')
-    col_area = colunas_lower.get('area') or colunas_lower.get('área')
-    col_carga = colunas_lower.get('carga_horaria') or colunas_lower.get('carga horária')
-    col_duracao = colunas_lower.get('duracao') or colunas_lower.get('duração')
-    
     if not col_nome:
-        raise HTTPException(status_code=400, detail="Coluna 'Nome' é obrigatória")
-    
-    # Buscar cursos existentes
-    result = await session.execute(select(CursoModel.nome))
-    cursos_existentes = {c.lower() for c in result.scalars().all()}
-    
-    importados = 0
-    duplicados = 0
-    erros = 0
-    detalhes = []
+        raise HTTPException(400, "Coluna 'Nome' é obrigatória")
+
+    existing = await db.cursos.distinct("nome")
+    cursos_existentes = {c.lower() for c in existing}
+
+    importados, duplicados, erros, detalhes = 0, 0, 0, []
     nomes_importados = set()
-    
+    batch = []
+
     for idx, row in df.iterrows():
         nome = str(row[col_nome]).strip() if pd.notna(row[col_nome]) else None
-        
         if not nome or nome.lower() == 'nan':
             erros += 1
-            detalhes.append({"linha": idx + 2, "status": "erro", "motivo": "Nome vazio"})
             continue
-        
         if nome.lower() in cursos_existentes or nome.lower() in nomes_importados:
             duplicados += 1
-            detalhes.append({"linha": idx + 2, "nome": nome, "status": "duplicado"})
             continue
-        
-        try:
-            # Extrair dados opcionais
-            descricao = str(row[col_descricao]).strip() if col_descricao and pd.notna(row.get(col_descricao)) else None
-            if descricao == 'nan':
-                descricao = None
-            
-            tipo = str(row[col_tipo]).strip().lower() if col_tipo and pd.notna(row.get(col_tipo)) else None
-            if tipo == 'nan':
-                tipo = None
-            
-            modalidade = str(row[col_modalidade]).strip().lower() if col_modalidade and pd.notna(row.get(col_modalidade)) else None
-            if modalidade == 'nan':
-                modalidade = None
-            
-            area = str(row[col_area]).strip().lower() if col_area and pd.notna(row.get(col_area)) else None
-            if area == 'nan':
-                area = None
-            
-            carga = str(row[col_carga]).strip() if col_carga and pd.notna(row.get(col_carga)) else None
-            if carga == 'nan':
-                carga = None
-            
-            duracao = str(row[col_duracao]).strip() if col_duracao and pd.notna(row.get(col_duracao)) else None
-            if duracao == 'nan':
-                duracao = None
-            
-            # Criar curso
-            curso = CursoModel(
-                id=str(uuid.uuid4()),
-                nome=nome,
-                descricao=descricao,
-                tipo=tipo,
-                modalidade=modalidade,
-                area=area,
-                carga_horaria=carga,
-                duracao=duracao,
-                ativo=True
-            )
-            session.add(curso)
-            nomes_importados.add(nome.lower())
-            importados += 1
-            detalhes.append({"linha": idx + 2, "nome": nome, "status": "importado"})
-            
-        except Exception as e:
-            erros += 1
-            detalhes.append({"linha": idx + 2, "nome": nome, "status": "erro", "motivo": str(e)})
-    
-    await session.commit()
-    
-    return {
-        "total_linhas": len(df),
-        "importados": importados,
-        "duplicados": duplicados,
-        "erros": erros,
-        "detalhes": detalhes[:100]  # Limitar detalhes retornados
-    }
+        batch.append({"id": str(uuid.uuid4()), "nome": nome, "ativo": True,
+                       "created_at": datetime.now(timezone.utc).isoformat()})
+        nomes_importados.add(nome.lower())
+        importados += 1
+
+    if batch:
+        await db.cursos.insert_many(batch)
+
+    return {"total_linhas": len(df), "importados": importados, "duplicados": duplicados, "erros": erros, "detalhes": detalhes[:100]}
 
 
 # ==================== DADOS AUXILIARES ====================
 
 @router.get("/status-pedido", tags=["Auxiliares"])
 async def listar_status():
-    """Lista status disponíveis"""
-    return [
-        {"value": s.value, "label": s.label}
-        for s in StatusPedido
-    ]
+    return [{"value": s.value, "label": s.label} for s in StatusPedido]

@@ -1,173 +1,137 @@
 <analysis>**original_problem_statement:**
-O usuário solicitou a criação de um sistema web completo chamado SYNAPSE para o SENAI CIMATEC, para substituir processos manuais de gestão de matrículas, pendências e reembolsos.
+O usuário solicitou uma migração completa do banco de dados da aplicação, de SQLite para MongoDB, para resolver problemas de incompatibilidade de deploy na plataforma Emergent. A tarefa é de alta complexidade e envolve a reescrita de toda a camada de acesso a dados do backend.
 
-As solicitações mais recentes nesta sessão foram:
-1.  **Melhorias Técnicas:** Refatorar o código, limpar dependências e resolver inconsistências no banco de dados para preparar a aplicação para o deploy.
-2.  **Correção de Erros de Deploy:** Analisar logs de build e corrigir um erro crítico relacionado à biblioteca  que impedia o deploy.
-3.  **Implementar Central de Alertas:** Criar um sistema de alertas no header para notificar os assistentes sobre pedidos críticos, SLA em risco, reembolsos pendentes e turmas lotando.
-4.  **Corrigir Módulo Meu Dia:** Adicionar um campo de data para novas tarefas e fazer com que os lembretes funcionem, exibindo alertas visuais na tela no horário agendado.
-5.  **Melhorar Gestão de Usuários:** Adicionar uma funcionalidade para o administrador poder resetar a senha de um usuário específico ou de todos os usuários.
-6.  **Corrigir Formatador de Planilhas:** Ajustar a formatação de números de telefone para remover a máscara, facilitando a cópia para outros sistemas (TOTVS).
-7.  **Auditoria e Correção de Dados:** Fazer uma auditoria completa em todos os cards e gráficos dos dashboards para garantir que os números estão corretos e consistentes com o banco de dados.
-8.  **Categorizar Cursos:** Analisar e categorizar automaticamente todos os 4489 cursos existentes por tipo (Técnico, Graduação, Pós, etc.) e adicionar filtros na interface.
-9.  **Melhorar Módulo de Reembolsos:** Adicionar um card para Cancelados, garantindo que a soma dos status bata com o total, e adicionar uma opção para o administrador excluir registros de reembolso incorretos.
-10. **(Em Andamento) Criar Novas Funcionalidades:**
-    *   Criar uma página de Manual/Ajuda do sistema.
-    *   Criar um Dashboard de Produtividade para a coordenadora.
-    *   Limpar nomes de cursos que possuem números no início.
+Anteriormente, o usuário também solicitou e o agente implementou:
+1.  **Filtro por Período Letivo:** Adicionar um filtro de período letivo no Painel de Vagas para evitar que dados de semestres passados se acumulem.
+2.  **Duplicação de Período:** Criar uma funcionalidade para facilitar a transição de semestres, permitindo ao administrador duplicar as turmas de um período anterior para um novo (com vagas zeradas) ou criar um período novo e vazio.
 
 **User's preferred language**: Português (Brasil). O próximo agente DEVE se comunicar em português.
 
 **what currently exists?**
-Uma aplicação full-stack (FastAPI + React + SQLite) chamada SYNAPSE, que foi extensivamente refatorada e depurada. O monolito  foi modularizado, erros críticos de deploy foram corrigidos e a consistência dos dados nos dashboards foi validada e ajustada.
-
-Funcionalidades implementadas nesta sessão:
--   **Refatoração do Backend:** O arquivo  foi reduzido em 80%, com endpoints movidos para roteadores modulares.
--   **Correção de Deploy:** O conflito entre  e  foi resolvido, viabilizando o deploy.
--   **Central de Alertas:** Um ícone de sino no header agora exibe um popover com alertas críticos (pedidos parados, reembolsos pendentes).
--   **Funcionalidades de Admin:** Admins podem resetar senhas de usuários e excluir registros de reembolso.
--   **Melhorias no Meu Dia:** Tarefas agora têm campo de data e os lembretes são exibidos corretamente na página e através de alertas visuais (toasts) na tela.
--   **Correções de Dados:** Todos os dashboards (Principal, Reembolsos, Painel de Vagas) foram auditados e os números corrigidos para baterem com a fonte de dados.
--   **Organização de Cursos:** Os 4489 cursos foram categorizados automaticamente, e a interface de consulta agora possui filtros por categoria.
+Uma aplicação full-stack (FastAPI + React) que está no meio de uma migração de banco de dados de SQLite para MongoDB.
+-   As credenciais do MongoDB foram adicionadas ao .
+-   Um script de migração () foi criado e executado com sucesso, transferindo todos os dados do SQLite para coleções no MongoDB.
+-   A infraestrutura base do backend foi adaptada com um novo conector () e um novo arquivo de dependências ().
+-   A grande maioria dos arquivos de rota (endpoints da API) em  foi reescrita para usar Pymongo (MongoDB) em vez de SQLAlchemy (SQLite). A aplicação está em um estado não funcional até que a migração seja concluída.
 
 **Last working item**:
--   **Last item agent was working:** O agente iniciou a implementação da primeira de três novas solicitações do usuário: a criação de uma página de Manual/Ajuda do sistema. O agente criou o arquivo da nova página no frontend e a rota correspondente.
+-   **Last item agent was working:** O agente estava executando a Fase 3 da migração para o MongoDB: a conversão de todos os roteadores da API. Ele havia acabado de reescrever dois dos roteadores mais complexos,  e , para serem compatíveis com o MongoDB.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** Frontend testing agent (para validar a nova página e seu conteúdo quando estiver pronta).
+-   **Which testing method agent to use?** both. Após a conclusão da migração, será necessário um teste de regressão completo do backend e do frontend. O  é altamente recomendado para garantir que todas as funcionalidades foram preservadas.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** Limpar o arquivo  de dependências desnecessárias (ex: ). (P2)
--   **Issue 2:** Investigar o layout da planilha do SESI. (P3, BLOQUEADO)
+-   **Issue 1: Concluir a Migração de SQLite para MongoDB (P0)**: Esta é a tarefa principal e bloqueadora. O backend está inoperante até que seja concluída.
 
 **Issues Detail:**
--   **Issue 1: Limpeza do **
-    -   **Attempted fixes:** O agente analisou o arquivo e confirmou que a dependência pesada  já não existia. Identificou que  provavelmente não é usado, mas optou por não removê-lo para evitar quebras inesperadas, adiando a tarefa.
-    -   **Next debug checklist:** Usar uma ferramenta como  ou  para analisar o código-fonte e identificar com segurança todas as dependências não importadas. Após a remoção, fazer um teste de regressão completo.
-    -   **Why fix this issue and what will be achieved with the fix?** Reduzir o tamanho da imagem do contêiner, acelerar a inicialização e remover potenciais vulnerabilidades de pacotes não utilizados.
-    -   **Status:** NOT STARTED
+-   **Issue 1: Concluir a Migração de SQLite para MongoDB**
+    -   **Attempted fixes:** A migração está em andamento. Os dados foram movidos e a maioria dos roteadores foi reescrita.
+    -   **Next debug checklist:**
+        1.  Verificar se existe algum arquivo de rota em  que ainda utiliza a sintaxe do SQLAlchemy (). Se houver, reescrevê-lo para usar Pymongo.
+        2.  Revisar e atualizar o arquivo  para remover as importações antigas do SQLAlchemy e registrar os novos roteadores compatíveis com MongoDB.
+        3.  Remover todos os arquivos e diretórios legados relacionados ao SQLAlchemy (, , o antigo , e o arquivo ).
+        4.  Reiniciar o backend e verificar os logs em busca de erros de inicialização.
+        5.  Realizar testes pontuais com  para validar os principais endpoints (login, dashboard principal).
+        6.  Invocar o  para um teste de regressão completo.
+    -   **Why fix this issue and what will be achieved with the fix?** A conclusão da migração é um requisito para que a aplicação possa ser implantada na plataforma Emergent. Isso desbloqueará futuras funcionalidades e resolverá os erros de build.
+    -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Backend.
-    -   **Blocked on other issue:** Não.
-
--   **Issue 2: Layout incorreto na planilha do SESI**
-    -   **Attempted fixes:** Nenhuma nesta sessão. É uma pendência antiga.
-    -   **Next debug checklist:** Aguardar o usuário fornecer o arquivo original para análise.
-    -   **Why fix this issue and what will be achieved with the fix?** Aumentar a robustez do formatador de planilhas para aceitar diferentes layouts.
-    -   **Status:** BLOCKED (Aguardando arquivo do usuário)
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Backend
-    -   **Blocked on other issue:** Não.
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on other issue:** Não, esta é a questão bloqueadora.
 
 **In progress Task List**:
--   **Task 1: Criar página de Manual/Ajuda do sistema** (P0)
-    -   **Where to resume:** O arquivo  foi criado, mas está vazio. É preciso popular esta página com conteúdo explicativo sobre as funcionalidades do sistema, talvez usando  para renderizar um manual.
-    -   **What will be achieved with this?** Fornecer aos usuários, especialmente administradores, um guia de referência sobre como usar cada parte do sistema.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Frontend.
-    -   **Blocked on something:** Não.
+-   A migração para MongoDB é a única tarefa em andamento. As fases restantes estão detalhadas acima.
 
 **Upcoming and Future Tasks**
+As tarefas abaixo foram planejadas antes da migração e devem ser retomadas após sua conclusão.
 **Upcoming Tasks:**
--   **(P1) Criar Dashboard de Produtividade para Cristiane:** Desenvolver um novo painel para que a coordenadora possa visualizar a produtividade da equipe (quantas análises cada assistente realizou em um determinado período).
--   **(P2) Limpar Nomes de Cursos:** Criar um script ou funcionalidade para remover números e prefixos desnecessários do início dos nomes dos cursos no banco de dados (ex: 3003Técnico...).
--   **(P2) Integração com TOTVS:** O próximo passo estratégico é o usuário apresentar a  à equipe de TI para viabilizar uma integração via API, eliminando a necessidade de exportar planilhas.
--   **(P2) Evoluir Arquitetura da Informação:** Refinar os nomes dos menus e fluxos para separar claramente Processo Seletivo de Demandas Corporativas.
+-   **(P1) Criar Dashboard de Produtividade para Cristiane:** A base (frontend e backend) foi criada, mas precisa ser testada e validada após a migração.
+-   **(P1) Integração com TOTVS:** Próximo passo estratégico após estabilização da aplicação.
+-   **(P2) Limpar Nomes de Cursos:** A limpeza inicial foi feita, mas pode precisar de ajustes.
+-   **(P2) Evoluir Arquitetura da Informação:** Refinar nomes de menus e fluxos.
 
 **Future Tasks:**
--   Implementar filtros por intervalo de datas nas principais listagens da aplicação.
--   Resolver as dívidas técnicas restantes.
+-   Implementar filtros por intervalo de datas nas principais listagens.
+-   Limpeza final do  e outras dívidas técnicas.
 
 **Completed work in this session**
--   **Refatoração do Backend:** O monolito  foi completamente refatorado em roteadores modulares (, , etc.), reduzindo o arquivo principal em 80% e melhorando a manutenibilidade.
--   **Correção de Blocker de Deploy:** Resolvido o erro  ao substituir  por  diretamente e atualizar os hashes de senha no banco.
--   **Implementação da Central de Alertas:** Criado um novo endpoint () e um componente de frontend () que exibe um badge com a contagem de alertas críticos e um popover com detalhes.
--   **Melhorias em Meu Dia e Lembretes:** O modal de criação de tarefas agora inclui um campo de data. A lógica foi corrigida para que tarefas com horário apareçam como lembretes, e um sistema de alerta visual (toast) foi criado para notificar o usuário no horário agendado.
--   **Funcionalidades de Admin:** Implementados endpoints e botões na UI para que administradores possam resetar a senha de um ou todos os usuários e excluir registros de reembolso.
--   **Auditoria e Correção de Dados:** Realizada uma auditoria completa nos dashboards, corrigindo inconsistências de contagem nos cards de Reembolso, Painel de Vagas (ocupação > 100%) e outros.
--   **Categorização Automática de Cursos:** Um script foi executado para categorizar todos os 4489 cursos. A UI foi atualizada com cards de estatísticas e filtros por categoria.
--   **Ajuste no Módulo de Reembolsos:** Adicionado um card de Cancelados ao dashboard e o ícone de exclusão para administradores na tabela de registros.
--   **Correção do Formatador de Planilhas:** A função de formatação de telefone foi alterada para retornar apenas dígitos, sem máscara.
--   **Consolidação do Banco de Dados:** Removido um arquivo de banco de dados SQLite antigo e duplicado (), consolidando o uso em .
+-   **Diagnóstico de Deploy:** Utilizou o  para identificar que o SQLite era a causa raiz das falhas de build.
+-   **Migração para MongoDB (Iniciada):**
+    -   Configurou a conexão com o MongoDB.
+    -   Criou e executou um script para migrar todos os dados do SQLite para o MongoDB.
+    -   Reescreveu a grande maioria dos roteadores da API para usar Pymongo.
+-   **Funcionalidade: Filtro por Período (Painel de Vagas):**
+    -   Implementou um endpoint () para listar os períodos letivos.
+    -   Adicionou um seletor na página Painel de Vagas que filtra todos os cards e a tabela de turmas pelo período selecionado.
+-   **Funcionalidade: Duplicação de Período:**
+    -   Criou um endpoint () e um modal na UI para permitir a criação de um novo período letivo.
+    -   O modal permite ao usuário escolher entre criar um período vazio ou duplicar as turmas de um período existente, zerando as vagas ocupadas.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Limpeza do **: O agente analisou, mas decidiu adiar a limpeza para evitar riscos.
+-   **Issue 1: Limpeza do **: Adiado devido à prioridade da migração.
 -   **Issue 2: Problema de layout na planilha do SESI**: Bloqueado, aguardando arquivo do usuário.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:** Refatoração do monolito .
--   **Recurrence count:** Alto
--   **Status:** RESOLVED (A refatoração foi concluída nesta sessão).
+-   Nenhum.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend Refactoring:** Transição de um padrão monolítico () para uma arquitetura de roteadores modulares, melhorando a organização e escalabilidade do código.
--   **Dependency Conflict Resolution:** Resolução de um erro de deploy causado pela incompatibilidade entre as bibliotecas  e , optando pelo uso direto do  para hashing de senhas.
--   **Data Auditing & Correction:** Processo sistemático de consultar o banco de dados diretamente, comparar com os resultados da API e corrigir a lógica de frontend e backend para garantir a consistência dos dados exibidos nos dashboards.
--   **Real-time Alerts:** Implementação de um sistema de polling no frontend () que verifica periodicamente por lembretes agendados e dispara notificações visuais (toasts) para o usuário.
--   **Automated Data Categorization:** Uso de scripts com lógica baseada em palavras-chave para processar e categorizar um grande volume de dados textuais (nomes de cursos), adicionando uma nova dimensão () ao modelo de dados.
+-   **Database Migration (SQLite → MongoDB):** Substituição completa da camada de persistência, de um banco relacional para um banco de documentos NoSQL.
+-   **Pymongo vs. SQLAlchemy:** Mudança de paradigma do uso de um ORM (SQLAlchemy) com sessões e objetos, para o uso de um driver direto (Pymongo) com dicionários, cursores e manipulação manual de .
+-   **ObjectId Serialization:** O desafio técnico mais crítico da migração é garantir que os  do MongoDB sejam convertidos para strings antes de serem enviados nas respostas da API, para evitar erros de serialização JSON.
 
 **key DB schema**
--   ****:  (A coluna  foi adicionada e populada com categorias como 'tecnico', 'graduacao', 'pos-graduacao', 'qualificacao', 'aperfeicoamento', 'livre').
--   ****:  (Tabela central para a funcionalidade Meu Dia e lembretes).
--   ****:  (O status  agora é tratado no dashboard).
+-   O esquema agora é baseado em coleções no MongoDB, com nomes que correspondem às tabelas antigas do SQLite (ex: , , , etc.). Os relacionamentos são gerenciados por s de referência.
 
 **changes in tech stack**
--   ** foi removido** do  e do código.
--   ** agora é usado diretamente** para hashing e verificação de senhas em .
+-   **Removido (ou em processo de remoção):** , .
+-   **Adicionado:** , .
 
 **All files of reference**
--   : Arquivo principal do backend, agora significativamente mais limpo após a refatoração.
--   : Diretório contendo os novos roteadores modulares para cada funcionalidade.
--   : Arquivo onde a lógica de autenticação foi trocada de  para .
--   : Página onde o card Cancelados e o botão de exclusão foram adicionados.
--   : Página onde o sistema de lembretes e tarefas foi corrigido.
--   : Novo componente para a central de alertas no header.
--   : Novo componente que dispara toasts de alerta para lembretes.
--   : Novo arquivo (ainda vazio) para o manual do sistema.
+-   : Contém a nova variável .
+-   : Arquivo de conexão com o MongoDB.
+-   : Novo arquivo de injeção de dependência para o MongoDB.
+-   : Diretório onde todos os arquivos estão sendo reescritos.
+-   : Arquivo principal que precisa ser atualizado para finalizar a migração.
+-   : Contém as últimas funcionalidades implementadas e testadas antes da migração.
 
 **Areas that need refactoring**:
--   : Ainda pode conter dependências não utilizadas ().
--   Nomes de cursos na tabela  precisam de limpeza para remover prefixos numéricos.
+-   Todo o código legado do SQLAlchemy (modelos, repositórios,  antigo) precisa ser removido após a conclusão da migração.
 
 **key api endpoints**
--    (GET): Novo endpoint para a Central de Alertas.
--    (POST): Novo endpoint para admin resetar senha de um usuário.
--    (POST): Novo endpoint para admin resetar todas as senhas.
--    (DELETE): Endpoint existente que agora é utilizado pela UI para exclusão por admin.
--    (GET): Endpoint modificado para incluir tarefas com horário na lista de lembretes.
--   , , : Endpoints que foram movidos do  para seus respectivos roteadores.
+-    (POST): Novo endpoint para duplicar turmas para um novo período letivo.
+-    (GET): Novo endpoint para listar os períodos letivos disponíveis.
+-   *Todos os outros endpoints*: Estão sendo reescritos para funcionar com MongoDB.
 
 **Critical Info for New Agent**
--   A aplicação passou por uma grande refatoração e limpeza de bugs. Os principais problemas de inconsistência de dados e o blocker de deploy foram resolvidos.
--   A confiança do usuário foi reforçada com as correções precisas dos dados nos dashboards. Manter essa precisão é crucial.
--   O fluxo de trabalho agora é focado em adicionar as novas funcionalidades solicitadas: Manual do Sistema, Dashboard de Produtividade e limpeza de dados dos cursos.
--   O sistema de lembretes agora funciona de duas formas: (1) exibindo tarefas com horário na página Meu Dia e (2) disparando um alerta visual (toast) na tela quando o horário da tarefa chega.
--   A aplicação está configurada para usar SQLite, o que é suficiente para o ambiente de desenvolvimento e deploy inicial. A migração para PostgreSQL é uma possibilidade futura para produção em larga escala.
+-   **A migração é a prioridade absoluta.** A aplicação não funcionará até que seja concluída. Siga os passos da .
+-   **Cuidado com !** É a principal fonte de erros em migrações para MongoDB. Sempre converta  e outros campos de referência  para  antes de retorná-los em uma API. O agente anterior usou modelos Pydantic com validadores para automatizar isso. Continue usando esse padrão.
+-   Após reescrever os últimos roteadores, o passo final é editar  para usar os novos roteadores e remover todo o código antigo. Não se esqueça de deletar os arquivos legados.
+-   Testes massivos serão necessários. Após a migração, o  é a melhor ferramenta para garantir a integridade da aplicação.
 
 **documents and test reports created in this job**
--    foi atualizado com as novas funcionalidades concluídas.
--   Os relatórios do  foram utilizados para identificar e corrigir problemas de deploy, mas não são salvos como artefatos permanentes.
+-    (Contém resultados de testes das funcionalidades pré-migração).
+-    (Atualizado com as funcionalidades concluídas antes da migração).
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **Usuário:** Aponta que o sistema de lembretes não está funcionando e que a tarefa Teste não apareceu. (RESOLVIDO)
-9.  **Usuário:** Pergunta se o agente fez alguma alteração no código para corrigir os lembretes ou se já estava funcionando. (RESPONDIDO, o agente explicou as mudanças que fez).
-8.  **Usuário:** Aponta que o módulo de Reembolsos não tem um card para Cancelados e que o admin não pode excluir registros. (RESOLVIDO)
-7.  **Usuário:** Pede para o agente continuar com a implementação da exclusão de reembolsos. (CONCLUÍDO)
-6.  **Usuário:** Pede para o agente criar 3 novas funcionalidades em ordem: (1) Página de Manual/Ajuda, (2) Dashboard de Produtividade, (3) Limpar nomes de cursos. (EM ANDAMENTO)
-5.  **Usuário:** Pede ao agente para categorizar todos os 4489 cursos automaticamente. (CONCLUÍDO)
-4.  **Usuário:** Responde Quero kkkkkk ao ser perguntado se quer filtros por categoria de curso. (CONCLUÍDO)
-3.  **Usuário:** Pergunta se pode colocar a aplicação em seu domínio . (RESPONDIDO com instruções).
-2.  **Usuário:** Adiciona um lembrete e aponta que ele não apareceu. (RESOLVIDO, o problema era a data da tarefa).
-1.  **Usuário:** Pergunta se os lembretes já estavam funcionando corretamente sem que o agente alterasse o código. (RESPONDIDO, o agente confirmou que fez alterações).
+10. **Usuário:** Continua (Incentivando o agente a prosseguir com a migração).
+9.  **Usuário:** Quero (Aprovando a sugestão de adicionar a funcionalidade de duplicar período).
+8.  **Usuário:** Ele deve perguntar se a essoa deseja duplicar o período anterior ou não (Solicitando um ajuste no fluxo de duplicação de período).
+7.  **Usuário:** Pode prosseguir (Aprovando o plano para implementar o filtro de período).
+6.  **Usuário:** Informa que no Painel de Vagas os dados de semestres anteriores se acumularão, sugerindo a necessidade de um filtro por período.
+5.  **Usuário:** Migrar para MongoDB — Trabalho significativo, mas viabiliza o deploy na Emergent (Confirmando a decisão de iniciar a migração do banco de dados).
+4.  **Usuário:** Pede para chamar o  e verificar a prontidão para deploy.
+3.  **Usuário:** Aprova o screenshot do novo modal de duplicação de período.
+2.  **Usuário:** Continua (Incentivando o agente a prosseguir com a reescrita dos roteadores).
+1.  **Usuário:** Continua (Incentivando o agente a prosseguir com a reescrita dos roteadores).
 
 **Project Health Check:**
--   **Broken:** Nenhum.
+-   **Broken:** O backend está totalmente inoperante devido à migração em andamento.
 -   **Mocked:** Nenhum.
--   **Technical Debt:** Limpeza pendente do ; necessidade de limpar nomes de cursos no DB.
+-   **Technical Debt:** Limpeza pendente do .
 
 **3rd Party Integrations**
 -   ViaCEP
@@ -175,21 +139,18 @@ Funcionalidades implementadas nesta sessão:
 -   Recharts
 -   pandas, openpyxl
 -   Resend (Email)
--   react-markdown, remark-gfm
--   @tailwindcss/typography
--   file-saver
--   react-beautiful-dnd
--   bcrypt (substituiu passlib)
+-   react-markdown
+-   bcrypt
 
 **Testing status**
--   **Testing agent used after significant changes:** NO (o  foi usado extensivamente, que faz um tipo de health check).
+-   **Testing agent used after significant changes:** YES (para funcionalidades pré-migração).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** Não.
--   **Known regressions:** Nenhuma.
+-   **Known regressions:** A aplicação inteira está em estado de regressão até que a migração seja concluída e testada.
 
 **Credentials to test flow:**
 -   **Admin principal:**  (Senha: )
 -   **Outros usuários:** Senha padrão  (requer troca no primeiro login).
 
 **What agent forgot to execute**
--   O agente adiou conscientemente a limpeza final do  e ainda não iniciou duas das três tarefas solicitadas pelo usuário no final da sessão (Dashboard de Produtividade e limpeza de nomes de cursos), pois estava trabalhando na primeira (Manual do Sistema).</analysis>
+-   O agente está focado na migração massiva. Nenhuma tarefa foi esquecida, mas sim colocada em espera. A conclusão da migração é o pré-requisito para todas as outras atividades.</analysis>

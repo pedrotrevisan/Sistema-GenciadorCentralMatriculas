@@ -1,768 +1,278 @@
-"""Router de Apoio Cognitivo - Meu Dia e Base de Conhecimento"""
+"""Router de Apoio Cognitivo - Meu Dia e Base de Conhecimento - MongoDB version"""
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone, date, timedelta
-from sqlalchemy import select, func, and_, or_, desc
-from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 from src.domain.entities import Usuario
-from .dependencies import get_db_session, get_current_user
+from src.infrastructure.persistence.mongodb import db
+from src.routers.dependencies import get_current_user
 
 router = APIRouter(prefix="/apoio", tags=["Apoio Cognitivo"])
 
 
-# ==================== MODELOS ====================
-
-from sqlalchemy import Column, String, Text, Boolean, DateTime, Date, Integer, ForeignKey
-from sqlalchemy.orm import relationship
-from src.infrastructure.persistence.database import Base
-
-
-class TarefaDiariaModel(Base):
-    """Modelo para tarefas do checklist diário"""
-    __tablename__ = "tarefas_diarias"
-    
-    id = Column(String(36), primary_key=True)
-    usuario_id = Column(String(36), nullable=False, index=True)
-    titulo = Column(String(200), nullable=False)
-    descricao = Column(Text, nullable=True)
-    categoria = Column(String(50), nullable=True)  # rotina, pendencia, lembrete, outro
-    prioridade = Column(Integer, default=2)  # 1=alta, 2=media, 3=baixa
-    recorrente = Column(Boolean, default=False)  # Se repete todos os dias
-    dias_semana = Column(String(20), nullable=True)  # "1,2,3,4,5" = seg a sex
-    horario_sugerido = Column(String(5), nullable=True)  # "09:00"
-    concluida = Column(Boolean, default=False)
-    data_conclusao = Column(DateTime, nullable=True)
-    data_tarefa = Column(Date, nullable=True)  # Data específica da tarefa
-    ordem = Column(Integer, default=0)
-    ativo = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-
-
-class ArtigoConhecimentoModel(Base):
-    """Modelo para artigos da base de conhecimento"""
-    __tablename__ = "artigos_conhecimento"
-    
-    id = Column(String(36), primary_key=True)
-    titulo = Column(String(200), nullable=False)
-    conteudo = Column(Text, nullable=False)
-    resumo = Column(Text, nullable=True)  # Resumo curto para exibição
-    categoria = Column(String(50), nullable=False)  # procedimento, faq, documento, dica
-    tags = Column(String(500), nullable=True)  # Tags separadas por vírgula
-    icone = Column(String(50), nullable=True)  # Nome do ícone lucide
-    destaque = Column(Boolean, default=False)  # Se aparece na home
-    ordem = Column(Integer, default=0)
-    visualizacoes = Column(Integer, default=0)
-    criado_por_id = Column(String(36), nullable=True)
-    criado_por_nome = Column(String(200), nullable=True)
-    ativo = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-
-
-class LembreteModel(Base):
-    """Modelo para lembretes personalizados"""
-    __tablename__ = "lembretes"
-    
-    id = Column(String(36), primary_key=True)
-    usuario_id = Column(String(36), nullable=False, index=True)
-    titulo = Column(String(200), nullable=False)
-    descricao = Column(Text, nullable=True)
-    data_lembrete = Column(DateTime, nullable=False)
-    tipo = Column(String(30), nullable=True)  # contato, reuniao, prazo, outro
-    referencia_id = Column(String(36), nullable=True)  # ID de pedido/pendência relacionado
-    referencia_tipo = Column(String(30), nullable=True)  # pedido, pendencia
-    notificado = Column(Boolean, default=False)
-    concluido = Column(Boolean, default=False)
-    ativo = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-
-
-# ==================== DTOs ====================
-
-class TarefaRequest(BaseModel):
-    titulo: str = Field(..., min_length=2, max_length=200)
+class TarefaCreateDTO(BaseModel):
+    titulo: str = Field(..., min_length=1, max_length=200)
     descricao: Optional[str] = None
-    categoria: Optional[str] = "outro"
-    prioridade: Optional[int] = 2
-    recorrente: Optional[bool] = False
+    categoria: Optional[str] = "rotina"
+    prioridade: int = Field(default=2, ge=1, le=3)
+    recorrente: bool = False
     dias_semana: Optional[str] = None
     horario_sugerido: Optional[str] = None
-    data_tarefa: Optional[str] = None  # YYYY-MM-DD
-    ordem: Optional[int] = 0
+    data_tarefa: Optional[str] = None
 
+class TarefaUpdateDTO(BaseModel):
+    titulo: Optional[str] = None
+    descricao: Optional[str] = None
+    categoria: Optional[str] = None
+    prioridade: Optional[int] = None
+    concluida: Optional[bool] = None
+    horario_sugerido: Optional[str] = None
+    data_tarefa: Optional[str] = None
+    ordem: Optional[int] = None
 
-class ArtigoRequest(BaseModel):
-    titulo: str = Field(..., min_length=3, max_length=200)
+class TarefaReorderDTO(BaseModel):
+    tarefas: List[dict]
+
+class ArtigoCreateDTO(BaseModel):
+    titulo: str = Field(..., min_length=3)
     conteudo: str = Field(..., min_length=10)
     resumo: Optional[str] = None
-    categoria: str = "procedimento"
+    categoria: str = Field(default="procedimento")
     tags: Optional[str] = None
     icone: Optional[str] = None
-    destaque: Optional[bool] = False
-    ordem: Optional[int] = 0
+    destaque: bool = False
 
+class ArtigoUpdateDTO(BaseModel):
+    titulo: Optional[str] = None
+    conteudo: Optional[str] = None
+    resumo: Optional[str] = None
+    categoria: Optional[str] = None
+    tags: Optional[str] = None
+    icone: Optional[str] = None
+    destaque: Optional[bool] = None
 
-class LembreteRequest(BaseModel):
-    titulo: str = Field(..., min_length=2, max_length=200)
+class LembreteCreateDTO(BaseModel):
+    titulo: str
     descricao: Optional[str] = None
-    data_lembrete: str  # ISO format
+    data_lembrete: str
     tipo: Optional[str] = "outro"
     referencia_id: Optional[str] = None
     referencia_tipo: Optional[str] = None
 
 
-# ==================== CATEGORIAS ====================
-
-CATEGORIAS_TAREFA = [
-    {"value": "rotina", "label": "Rotina Diária", "cor": "blue"},
-    {"value": "pendencia", "label": "Pendência", "cor": "orange"},
-    {"value": "lembrete", "label": "Lembrete", "cor": "purple"},
-    {"value": "reuniao", "label": "Reunião", "cor": "green"},
-    {"value": "outro", "label": "Outro", "cor": "gray"},
-]
-
-CATEGORIAS_ARTIGO = [
-    {"value": "procedimento", "label": "Procedimento", "icone": "FileText"},
-    {"value": "faq", "label": "Perguntas Frequentes", "icone": "HelpCircle"},
-    {"value": "documento", "label": "Documento", "icone": "File"},
-    {"value": "dica", "label": "Dica Rápida", "icone": "Lightbulb"},
-    {"value": "contato", "label": "Informação de Contato", "icone": "Phone"},
-]
-
-
 # ==================== MEU DIA ====================
 
 @router.get("/meu-dia")
-async def meu_dia(
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Retorna o resumo do dia do usuário"""
-    from src.infrastructure.persistence.models import PendenciaModel, PedidoModel
-    from src.infrastructure.persistence.models_contatos import LogContatoModel
-    
-    hoje = date.today()
-    dia_semana = str(hoje.weekday() + 1)  # 1=segunda, 7=domingo
-    
-    # Buscar tarefas do dia (específicas + recorrentes do dia da semana)
-    tarefas_query = select(TarefaDiariaModel).where(
-        and_(
-            TarefaDiariaModel.usuario_id == usuario.id,
-            TarefaDiariaModel.ativo == True,
-            or_(
-                TarefaDiariaModel.data_tarefa == hoje,
-                and_(
-                    TarefaDiariaModel.recorrente == True,
-                    or_(
-                        TarefaDiariaModel.dias_semana == None,
-                        TarefaDiariaModel.dias_semana.contains(dia_semana)
-                    )
-                )
-            )
-        )
-    ).order_by(TarefaDiariaModel.ordem, TarefaDiariaModel.prioridade)
-    
-    tarefas_result = await session.execute(tarefas_query)
-    tarefas = tarefas_result.scalars().all()
-    
-    # Buscar lembretes do dia
-    inicio_dia = datetime.combine(hoje, datetime.min.time()).replace(tzinfo=timezone.utc)
-    fim_dia = datetime.combine(hoje, datetime.max.time()).replace(tzinfo=timezone.utc)
-    
-    lembretes_query = select(LembreteModel).where(
-        and_(
-            LembreteModel.usuario_id == usuario.id,
-            LembreteModel.ativo == True,
-            LembreteModel.concluido == False,
-            LembreteModel.data_lembrete >= inicio_dia,
-            LembreteModel.data_lembrete <= fim_dia
-        )
-    ).order_by(LembreteModel.data_lembrete)
-    
-    lembretes_result = await session.execute(lembretes_query)
-    lembretes = lembretes_result.scalars().all()
-    
-    # Converter tarefas com horário em lembretes também
-    tarefas_com_horario = [t for t in tarefas if t.horario_sugerido and not t.concluida]
-    
-    # Criar lista unificada de lembretes (lembretes reais + tarefas com horário)
-    lembretes_unificados = []
-    
-    # Adicionar lembretes da tabela lembretes
-    for l in lembretes:
-        lembretes_unificados.append({
-            "id": l.id,
-            "titulo": l.titulo,
-            "descricao": l.descricao,
-            "horario": l.data_lembrete.strftime("%H:%M") if l.data_lembrete else None,
-            "tipo": l.tipo,
-            "fonte": "lembrete"
-        })
-    
-    # Adicionar tarefas com horário como lembretes
-    for t in tarefas_com_horario:
-        lembretes_unificados.append({
-            "id": t.id,
-            "titulo": t.titulo,
-            "descricao": t.descricao or f"Tarefa: {t.categoria}",
-            "horario": t.horario_sugerido,
-            "tipo": t.categoria or "tarefa",
-            "fonte": "tarefa"
-        })
-    
-    # Ordenar por horário
-    lembretes_unificados.sort(key=lambda x: x.get("horario") or "23:59")
-    
-    # Buscar retornos de contato pendentes (usando a tabela de contatos correta)
-    retornos_query = select(func.count(LogContatoModel.id)).where(
-        and_(
-            LogContatoModel.data_retorno != None,
-            LogContatoModel.retorno_realizado == False,
-            LogContatoModel.data_retorno <= fim_dia
-        )
-    )
-    retornos_result = await session.execute(retornos_query)
-    total_retornos = retornos_result.scalar() or 0
-    
-    # Contagem de pendências em aberto
-    pendencias_query = await session.execute(
-        select(func.count(PendenciaModel.id)).where(
-            PendenciaModel.status.in_(['pendente', 'aguardando_aluno', 'reenvio_necessario'])
-        )
-    )
-    total_pendencias = pendencias_query.scalar() or 0
-    
-    # Pedidos em análise
-    pedidos_query = await session.execute(
-        select(func.count(PedidoModel.id)).where(
-            PedidoModel.status.in_(['em_analise', 'documentacao_pendente'])
-        )
-    )
-    total_pedidos_andamento = pedidos_query.scalar() or 0
-    
-    return {
-        "data": hoje.isoformat(),
-        "dia_semana": ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"][hoje.weekday()],
-        "saudacao": _get_saudacao(),
-        "tarefas": [
-            {
-                "id": t.id,
-                "titulo": t.titulo,
-                "descricao": t.descricao,
-                "categoria": t.categoria,
-                "prioridade": t.prioridade,
-                "horario_sugerido": t.horario_sugerido,
-                "concluida": t.concluida,
-                "recorrente": t.recorrente,
-                "data_tarefa": t.data_tarefa.isoformat() if hasattr(t, 'data_tarefa') and t.data_tarefa else None
-            }
-            for t in tarefas
-        ],
-        "lembretes": lembretes_unificados,
-        "retornos_pendentes": total_retornos,
-        "resumo": {
-            "tarefas_total": len(tarefas),
-            "tarefas_concluidas": len([t for t in tarefas if t.concluida]),
-            "pendencias_abertas": total_pendencias,
-            "pedidos_andamento": total_pedidos_andamento,
-            "lembretes_hoje": len(lembretes_unificados)
-        }
-    }
+async def get_meu_dia(data: Optional[str] = None, usuario: Usuario = Depends(get_current_user)):
+    hoje = data or date.today().isoformat()
+    dia_semana = date.fromisoformat(hoje).isoweekday()
 
+    query = {"usuario_id": usuario.id, "ativo": {"$ne": False},
+             "$or": [{"data_tarefa": hoje}, {"data_tarefa": None, "recorrente": True}]}
+    tarefas = await db.tarefas_diarias.find(query, {"_id": 0}).sort([("ordem", 1), ("prioridade", 1)]).to_list(200)
 
-def _get_saudacao():
-    """Retorna saudação baseada no horário"""
-    hora = datetime.now().hour
-    if hora < 12:
-        return "Bom dia"
-    elif hora < 18:
-        return "Boa tarde"
-    return "Boa noite"
+    # Lembretes do dia
+    inicio = f"{hoje}T00:00:00"
+    fim = f"{hoje}T23:59:59"
+    lembretes_query = {"usuario_id": usuario.id, "data_lembrete": {"$gte": inicio, "$lte": fim}, "concluido": {"$ne": True}}
+    lembretes = await db.lembretes.find(lembretes_query, {"_id": 0}).sort("data_lembrete", 1).to_list(50)
 
+    # Tarefas com horário como lembretes
+    tarefas_com_horario = [t for t in tarefas if t.get("horario_sugerido") and not t.get("concluida")]
 
-# ==================== TAREFAS ====================
+    total = len(tarefas)
+    concluidas = len([t for t in tarefas if t.get("concluida")])
+    progresso = round((concluidas / total * 100) if total > 0 else 0, 1)
 
-@router.get("/tarefas")
-async def listar_tarefas(
-    data: Optional[str] = None,  # YYYY-MM-DD
-    categoria: Optional[str] = None,
-    concluida: Optional[bool] = None,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Lista tarefas do usuário"""
-    query = select(TarefaDiariaModel).where(
-        and_(
-            TarefaDiariaModel.usuario_id == usuario.id,
-            TarefaDiariaModel.ativo == True
-        )
-    )
-    
-    if data:
-        data_filtro = datetime.strptime(data, "%Y-%m-%d").date()
-        dia_semana = str(data_filtro.weekday() + 1)
-        query = query.where(
-            or_(
-                TarefaDiariaModel.data_tarefa == data_filtro,
-                and_(
-                    TarefaDiariaModel.recorrente == True,
-                    or_(
-                        TarefaDiariaModel.dias_semana == None,
-                        TarefaDiariaModel.dias_semana.contains(dia_semana)
-                    )
-                )
-            )
-        )
-    
-    if categoria:
-        query = query.where(TarefaDiariaModel.categoria == categoria)
-    
-    if concluida is not None:
-        query = query.where(TarefaDiariaModel.concluida == concluida)
-    
-    query = query.order_by(TarefaDiariaModel.ordem, TarefaDiariaModel.prioridade)
-    
-    result = await session.execute(query)
-    tarefas = result.scalars().all()
-    
-    return [
-        {
-            "id": t.id,
-            "titulo": t.titulo,
-            "descricao": t.descricao,
-            "categoria": t.categoria,
-            "prioridade": t.prioridade,
-            "recorrente": t.recorrente,
-            "dias_semana": t.dias_semana,
-            "horario_sugerido": t.horario_sugerido,
-            "concluida": t.concluida,
-            "data_tarefa": t.data_tarefa.isoformat() if t.data_tarefa else None,
-            "ordem": t.ordem
-        }
-        for t in tarefas
-    ]
+    return {"tarefas": tarefas, "lembretes": lembretes, "lembretes_tarefas": tarefas_com_horario,
+            "estatisticas": {"total": total, "concluidas": concluidas, "pendentes": total - concluidas, "progresso": progresso},
+            "data": hoje, "dia_semana": dia_semana}
 
 
 @router.post("/tarefas")
-async def criar_tarefa(
-    request: TarefaRequest,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Cria uma nova tarefa"""
-    tarefa = TarefaDiariaModel(
-        id=str(uuid.uuid4()),
-        usuario_id=usuario.id,
-        titulo=request.titulo,
-        descricao=request.descricao,
-        categoria=request.categoria,
-        prioridade=request.prioridade,
-        recorrente=request.recorrente,
-        dias_semana=request.dias_semana,
-        horario_sugerido=request.horario_sugerido,
-        data_tarefa=datetime.strptime(request.data_tarefa, "%Y-%m-%d").date() if request.data_tarefa else None,
-        ordem=request.ordem
-    )
-    
-    session.add(tarefa)
-    await session.commit()
-    
-    return {
-        "id": tarefa.id,
-        "titulo": tarefa.titulo,
-        "mensagem": "Tarefa criada com sucesso"
+async def criar_tarefa(dto: TarefaCreateDTO, usuario: Usuario = Depends(get_current_user)):
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {
+        "id": str(uuid.uuid4()), "usuario_id": usuario.id,
+        "titulo": dto.titulo, "descricao": dto.descricao,
+        "categoria": dto.categoria, "prioridade": dto.prioridade,
+        "recorrente": dto.recorrente, "dias_semana": dto.dias_semana,
+        "horario_sugerido": dto.horario_sugerido,
+        "data_tarefa": dto.data_tarefa or date.today().isoformat(),
+        "concluida": False, "data_conclusao": None, "ordem": 0,
+        "ativo": True, "created_at": now, "updated_at": now
     }
+    await db.tarefas_diarias.insert_one(doc)
+    return doc
 
 
 @router.put("/tarefas/{tarefa_id}")
-async def atualizar_tarefa(
-    tarefa_id: str,
-    request: TarefaRequest,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Atualiza uma tarefa"""
-    result = await session.execute(
-        select(TarefaDiariaModel).where(
-            and_(
-                TarefaDiariaModel.id == tarefa_id,
-                TarefaDiariaModel.usuario_id == usuario.id
-            )
-        )
-    )
-    tarefa = result.scalar_one_or_none()
-    
-    if not tarefa:
+async def atualizar_tarefa(tarefa_id: str, dto: TarefaUpdateDTO, usuario: Usuario = Depends(get_current_user)):
+    t = await db.tarefas_diarias.find_one({"id": tarefa_id, "usuario_id": usuario.id})
+    if not t:
         raise HTTPException(404, "Tarefa não encontrada")
-    
-    tarefa.titulo = request.titulo
-    tarefa.descricao = request.descricao
-    tarefa.categoria = request.categoria
-    tarefa.prioridade = request.prioridade
-    tarefa.recorrente = request.recorrente
-    tarefa.dias_semana = request.dias_semana
-    tarefa.horario_sugerido = request.horario_sugerido
-    tarefa.ordem = request.ordem
-    if request.data_tarefa:
-        tarefa.data_tarefa = datetime.strptime(request.data_tarefa, "%Y-%m-%d").date()
-    
-    await session.commit()
-    return {"mensagem": "Tarefa atualizada com sucesso"}
+    updates = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    for k, v in dto.model_dump(exclude_unset=True).items():
+        if v is not None:
+            updates[k] = v
+    if dto.concluida:
+        updates["data_conclusao"] = datetime.now(timezone.utc).isoformat()
+    await db.tarefas_diarias.update_one({"id": tarefa_id}, {"$set": updates})
+    return {"message": "Tarefa atualizada"}
 
 
-@router.patch("/tarefas/{tarefa_id}/concluir")
-async def concluir_tarefa(
-    tarefa_id: str,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Marca tarefa como concluída/não concluída"""
-    result = await session.execute(
-        select(TarefaDiariaModel).where(
-            and_(
-                TarefaDiariaModel.id == tarefa_id,
-                TarefaDiariaModel.usuario_id == usuario.id
-            )
-        )
-    )
-    tarefa = result.scalar_one_or_none()
-    
-    if not tarefa:
+@router.patch("/tarefas/{tarefa_id}/toggle")
+async def toggle_tarefa(tarefa_id: str, usuario: Usuario = Depends(get_current_user)):
+    t = await db.tarefas_diarias.find_one({"id": tarefa_id, "usuario_id": usuario.id})
+    if not t:
         raise HTTPException(404, "Tarefa não encontrada")
-    
-    tarefa.concluida = not tarefa.concluida
-    tarefa.data_conclusao = datetime.now(timezone.utc) if tarefa.concluida else None
-    
-    await session.commit()
-    return {
-        "concluida": tarefa.concluida,
-        "mensagem": "Tarefa concluída!" if tarefa.concluida else "Tarefa reaberta"
-    }
+    nova = not t.get("concluida", False)
+    updates = {"concluida": nova, "updated_at": datetime.now(timezone.utc).isoformat()}
+    if nova:
+        updates["data_conclusao"] = datetime.now(timezone.utc).isoformat()
+    else:
+        updates["data_conclusao"] = None
+    await db.tarefas_diarias.update_one({"id": tarefa_id}, {"$set": updates})
+    return {"concluida": nova}
 
 
 @router.delete("/tarefas/{tarefa_id}")
-async def deletar_tarefa(
-    tarefa_id: str,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Remove uma tarefa"""
-    result = await session.execute(
-        select(TarefaDiariaModel).where(
-            and_(
-                TarefaDiariaModel.id == tarefa_id,
-                TarefaDiariaModel.usuario_id == usuario.id
-            )
-        )
-    )
-    tarefa = result.scalar_one_or_none()
-    
-    if not tarefa:
+async def deletar_tarefa(tarefa_id: str, usuario: Usuario = Depends(get_current_user)):
+    result = await db.tarefas_diarias.delete_one({"id": tarefa_id, "usuario_id": usuario.id})
+    if result.deleted_count == 0:
         raise HTTPException(404, "Tarefa não encontrada")
-    
-    tarefa.ativo = False
-    await session.commit()
-    return {"mensagem": "Tarefa removida com sucesso"}
+    return {"message": "Tarefa deletada"}
 
 
-# ==================== BASE DE CONHECIMENTO ====================
-
-@router.get("/conhecimento/categorias")
-async def listar_categorias_conhecimento():
-    """Lista categorias da base de conhecimento"""
-    return CATEGORIAS_ARTIGO
-
-
-@router.get("/conhecimento")
-async def listar_artigos(
-    categoria: Optional[str] = None,
-    busca: Optional[str] = None,
-    destaque: Optional[bool] = None,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Lista artigos da base de conhecimento"""
-    query = select(ArtigoConhecimentoModel).where(ArtigoConhecimentoModel.ativo == True)
-    
-    if categoria:
-        query = query.where(ArtigoConhecimentoModel.categoria == categoria)
-    
-    if destaque is not None:
-        query = query.where(ArtigoConhecimentoModel.destaque == destaque)
-    
-    if busca:
-        query = query.where(
-            or_(
-                ArtigoConhecimentoModel.titulo.ilike(f"%{busca}%"),
-                ArtigoConhecimentoModel.conteudo.ilike(f"%{busca}%"),
-                ArtigoConhecimentoModel.tags.ilike(f"%{busca}%")
-            )
-        )
-    
-    query = query.order_by(desc(ArtigoConhecimentoModel.destaque), ArtigoConhecimentoModel.ordem, ArtigoConhecimentoModel.titulo)
-    
-    result = await session.execute(query)
-    artigos = result.scalars().all()
-    
-    return [
-        {
-            "id": a.id,
-            "titulo": a.titulo,
-            "resumo": a.resumo,
-            "categoria": a.categoria,
-            "tags": a.tags.split(",") if a.tags else [],
-            "icone": a.icone,
-            "destaque": a.destaque,
-            "visualizacoes": a.visualizacoes
-        }
-        for a in artigos
-    ]
-
-
-@router.get("/conhecimento/{artigo_id}")
-async def buscar_artigo(
-    artigo_id: str,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Retorna detalhes de um artigo"""
-    result = await session.execute(
-        select(ArtigoConhecimentoModel).where(
-            and_(
-                ArtigoConhecimentoModel.id == artigo_id,
-                ArtigoConhecimentoModel.ativo == True
-            )
-        )
-    )
-    artigo = result.scalar_one_or_none()
-    
-    if not artigo:
-        raise HTTPException(404, "Artigo não encontrado")
-    
-    # Incrementar visualizações
-    artigo.visualizacoes += 1
-    await session.commit()
-    
-    return {
-        "id": artigo.id,
-        "titulo": artigo.titulo,
-        "conteudo": artigo.conteudo,
-        "resumo": artigo.resumo,
-        "categoria": artigo.categoria,
-        "tags": artigo.tags.split(",") if artigo.tags else [],
-        "icone": artigo.icone,
-        "destaque": artigo.destaque,
-        "visualizacoes": artigo.visualizacoes,
-        "criado_por": artigo.criado_por_nome,
-        "created_at": artigo.created_at.isoformat() if artigo.created_at else None,
-        "updated_at": artigo.updated_at.isoformat() if artigo.updated_at else None
-    }
-
-
-@router.post("/conhecimento")
-async def criar_artigo(
-    request: ArtigoRequest,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Cria um novo artigo (Admin)"""
-    if usuario.role.value != 'admin':
-        raise HTTPException(403, "Apenas administradores podem criar artigos")
-    
-    artigo = ArtigoConhecimentoModel(
-        id=str(uuid.uuid4()),
-        titulo=request.titulo,
-        conteudo=request.conteudo,
-        resumo=request.resumo,
-        categoria=request.categoria,
-        tags=request.tags,
-        icone=request.icone,
-        destaque=request.destaque,
-        ordem=request.ordem,
-        criado_por_id=usuario.id,
-        criado_por_nome=usuario.nome
-    )
-    
-    session.add(artigo)
-    await session.commit()
-    
-    return {
-        "id": artigo.id,
-        "titulo": artigo.titulo,
-        "mensagem": "Artigo criado com sucesso"
-    }
-
-
-@router.put("/conhecimento/{artigo_id}")
-async def atualizar_artigo(
-    artigo_id: str,
-    request: ArtigoRequest,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Atualiza um artigo (Admin)"""
-    if usuario.role.value != 'admin':
-        raise HTTPException(403, "Apenas administradores podem editar artigos")
-    
-    result = await session.execute(
-        select(ArtigoConhecimentoModel).where(ArtigoConhecimentoModel.id == artigo_id)
-    )
-    artigo = result.scalar_one_or_none()
-    
-    if not artigo:
-        raise HTTPException(404, "Artigo não encontrado")
-    
-    artigo.titulo = request.titulo
-    artigo.conteudo = request.conteudo
-    artigo.resumo = request.resumo
-    artigo.categoria = request.categoria
-    artigo.tags = request.tags
-    artigo.icone = request.icone
-    artigo.destaque = request.destaque
-    artigo.ordem = request.ordem
-    
-    await session.commit()
-    return {"mensagem": "Artigo atualizado com sucesso"}
-
-
-@router.delete("/conhecimento/{artigo_id}")
-async def deletar_artigo(
-    artigo_id: str,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Remove um artigo (Admin)"""
-    if usuario.role.value != 'admin':
-        raise HTTPException(403, "Apenas administradores podem remover artigos")
-    
-    result = await session.execute(
-        select(ArtigoConhecimentoModel).where(ArtigoConhecimentoModel.id == artigo_id)
-    )
-    artigo = result.scalar_one_or_none()
-    
-    if not artigo:
-        raise HTTPException(404, "Artigo não encontrado")
-    
-    artigo.ativo = False
-    await session.commit()
-    return {"mensagem": "Artigo removido com sucesso"}
+@router.put("/tarefas/reorder")
+async def reordenar_tarefas(dto: TarefaReorderDTO, usuario: Usuario = Depends(get_current_user)):
+    for item in dto.tarefas:
+        await db.tarefas_diarias.update_one({"id": item["id"], "usuario_id": usuario.id}, {"$set": {"ordem": item.get("ordem", 0)}})
+    return {"message": "Tarefas reordenadas"}
 
 
 # ==================== LEMBRETES ====================
 
 @router.get("/lembretes")
-async def listar_lembretes(
-    pendentes: Optional[bool] = True,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Lista lembretes do usuário"""
-    query = select(LembreteModel).where(
-        and_(
-            LembreteModel.usuario_id == usuario.id,
-            LembreteModel.ativo == True
-        )
-    )
-    
-    if pendentes:
-        query = query.where(LembreteModel.concluido == False)
-    
-    query = query.order_by(LembreteModel.data_lembrete)
-    
-    result = await session.execute(query)
-    lembretes = result.scalars().all()
-    
-    return [
-        {
-            "id": l.id,
-            "titulo": l.titulo,
-            "descricao": l.descricao,
-            "data_lembrete": l.data_lembrete.isoformat() if l.data_lembrete else None,
-            "tipo": l.tipo,
-            "referencia_id": l.referencia_id,
-            "referencia_tipo": l.referencia_tipo,
-            "concluido": l.concluido
-        }
-        for l in lembretes
-    ]
+async def listar_lembretes(dias: int = Query(7, ge=1, le=30), usuario: Usuario = Depends(get_current_user)):
+    limite = (datetime.now(timezone.utc) + timedelta(days=dias)).isoformat()
+    agora = datetime.now(timezone.utc).isoformat()
+    query = {"usuario_id": usuario.id, "ativo": {"$ne": False}, "data_lembrete": {"$gte": agora, "$lte": limite}}
+    docs = await db.lembretes.find(query, {"_id": 0}).sort("data_lembrete", 1).to_list(100)
+    return {"lembretes": docs, "total": len(docs)}
 
 
 @router.post("/lembretes")
-async def criar_lembrete(
-    request: LembreteRequest,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Cria um novo lembrete"""
-    lembrete = LembreteModel(
-        id=str(uuid.uuid4()),
-        usuario_id=usuario.id,
-        titulo=request.titulo,
-        descricao=request.descricao,
-        data_lembrete=datetime.fromisoformat(request.data_lembrete.replace('Z', '+00:00')),
-        tipo=request.tipo,
-        referencia_id=request.referencia_id,
-        referencia_tipo=request.referencia_tipo
-    )
-    
-    session.add(lembrete)
-    await session.commit()
-    
-    return {
-        "id": lembrete.id,
-        "mensagem": "Lembrete criado com sucesso"
+async def criar_lembrete(dto: LembreteCreateDTO, usuario: Usuario = Depends(get_current_user)):
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {
+        "id": str(uuid.uuid4()), "usuario_id": usuario.id,
+        "titulo": dto.titulo, "descricao": dto.descricao,
+        "data_lembrete": dto.data_lembrete, "tipo": dto.tipo,
+        "referencia_id": dto.referencia_id, "referencia_tipo": dto.referencia_tipo,
+        "notificado": False, "concluido": False, "ativo": True, "created_at": now
     }
+    await db.lembretes.insert_one(doc)
+    return doc
 
 
 @router.patch("/lembretes/{lembrete_id}/concluir")
-async def concluir_lembrete(
-    lembrete_id: str,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Marca lembrete como concluído"""
-    result = await session.execute(
-        select(LembreteModel).where(
-            and_(
-                LembreteModel.id == lembrete_id,
-                LembreteModel.usuario_id == usuario.id
-            )
-        )
-    )
-    lembrete = result.scalar_one_or_none()
-    
-    if not lembrete:
+async def concluir_lembrete(lembrete_id: str, usuario: Usuario = Depends(get_current_user)):
+    result = await db.lembretes.update_one({"id": lembrete_id, "usuario_id": usuario.id},
+                                            {"$set": {"concluido": True}})
+    if result.matched_count == 0:
         raise HTTPException(404, "Lembrete não encontrado")
-    
-    lembrete.concluido = True
-    await session.commit()
-    return {"mensagem": "Lembrete concluído"}
+    return {"message": "Lembrete concluído"}
 
 
 @router.delete("/lembretes/{lembrete_id}")
-async def deletar_lembrete(
-    lembrete_id: str,
-    session: AsyncSession = Depends(get_db_session),
+async def deletar_lembrete(lembrete_id: str, usuario: Usuario = Depends(get_current_user)):
+    result = await db.lembretes.delete_one({"id": lembrete_id, "usuario_id": usuario.id})
+    if result.deleted_count == 0:
+        raise HTTPException(404, "Lembrete não encontrado")
+    return {"message": "Lembrete deletado"}
+
+
+# ==================== BASE DE CONHECIMENTO ====================
+
+@router.get("/conhecimento")
+async def listar_artigos(
+    categoria: Optional[str] = None, busca: Optional[str] = None,
+    destaque: Optional[bool] = None,
     usuario: Usuario = Depends(get_current_user)
 ):
-    """Remove um lembrete"""
-    result = await session.execute(
-        select(LembreteModel).where(
-            and_(
-                LembreteModel.id == lembrete_id,
-                LembreteModel.usuario_id == usuario.id
-            )
-        )
-    )
-    lembrete = result.scalar_one_or_none()
-    
-    if not lembrete:
-        raise HTTPException(404, "Lembrete não encontrado")
-    
-    lembrete.ativo = False
-    await session.commit()
-    return {"mensagem": "Lembrete removido"}
+    query = {"ativo": {"$ne": False}}
+    if categoria:
+        query["categoria"] = categoria
+    if destaque is not None:
+        query["destaque"] = destaque
+    if busca:
+        query["$or"] = [{"titulo": {"$regex": busca, "$options": "i"}},
+                        {"conteudo": {"$regex": busca, "$options": "i"}},
+                        {"tags": {"$regex": busca, "$options": "i"}}]
+    artigos = await db.artigos_conhecimento.find(query, {"_id": 0}).sort([("destaque", -1), ("ordem", 1)]).to_list(200)
+    categorias = await db.artigos_conhecimento.distinct("categoria", {"ativo": {"$ne": False}})
+    return {"artigos": artigos, "total": len(artigos), "categorias": categorias}
+
+
+@router.get("/conhecimento/{artigo_id}")
+async def buscar_artigo(artigo_id: str, usuario: Usuario = Depends(get_current_user)):
+    artigo = await db.artigos_conhecimento.find_one({"id": artigo_id}, {"_id": 0})
+    if not artigo:
+        raise HTTPException(404, "Artigo não encontrado")
+    await db.artigos_conhecimento.update_one({"id": artigo_id}, {"$inc": {"visualizacoes": 1}})
+    return artigo
+
+
+@router.post("/conhecimento", status_code=201)
+async def criar_artigo(dto: ArtigoCreateDTO, usuario: Usuario = Depends(get_current_user)):
+    if usuario.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {
+        "id": str(uuid.uuid4()), "titulo": dto.titulo, "conteudo": dto.conteudo,
+        "resumo": dto.resumo, "categoria": dto.categoria, "tags": dto.tags,
+        "icone": dto.icone, "destaque": dto.destaque, "ordem": 0,
+        "visualizacoes": 0, "criado_por_id": usuario.id, "criado_por_nome": usuario.nome,
+        "ativo": True, "created_at": now, "updated_at": now
+    }
+    await db.artigos_conhecimento.insert_one(doc)
+    return doc
+
+
+@router.put("/conhecimento/{artigo_id}")
+async def atualizar_artigo(artigo_id: str, dto: ArtigoUpdateDTO, usuario: Usuario = Depends(get_current_user)):
+    if usuario.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    updates = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    for k, v in dto.model_dump(exclude_unset=True).items():
+        if v is not None:
+            updates[k] = v
+    result = await db.artigos_conhecimento.update_one({"id": artigo_id}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Artigo não encontrado")
+    return {"message": "Artigo atualizado"}
+
+
+@router.delete("/conhecimento/{artigo_id}")
+async def deletar_artigo(artigo_id: str, usuario: Usuario = Depends(get_current_user)):
+    if usuario.role.value not in ("admin",):
+        raise HTTPException(403, "Sem permissão")
+    result = await db.artigos_conhecimento.update_one({"id": artigo_id}, {"$set": {"ativo": False}})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Artigo não encontrado")
+    return {"message": "Artigo desativado"}
+
+
+@router.get("/conhecimento/categorias/lista")
+async def listar_categorias(usuario: Usuario = Depends(get_current_user)):
+    return {"categorias": [
+        {"value": "procedimento", "label": "Procedimento", "icone": "clipboard-list"},
+        {"value": "faq", "label": "FAQ", "icone": "help-circle"},
+        {"value": "documento", "label": "Documento", "icone": "file-text"},
+        {"value": "dica", "label": "Dica", "icone": "lightbulb"},
+        {"value": "regra", "label": "Regra de Negócio", "icone": "shield"},
+        {"value": "fluxo", "label": "Fluxo de Trabalho", "icone": "git-branch"}
+    ]}

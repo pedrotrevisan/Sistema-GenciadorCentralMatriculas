@@ -1,22 +1,17 @@
-"""Router do Módulo de Reembolsos"""
+"""Router do Módulo de Reembolsos - MongoDB version"""
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timezone
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 from src.domain.entities import Usuario
-from src.infrastructure.persistence.models import ReembolsoModel
-from src.utils.text_formatters import formatar_nome_proprio  # NOVO - importar formatação
-
-from .dependencies import get_db_session, get_current_user
+from src.infrastructure.persistence.mongodb import db
+from src.utils.text_formatters import formatar_nome_proprio
+from src.routers.dependencies import get_current_user
 
 router = APIRouter(prefix="/reembolsos", tags=["Reembolsos"])
 
-
-# Constantes de Motivos de Reembolso
 MOTIVOS_REEMBOLSO = {
     "sem_escolaridade": {"label": "Sem Escolaridade", "reter_taxa": False},
     "sem_vaga": {"label": "Sem Vaga 2026.1", "reter_taxa": False},
@@ -25,17 +20,12 @@ MOTIVOS_REEMBOLSO = {
     "desistencia": {"label": "Desistência do Aluno", "reter_taxa": True},
     "outros": {"label": "Outros", "reter_taxa": False}
 }
-
 STATUS_REEMBOLSO = {
-    "aberto": "Aberto",
-    "aguardando_dados_bancarios": "Aguardando Dados Bancários",
-    "enviado_financeiro": "Enviado ao Financeiro",
-    "pago": "Pago",
-    "cancelado": "Cancelado"
+    "aberto": "Aberto", "aguardando_dados_bancarios": "Aguardando Dados Bancários",
+    "enviado_financeiro": "Enviado ao Financeiro", "pago": "Pago", "cancelado": "Cancelado"
 }
 
 
-# DTOs para Reembolsos
 class CriarReembolsoDTO(BaseModel):
     aluno_nome: str
     aluno_cpf: Optional[str] = None
@@ -49,7 +39,6 @@ class CriarReembolsoDTO(BaseModel):
     numero_chamado_sgc: Optional[str] = None
     observacoes: Optional[str] = None
 
-
 class AtualizarReembolsoDTO(BaseModel):
     status: Optional[str] = None
     numero_chamado_sgc: Optional[str] = None
@@ -58,7 +47,6 @@ class AtualizarReembolsoDTO(BaseModel):
     data_pagamento: Optional[str] = None
     observacoes: Optional[str] = None
 
-
 class RegistrarDadosBancariosDTO(BaseModel):
     banco_titular_nome: str
     banco_titular_cpf: str
@@ -66,495 +54,219 @@ class RegistrarDadosBancariosDTO(BaseModel):
     banco_agencia: str
     banco_operacao: Optional[str] = None
     banco_conta: str
-    banco_tipo_conta: str  # corrente ou poupanca
+    banco_tipo_conta: str
     banco_responsavel_financeiro: Optional[bool] = False
 
 
-@router.get("/motivos")
-async def listar_motivos_reembolso(
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Lista todos os motivos de reembolso disponíveis"""
-    return [
-        {
-            "value": key,
-            "label": config["label"],
-            "reter_taxa": config["reter_taxa"]
-        }
-        for key, config in MOTIVOS_REEMBOLSO.items()
-    ]
-
-
-@router.get("/status")
-async def listar_status_reembolso(
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Lista todos os status de reembolso disponíveis"""
-    return [
-        {"value": key, "label": label}
-        for key, label in STATUS_REEMBOLSO.items()
-    ]
-
-
-@router.get("/dashboard")
-async def dashboard_reembolsos(
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Dashboard do Módulo de Reembolsos"""
-    # Contagem por status
-    status_query = await session.execute(
-        select(ReembolsoModel.status, func.count(ReembolsoModel.id))
-        .group_by(ReembolsoModel.status)
-    )
-    contagem_status = {row[0]: row[1] for row in status_query.fetchall()}
-    
-    # Contagem por motivo
-    motivo_query = await session.execute(
-        select(ReembolsoModel.motivo, func.count(ReembolsoModel.id))
-        .group_by(ReembolsoModel.motivo)
-    )
-    por_motivo = [
-        {"motivo": MOTIVOS_REEMBOLSO.get(row[0], {}).get("label", row[0]), "total": row[1]} 
-        for row in motivo_query.fetchall()
-    ]
-    
-    # Total geral
-    total_query = await session.execute(select(func.count(ReembolsoModel.id)))
-    total = total_query.scalar() or 0
-    
-    # Total em aberto (não pago e não cancelado)
-    abertos_query = await session.execute(
-        select(func.count(ReembolsoModel.id))
-        .where(ReembolsoModel.status.notin_(['pago', 'cancelado']))
-    )
-    total_abertos = abertos_query.scalar() or 0
-    
+def _reembolso_to_dict(r):
     return {
-        "contagem_status": contagem_status,
-        "por_motivo": por_motivo,
-        "total": total,
-        "total_abertos": total_abertos,
-        "total_aberto": contagem_status.get('aberto', 0),
-        "total_aguardando": contagem_status.get('aguardando_dados', 0) + contagem_status.get('aguardando_dados_bancarios', 0),
-        "total_enviado": contagem_status.get('enviado_financeiro', 0) + contagem_status.get('no_financeiro', 0),
-        "total_pago": contagem_status.get('pago', 0),
-        "total_cancelado": contagem_status.get('cancelado', 0)
+        "id": r["id"], "aluno_nome": r.get("aluno_nome"), "aluno_cpf": r.get("aluno_cpf"),
+        "aluno_email": r.get("aluno_email"), "aluno_telefone": r.get("aluno_telefone"),
+        "aluno_menor_idade": r.get("aluno_menor_idade"), "curso": r.get("curso"),
+        "turma": r.get("turma"), "motivo": r.get("motivo"),
+        "motivo_label": MOTIVOS_REEMBOLSO.get(r.get("motivo"), {}).get("label", r.get("motivo")),
+        "reter_taxa": r.get("reter_taxa"), "numero_chamado_sgc": r.get("numero_chamado_sgc"),
+        "status": r.get("status"),
+        "status_label": STATUS_REEMBOLSO.get(r.get("status"), r.get("status")),
+        "tem_dados_bancarios": r.get("banco_titular_nome") is not None,
+        "data_abertura": r.get("data_abertura"),
+        "data_retorno_financeiro": r.get("data_retorno_financeiro"),
+        "data_provisao_pagamento": r.get("data_provisao_pagamento"),
+        "data_pagamento": r.get("data_pagamento"),
+        "observacoes": r.get("observacoes"), "criado_por_nome": r.get("criado_por_nome"),
+        "created_at": r.get("created_at")
     }
 
 
+@router.get("/motivos")
+async def listar_motivos(usuario: Usuario = Depends(get_current_user)):
+    return [{"value": k, "label": v["label"], "reter_taxa": v["reter_taxa"]} for k, v in MOTIVOS_REEMBOLSO.items()]
+
+@router.get("/status")
+async def listar_status(usuario: Usuario = Depends(get_current_user)):
+    return [{"value": k, "label": v} for k, v in STATUS_REEMBOLSO.items()]
+
+
 @router.get("/templates-email")
-async def listar_templates_email(
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Retorna os templates de email para reembolso"""
+async def listar_templates_email(usuario: Usuario = Depends(get_current_user)):
     return {
         "solicitacao_dados_bancarios": {
             "assunto": "SENAI CIMATEC - Solicitação de Dados Bancários para Reembolso",
-            "corpo": """Olá, boa tarde!
-
-Agradecemos seu contato e esperamos que esteja bem!
-
-Informamos que sua matrícula no curso [NOME_DO_CURSO] foi cancelada devido ao [MOTIVO]. Para prosseguirmos com o reembolso do valor pago, solicitamos, por gentileza, o envio dos seus dados bancários para depósito, conforme os critérios abaixo.
-
-• Candidato maior de 18 anos: informar conta bancária em seu nome;
-• Candidato menor de 18 anos: informar conta bancária do responsável financeiro, que deve estar identificado no momento da inscrição.
-
-Dados bancários solicitados:
-• Nome completo do titular da conta:
-• CPF do titular:
-• Banco:
-• Agência:
-• Conta (com dígito):
-• Tipo de conta (corrente/poupança):
-
-Informações importantes:
-• O reembolso será realizado exclusivamente para conta corrente ou poupança. Não aceitaremos: conta fácil, conta jurídica, conta salário ou conta conjunta.
-• O crédito será realizado em até 15 dias úteis após o recebimento completo das informações.
-• O reembolso não será feito via PIX, sendo efetuado apenas por crédito em conta bancária.
-
-Pedimos a gentileza de responder a este e-mail com os dados acima para que possamos dar prosseguimento ao reembolso.
-
-Agradecemos seu interesse no SENAI e nos colocamos à disposição para qualquer dúvida.
-
-[NOME_ATENDENTE]
-
-Central de Atendimento ao Candidato
-
-[EMAIL_ATENDENTE]"""
+            "corpo": "Olá, boa tarde!\n\nInformamos que sua matrícula no curso [NOME_DO_CURSO] foi cancelada. Para prosseguirmos com o reembolso, solicitamos seus dados bancários.\n\n[NOME_ATENDENTE]\nCentral de Atendimento ao Candidato"
         },
         "confirmacao_recebimento": {
             "assunto": "SENAI CIMATEC - Confirmação de Recebimento dos Dados Bancários",
-            "corpo": """Olá, boa tarde!
-
-Confirmamos o recebimento dos seus dados bancários para reembolso.
-
-Aluno: [NOME_ALUNO]
-Curso: [NOME_DO_CURSO]
-
-Informamos que o processo de reembolso foi encaminhado ao setor financeiro. O crédito será realizado em até 15 dias úteis.
-
-Caso tenha alguma dúvida, estamos à disposição.
-
-[NOME_ATENDENTE]
-
-Central de Atendimento ao Candidato
-
-[EMAIL_ATENDENTE]"""
+            "corpo": "Olá!\n\nConfirmamos o recebimento dos seus dados bancários. O crédito será em até 15 dias úteis.\n\n[NOME_ATENDENTE]"
         },
         "confirmacao_pagamento": {
             "assunto": "SENAI CIMATEC - Reembolso Efetuado",
-            "corpo": """Olá, boa tarde!
-
-Informamos que o reembolso referente à matrícula no curso [NOME_DO_CURSO] foi efetuado com sucesso.
-
-Aluno: [NOME_ALUNO]
-Data do crédito: [DATA_PAGAMENTO]
-
-Por favor, verifique sua conta bancária.
-
-Caso tenha alguma dúvida, estamos à disposição.
-
-[NOME_ATENDENTE]
-
-Central de Atendimento ao Candidato
-
-[EMAIL_ATENDENTE]"""
+            "corpo": "Olá!\n\nInformamos que o reembolso foi efetuado. Verifique sua conta.\n\n[NOME_ATENDENTE]"
         }
+    }
+
+
+@router.get("/dashboard")
+async def dashboard_reembolsos(usuario: Usuario = Depends(get_current_user)):
+    pipeline = [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
+    result = await db.reembolsos.aggregate(pipeline).to_list(20)
+    contagem_status = {r["_id"]: r["count"] for r in result}
+
+    pipeline_motivo = [{"$group": {"_id": "$motivo", "count": {"$sum": 1}}}]
+    motivo_result = await db.reembolsos.aggregate(pipeline_motivo).to_list(20)
+    por_motivo = [{"motivo": MOTIVOS_REEMBOLSO.get(r["_id"], {}).get("label", r["_id"]), "total": r["count"]} for r in motivo_result]
+
+    total = await db.reembolsos.count_documents({})
+    total_abertos = await db.reembolsos.count_documents({"status": {"$nin": ["pago", "cancelado"]}})
+
+    return {
+        "contagem_status": contagem_status, "por_motivo": por_motivo, "total": total,
+        "total_abertos": total_abertos,
+        "total_aberto": contagem_status.get("aberto", 0),
+        "total_aguardando": contagem_status.get("aguardando_dados", 0) + contagem_status.get("aguardando_dados_bancarios", 0),
+        "total_enviado": contagem_status.get("enviado_financeiro", 0) + contagem_status.get("no_financeiro", 0),
+        "total_pago": contagem_status.get("pago", 0),
+        "total_cancelado": contagem_status.get("cancelado", 0)
     }
 
 
 @router.get("")
 async def listar_reembolsos(
-    status: Optional[str] = None,
-    motivo: Optional[str] = None,
+    status: Optional[str] = None, motivo: Optional[str] = None,
     aluno_nome: Optional[str] = None,
-    pagina: int = Query(1, ge=1),
-    por_pagina: int = Query(20, ge=1, le=100),
-    session: AsyncSession = Depends(get_db_session),
+    pagina: int = Query(1, ge=1), por_pagina: int = Query(20, ge=1, le=100),
     usuario: Usuario = Depends(get_current_user)
 ):
-    """Lista todos os reembolsos com filtros"""
-    query = select(ReembolsoModel)
-    
-    # Filtros
-    if status and status != 'todos':
-        query = query.where(ReembolsoModel.status == status)
-    if motivo and motivo != 'todos':
-        query = query.where(ReembolsoModel.motivo == motivo)
+    query = {}
+    if status and status != "todos":
+        query["status"] = status
+    if motivo and motivo != "todos":
+        query["motivo"] = motivo
     if aluno_nome:
-        query = query.where(ReembolsoModel.aluno_nome.ilike(f'%{aluno_nome}%'))
-    
-    # Ordenação: mais recentes primeiro
-    query = query.order_by(ReembolsoModel.created_at.desc())
-    
-    # Contagem total
-    count_query = select(func.count(ReembolsoModel.id))
-    if status and status != 'todos':
-        count_query = count_query.where(ReembolsoModel.status == status)
-    if motivo and motivo != 'todos':
-        count_query = count_query.where(ReembolsoModel.motivo == motivo)
-    if aluno_nome:
-        count_query = count_query.where(ReembolsoModel.aluno_nome.ilike(f'%{aluno_nome}%'))
-    
-    total_result = await session.execute(count_query)
-    total = total_result.scalar() or 0
-    
-    # Paginação
+        query["aluno_nome"] = {"$regex": aluno_nome, "$options": "i"}
+
+    total = await db.reembolsos.count_documents(query)
     offset = (pagina - 1) * por_pagina
-    query = query.offset(offset).limit(por_pagina)
-    
-    result = await session.execute(query)
-    reembolsos = result.scalars().all()
-    
+    docs = await db.reembolsos.find(query, {"_id": 0}).sort("created_at", -1).skip(offset).limit(por_pagina).to_list(por_pagina)
+
     return {
-        "reembolsos": [
-            {
-                "id": r.id,
-                "aluno_nome": r.aluno_nome,
-                "aluno_cpf": r.aluno_cpf,
-                "aluno_email": r.aluno_email,
-                "aluno_telefone": r.aluno_telefone,
-                "aluno_menor_idade": r.aluno_menor_idade,
-                "curso": r.curso,
-                "turma": r.turma,
-                "motivo": r.motivo,
-                "motivo_label": MOTIVOS_REEMBOLSO.get(r.motivo, {}).get("label", r.motivo),
-                "reter_taxa": r.reter_taxa,
-                "numero_chamado_sgc": r.numero_chamado_sgc,
-                "status": r.status,
-                "status_label": STATUS_REEMBOLSO.get(r.status, r.status),
-                "tem_dados_bancarios": r.banco_titular_nome is not None,
-                "data_abertura": r.data_abertura.isoformat() if r.data_abertura else None,
-                "data_retorno_financeiro": r.data_retorno_financeiro.isoformat() if r.data_retorno_financeiro else None,
-                "data_provisao_pagamento": r.data_provisao_pagamento.isoformat() if r.data_provisao_pagamento else None,
-                "data_pagamento": r.data_pagamento.isoformat() if r.data_pagamento else None,
-                "observacoes": r.observacoes,
-                "criado_por_nome": r.criado_por_nome,
-                "created_at": r.created_at.isoformat() if r.created_at else None
-            }
-            for r in reembolsos
-        ],
-        "paginacao": {
-            "pagina_atual": pagina,
-            "por_pagina": por_pagina,
-            "total_itens": total,
-            "total_paginas": (total + por_pagina - 1) // por_pagina
-        }
+        "reembolsos": [_reembolso_to_dict(r) for r in docs],
+        "paginacao": {"pagina_atual": pagina, "por_pagina": por_pagina, "total_itens": total,
+                      "total_paginas": (total + por_pagina - 1) // por_pagina}
     }
 
 
 @router.post("")
-async def criar_reembolso(
-    dto: CriarReembolsoDTO,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Cria uma nova solicitação de reembolso"""
-    # Validar motivo
+async def criar_reembolso(dto: CriarReembolsoDTO, usuario: Usuario = Depends(get_current_user)):
     if dto.motivo not in MOTIVOS_REEMBOLSO:
-        raise HTTPException(status_code=400, detail=f"Motivo inválido. Opções: {', '.join(MOTIVOS_REEMBOLSO.keys())}")
-    
-    # Determinar se deve reter taxa (10%)
-    reter_taxa = MOTIVOS_REEMBOLSO[dto.motivo]["reter_taxa"]
-    
-    # FORMATAÇÃO AUTOMÁTICA DE NOMES
-    aluno_nome_formatado = formatar_nome_proprio(dto.aluno_nome) if dto.aluno_nome else None
-    curso_formatado = formatar_nome_proprio(dto.curso) if dto.curso else None
-    turma_formatada = dto.turma.upper() if dto.turma else None  # Turma em maiúscula
-    
-    reembolso = ReembolsoModel(
-        id=str(uuid.uuid4()),
-        aluno_nome=aluno_nome_formatado,  # Formatado
-        aluno_cpf=dto.aluno_cpf,
-        aluno_email=dto.aluno_email.lower() if dto.aluno_email else None,  # Email em minúscula
-        aluno_telefone=dto.aluno_telefone,
-        aluno_menor_idade=dto.aluno_menor_idade or False,
-        curso=curso_formatado,  # Formatado
-        turma=turma_formatada,  # Formatado
-        motivo=dto.motivo,
-        motivo_descricao=dto.motivo_descricao,
-        reter_taxa=reter_taxa,
-        numero_chamado_sgc=dto.numero_chamado_sgc,
-        status="aberto",
-        observacoes=dto.observacoes,
-        criado_por_id=usuario.id,
-        criado_por_nome=usuario.nome,
-        data_abertura=datetime.now(timezone.utc)
-    )
-    
-    session.add(reembolso)
-    await session.commit()
-    
-    return {
-        "id": reembolso.id,
-        "mensagem": "Reembolso criado com sucesso",
-        "status": reembolso.status,
-        "reter_taxa": reembolso.reter_taxa
+        raise HTTPException(400, f"Motivo inválido")
+
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {
+        "id": str(uuid.uuid4()),
+        "aluno_nome": formatar_nome_proprio(dto.aluno_nome) if dto.aluno_nome else None,
+        "aluno_cpf": dto.aluno_cpf, "aluno_email": dto.aluno_email.lower() if dto.aluno_email else None,
+        "aluno_telefone": dto.aluno_telefone, "aluno_menor_idade": dto.aluno_menor_idade or False,
+        "curso": formatar_nome_proprio(dto.curso) if dto.curso else None,
+        "turma": dto.turma.upper() if dto.turma else None,
+        "motivo": dto.motivo, "motivo_descricao": dto.motivo_descricao,
+        "reter_taxa": MOTIVOS_REEMBOLSO[dto.motivo]["reter_taxa"],
+        "numero_chamado_sgc": dto.numero_chamado_sgc,
+        "status": "aberto", "observacoes": dto.observacoes,
+        "criado_por_id": usuario.id, "criado_por_nome": usuario.nome,
+        "data_abertura": now, "created_at": now, "updated_at": now,
+        "banco_titular_nome": None, "responsavel_id": None, "responsavel_nome": None
     }
+    await db.reembolsos.insert_one(doc)
+    return {"id": doc["id"], "mensagem": "Reembolso criado com sucesso", "status": "aberto", "reter_taxa": doc["reter_taxa"]}
 
 
 @router.get("/{reembolso_id}")
-async def buscar_reembolso(
-    reembolso_id: str,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Busca detalhes de um reembolso específico"""
-    result = await session.execute(
-        select(ReembolsoModel).where(ReembolsoModel.id == reembolso_id)
-    )
-    reembolso = result.scalar_one_or_none()
-    
-    if not reembolso:
-        raise HTTPException(status_code=404, detail="Reembolso não encontrado")
-    
-    return {
-        "id": reembolso.id,
-        "aluno_nome": reembolso.aluno_nome,
-        "aluno_cpf": reembolso.aluno_cpf,
-        "aluno_email": reembolso.aluno_email,
-        "aluno_telefone": reembolso.aluno_telefone,
-        "aluno_menor_idade": reembolso.aluno_menor_idade,
-        "curso": reembolso.curso,
-        "turma": reembolso.turma,
-        "motivo": reembolso.motivo,
-        "motivo_label": MOTIVOS_REEMBOLSO.get(reembolso.motivo, {}).get("label", reembolso.motivo),
-        "motivo_descricao": reembolso.motivo_descricao,
-        "reter_taxa": reembolso.reter_taxa,
-        "numero_chamado_sgc": reembolso.numero_chamado_sgc,
-        "status": reembolso.status,
-        "status_label": STATUS_REEMBOLSO.get(reembolso.status, reembolso.status),
-        # Dados bancários
-        "banco_titular_nome": reembolso.banco_titular_nome,
-        "banco_titular_cpf": reembolso.banco_titular_cpf,
-        "banco_nome": reembolso.banco_nome,
-        "banco_agencia": reembolso.banco_agencia,
-        "banco_operacao": reembolso.banco_operacao,
-        "banco_conta": reembolso.banco_conta,
-        "banco_tipo_conta": reembolso.banco_tipo_conta,
-        "banco_responsavel_financeiro": reembolso.banco_responsavel_financeiro,
-        "dados_bancarios_recebidos_em": reembolso.dados_bancarios_recebidos_em.isoformat() if reembolso.dados_bancarios_recebidos_em else None,
-        # Datas
-        "data_abertura": reembolso.data_abertura.isoformat() if reembolso.data_abertura else None,
-        "data_solicitacao_dados_bancarios": reembolso.data_solicitacao_dados_bancarios.isoformat() if reembolso.data_solicitacao_dados_bancarios else None,
-        "data_retorno_financeiro": reembolso.data_retorno_financeiro.isoformat() if reembolso.data_retorno_financeiro else None,
-        "data_provisao_pagamento": reembolso.data_provisao_pagamento.isoformat() if reembolso.data_provisao_pagamento else None,
-        "data_pagamento": reembolso.data_pagamento.isoformat() if reembolso.data_pagamento else None,
-        "observacoes": reembolso.observacoes,
-        "criado_por_nome": reembolso.criado_por_nome,
-        "atualizado_por_nome": reembolso.atualizado_por_nome,
-        "created_at": reembolso.created_at.isoformat() if reembolso.created_at else None,
-        "updated_at": reembolso.updated_at.isoformat() if reembolso.updated_at else None
-    }
+async def buscar_reembolso(reembolso_id: str, usuario: Usuario = Depends(get_current_user)):
+    r = await db.reembolsos.find_one({"id": reembolso_id}, {"_id": 0})
+    if not r:
+        raise HTTPException(404, "Reembolso não encontrado")
+    result = _reembolso_to_dict(r)
+    # Add bank details
+    result.update({
+        "motivo_descricao": r.get("motivo_descricao"),
+        "banco_titular_nome": r.get("banco_titular_nome"), "banco_titular_cpf": r.get("banco_titular_cpf"),
+        "banco_nome": r.get("banco_nome"), "banco_agencia": r.get("banco_agencia"),
+        "banco_operacao": r.get("banco_operacao"), "banco_conta": r.get("banco_conta"),
+        "banco_tipo_conta": r.get("banco_tipo_conta"),
+        "banco_responsavel_financeiro": r.get("banco_responsavel_financeiro"),
+        "dados_bancarios_recebidos_em": r.get("dados_bancarios_recebidos_em"),
+        "data_solicitacao_dados_bancarios": r.get("data_solicitacao_dados_bancarios"),
+        "atualizado_por_nome": r.get("atualizado_por_nome"),
+        "updated_at": r.get("updated_at")
+    })
+    return result
 
 
 @router.put("/{reembolso_id}")
-async def atualizar_reembolso(
-    reembolso_id: str,
-    dto: AtualizarReembolsoDTO,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Atualiza um reembolso"""
-    result = await session.execute(
-        select(ReembolsoModel).where(ReembolsoModel.id == reembolso_id)
-    )
-    reembolso = result.scalar_one_or_none()
-    
-    if not reembolso:
-        raise HTTPException(status_code=404, detail="Reembolso não encontrado")
-    
-    # Atualizar campos
+async def atualizar_reembolso(reembolso_id: str, dto: AtualizarReembolsoDTO, usuario: Usuario = Depends(get_current_user)):
+    r = await db.reembolsos.find_one({"id": reembolso_id})
+    if not r:
+        raise HTTPException(404, "Reembolso não encontrado")
+
+    updates = {"atualizado_por_id": usuario.id, "atualizado_por_nome": usuario.nome,
+               "updated_at": datetime.now(timezone.utc).isoformat()}
     if dto.status:
         if dto.status not in STATUS_REEMBOLSO:
-            raise HTTPException(status_code=400, detail=f"Status inválido. Opções: {', '.join(STATUS_REEMBOLSO.keys())}")
-        reembolso.status = dto.status
-        
-        # Se status for "pago", registrar data de pagamento
-        if dto.status == "pago" and not reembolso.data_pagamento:
-            reembolso.data_pagamento = datetime.now(timezone.utc)
-    
+            raise HTTPException(400, "Status inválido")
+        updates["status"] = dto.status
+        if dto.status == "pago" and not r.get("data_pagamento"):
+            updates["data_pagamento"] = datetime.now(timezone.utc).isoformat()
     if dto.numero_chamado_sgc:
-        reembolso.numero_chamado_sgc = dto.numero_chamado_sgc
-    
+        updates["numero_chamado_sgc"] = dto.numero_chamado_sgc
     if dto.data_retorno_financeiro:
-        reembolso.data_retorno_financeiro = datetime.fromisoformat(dto.data_retorno_financeiro.replace('Z', '+00:00'))
-    
+        updates["data_retorno_financeiro"] = dto.data_retorno_financeiro
     if dto.data_provisao_pagamento:
-        reembolso.data_provisao_pagamento = datetime.fromisoformat(dto.data_provisao_pagamento.replace('Z', '+00:00'))
-    
+        updates["data_provisao_pagamento"] = dto.data_provisao_pagamento
     if dto.data_pagamento:
-        reembolso.data_pagamento = datetime.fromisoformat(dto.data_pagamento.replace('Z', '+00:00'))
-    
+        updates["data_pagamento"] = dto.data_pagamento
     if dto.observacoes is not None:
-        reembolso.observacoes = dto.observacoes
-    
-    # Auditoria
-    reembolso.atualizado_por_id = usuario.id
-    reembolso.atualizado_por_nome = usuario.nome
-    reembolso.updated_at = datetime.now(timezone.utc)
-    
-    await session.commit()
-    
-    return {
-        "id": reembolso.id,
-        "mensagem": "Reembolso atualizado com sucesso",
-        "status": reembolso.status
-    }
+        updates["observacoes"] = dto.observacoes
+
+    await db.reembolsos.update_one({"id": reembolso_id}, {"$set": updates})
+    return {"id": reembolso_id, "mensagem": "Reembolso atualizado", "status": updates.get("status", r["status"])}
 
 
 @router.delete("/{reembolso_id}")
-async def deletar_reembolso(
-    reembolso_id: str,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Deleta um reembolso (apenas admin)"""
-    if usuario.role.value != 'admin':
-        raise HTTPException(status_code=403, detail="Apenas administradores podem excluir reembolsos")
-    
-    result = await session.execute(
-        select(ReembolsoModel).where(ReembolsoModel.id == reembolso_id)
-    )
-    reembolso = result.scalar_one_or_none()
-    
-    if not reembolso:
-        raise HTTPException(status_code=404, detail="Reembolso não encontrado")
-    
-    await session.delete(reembolso)
-    await session.commit()
-    
+async def deletar_reembolso(reembolso_id: str, usuario: Usuario = Depends(get_current_user)):
+    if usuario.role.value != "admin":
+        raise HTTPException(403, "Apenas administradores podem excluir")
+    result = await db.reembolsos.delete_one({"id": reembolso_id})
+    if result.deleted_count == 0:
+        raise HTTPException(404, "Reembolso não encontrado")
     return {"mensagem": "Reembolso excluído com sucesso"}
 
 
 @router.post("/{reembolso_id}/dados-bancarios")
-async def registrar_dados_bancarios(
-    reembolso_id: str,
-    dto: RegistrarDadosBancariosDTO,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Registra os dados bancários para um reembolso"""
-    result = await session.execute(
-        select(ReembolsoModel).where(ReembolsoModel.id == reembolso_id)
-    )
-    reembolso = result.scalar_one_or_none()
-    
-    if not reembolso:
-        raise HTTPException(status_code=404, detail="Reembolso não encontrado")
-    
-    # Atualizar dados bancários
-    reembolso.banco_titular_nome = dto.banco_titular_nome
-    reembolso.banco_titular_cpf = dto.banco_titular_cpf
-    reembolso.banco_nome = dto.banco_nome
-    reembolso.banco_agencia = dto.banco_agencia
-    reembolso.banco_operacao = dto.banco_operacao
-    reembolso.banco_conta = dto.banco_conta
-    reembolso.banco_tipo_conta = dto.banco_tipo_conta
-    reembolso.banco_responsavel_financeiro = dto.banco_responsavel_financeiro or False
-    reembolso.dados_bancarios_recebidos_em = datetime.now(timezone.utc)
-    
-    # Auditoria
-    reembolso.atualizado_por_id = usuario.id
-    reembolso.atualizado_por_nome = usuario.nome
-    reembolso.updated_at = datetime.now(timezone.utc)
-    
-    await session.commit()
-    
-    return {
-        "id": reembolso.id,
-        "mensagem": "Dados bancários registrados com sucesso",
-        "status": reembolso.status
-    }
+async def registrar_dados_bancarios(reembolso_id: str, dto: RegistrarDadosBancariosDTO, usuario: Usuario = Depends(get_current_user)):
+    r = await db.reembolsos.find_one({"id": reembolso_id})
+    if not r:
+        raise HTTPException(404, "Reembolso não encontrado")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.reembolsos.update_one({"id": reembolso_id}, {"$set": {
+        "banco_titular_nome": dto.banco_titular_nome, "banco_titular_cpf": dto.banco_titular_cpf,
+        "banco_nome": dto.banco_nome, "banco_agencia": dto.banco_agencia,
+        "banco_operacao": dto.banco_operacao, "banco_conta": dto.banco_conta,
+        "banco_tipo_conta": dto.banco_tipo_conta,
+        "banco_responsavel_financeiro": dto.banco_responsavel_financeiro or False,
+        "dados_bancarios_recebidos_em": now,
+        "atualizado_por_id": usuario.id, "atualizado_por_nome": usuario.nome, "updated_at": now
+    }})
+    return {"id": reembolso_id, "mensagem": "Dados bancários registrados", "status": r["status"]}
 
 
 @router.post("/{reembolso_id}/marcar-email-enviado")
-async def marcar_email_enviado(
-    reembolso_id: str,
-    session: AsyncSession = Depends(get_db_session),
-    usuario: Usuario = Depends(get_current_user)
-):
-    """Marca que o email de solicitação de dados bancários foi enviado"""
-    result = await session.execute(
-        select(ReembolsoModel).where(ReembolsoModel.id == reembolso_id)
-    )
-    reembolso = result.scalar_one_or_none()
-    
-    if not reembolso:
-        raise HTTPException(status_code=404, detail="Reembolso não encontrado")
-    
-    reembolso.data_solicitacao_dados_bancarios = datetime.now(timezone.utc)
-    reembolso.status = 'aguardando_dados_bancarios'
-    
-    # Auditoria
-    reembolso.atualizado_por_id = usuario.id
-    reembolso.atualizado_por_nome = usuario.nome
-    
-    await session.commit()
-    
-    return {
-        "id": reembolso.id,
-        "mensagem": "Email marcado como enviado",
-        "status": reembolso.status
-    }
+async def marcar_email_enviado(reembolso_id: str, usuario: Usuario = Depends(get_current_user)):
+    r = await db.reembolsos.find_one({"id": reembolso_id})
+    if not r:
+        raise HTTPException(404, "Reembolso não encontrado")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.reembolsos.update_one({"id": reembolso_id}, {"$set": {
+        "data_solicitacao_dados_bancarios": now, "status": "aguardando_dados_bancarios",
+        "atualizado_por_id": usuario.id, "atualizado_por_nome": usuario.nome
+    }})
+    return {"id": reembolso_id, "mensagem": "Email marcado como enviado", "status": "aguardando_dados_bancarios"}
