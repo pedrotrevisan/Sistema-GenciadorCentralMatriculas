@@ -196,10 +196,16 @@ async def listar_pedidos(
     pedidos_cursor = db.pedidos.find(query, {"_id": 0}).sort("created_at", -1).skip(offset).limit(por_pagina)
     pedidos_docs = await pedidos_cursor.to_list(length=por_pagina)
 
+    # Batch fetch alunos para todos os pedidos de uma vez (sem N+1)
+    pedido_ids = [p["id"] for p in pedidos_docs]
+    alunos_list = await db.alunos.find({"pedido_id": {"$in": pedido_ids}}, {"_id": 0}).to_list(length=None)
+    alunos_map = {}
+    for a in alunos_list:
+        alunos_map.setdefault(a["pedido_id"], []).append(a)
+
     pedidos_response = []
     for p in pedidos_docs:
-        alunos = await db.alunos.find({"pedido_id": p["id"]}, {"_id": 0}).to_list(length=100)
-        pedidos_response.append(_build_pedido_response(p, alunos))
+        pedidos_response.append(_build_pedido_response(p, alunos_map.get(p["id"], [])))
 
     import math
     return ListaPedidosResponseDTO(
@@ -222,13 +228,15 @@ async def get_dashboard(current_user: Usuario = Depends(get_current_user)):
     contagem = {r["_id"]: r["count"] for r in result}
     contagem["total"] = sum(contagem.values())
 
-    # Recent pedidos
+    # Recent pedidos — batch fetch alunos (sem N+1)
     pedidos_cursor = db.pedidos.find(query, {"_id": 0}).sort("created_at", -1).limit(5)
     recentes = await pedidos_cursor.to_list(length=5)
-    pedidos_response = []
-    for p in recentes:
-        alunos = await db.alunos.find({"pedido_id": p["id"]}, {"_id": 0}).to_list(length=100)
-        pedidos_response.append(_build_pedido_response(p, alunos))
+    recentes_ids = [p["id"] for p in recentes]
+    alunos_rec = await db.alunos.find({"pedido_id": {"$in": recentes_ids}}, {"_id": 0}).to_list(length=None)
+    alunos_rec_map = {}
+    for a in alunos_rec:
+        alunos_rec_map.setdefault(a["pedido_id"], []).append(a)
+    pedidos_response = [_build_pedido_response(p, alunos_rec_map.get(p["id"], [])) for p in recentes]
 
     return {"contagem_status": contagem, "pedidos_recentes": pedidos_response}
 
