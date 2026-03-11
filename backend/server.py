@@ -13,6 +13,8 @@ from contextlib import asynccontextmanager
 import os
 import logging
 import uuid
+import json
+import gzip
 from datetime import datetime, timezone
 
 # Load environment variables
@@ -98,6 +100,57 @@ async def lifespan(app: FastAPI):
             tipo["id"] = str(uuid.uuid4())
         await db.tipos_documento.insert_many(tipos_documentos)
         logger.info(f"{len(tipos_documentos)} tipos de documento criados")
+
+    # =========================================================
+    # AUTO-SEEDING: Se o banco estiver vazio (poucos pedidos),
+    # importa os dados do arquivo de seed comprimido.
+    # Isso garante que novos deploys tenham os dados históricos.
+    # =========================================================
+    pedidos_count = await db.pedidos.count_documents({})
+    if pedidos_count < 50:
+        seed_file = ROOT_DIR / "src" / "seeds" / "initial_data.json.gz"
+        if seed_file.exists():
+            logger.info(f"Banco vazio detectado ({pedidos_count} pedidos). Iniciando auto-seeding...")
+            try:
+                with gzip.open(seed_file, 'rb') as f:
+                    seed_data = json.loads(f.read().decode('utf-8'))
+
+                seeded_total = 0
+                SEED_COLLECTIONS = [
+                    'tipos_documento', 'cursos', 'projetos', 'empresas', 'usuarios',
+                    'painel_turmas', 'pedidos', 'alunos', 'reembolsos', 'pendencias',
+                    'chamados_sgc', 'artigos_conhecimento', 'chamados_sgc_andamentos',
+                    'chamados_sgc_esforco', 'chamados_sgc_interacoes', 'tarefas_diarias',
+                ]
+
+                for col_name in SEED_COLLECTIONS:
+                    docs = seed_data.get(col_name, [])
+                    if not docs:
+                        continue
+                    col = db[col_name]
+                    # Verifica quantos já existem (evita duplicatas)
+                    existing = await col.count_documents({})
+                    if col_name == 'usuarios' and existing > 0:
+                        # Não sobrescreve usuários existentes
+                        logger.info(f"  {col_name}: {existing} já existem, pulando")
+                        continue
+                    if existing > 0 and col_name not in ['pedidos', 'alunos', 'reembolsos']:
+                        logger.info(f"  {col_name}: {existing} já existem, pulando")
+                        continue
+                    # Limpa e insere
+                    await col.delete_many({})
+                    # Remove _id se presente
+                    clean_docs = [{k: v for k, v in d.items() if k != '_id'} for d in docs]
+                    if clean_docs:
+                        await col.insert_many(clean_docs, ordered=False)
+                        seeded_total += len(clean_docs)
+                        logger.info(f"  {col_name}: {len(clean_docs)} documentos inseridos")
+
+                logger.info(f"Auto-seeding concluído! {seeded_total} documentos inseridos no total.")
+            except Exception as e:
+                logger.error(f"Erro no auto-seeding: {e}")
+        else:
+            logger.warning(f"Arquivo de seed não encontrado: {seed_file}")
 
     logger.info("MongoDB initialized successfully!")
 
@@ -236,6 +289,7 @@ from src.routers.chamados_sgc import router as chamados_sgc_router
 from src.routers.painel_vagas import router as painel_vagas_router
 from src.routers.alertas import router as alertas_router
 from src.routers.produtividade import router as produtividade_router
+from src.routers.seed import router as seed_router
 
 # Include core routers
 api_router.include_router(auth_router)
@@ -263,6 +317,7 @@ api_router.include_router(chamados_sgc_router)
 api_router.include_router(painel_vagas_router)
 api_router.include_router(alertas_router)
 api_router.include_router(produtividade_router)
+api_router.include_router(seed_router)
 
 # Mount API router
 app.include_router(api_router)
