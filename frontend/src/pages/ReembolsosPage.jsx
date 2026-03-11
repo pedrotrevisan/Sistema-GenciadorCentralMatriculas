@@ -5,14 +5,15 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Textarea } from '../components/ui/textarea';
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import AtribuirResponsavelModal from '../components/AtribuirResponsavelModal';
 import {
-  DollarSign, Search, Filter, Plus, Eye, Edit,
+  DollarSign, Search, Filter, Plus, Eye, Edit, Trash2,
   Clock, CheckCircle, XCircle, Send, CreditCard,
   ChevronLeft, ChevronRight, FileText, User, Calendar,
   Mail, Copy, Check, AlertTriangle, Phone, Building, UserPlus
@@ -29,6 +30,7 @@ const STATUS_CONFIG = {
 };
 
 export default function ReembolsosPage() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState(null);
   const [reembolsos, setReembolsos] = useState([]);
@@ -47,6 +49,8 @@ export default function ReembolsosPage() {
   const [modalEditar, setModalEditar] = useState(null);
   const [modalDadosBancarios, setModalDadosBancarios] = useState(null);
   const [modalTemplates, setModalTemplates] = useState(null);
+  const [modalExcluir, setModalExcluir] = useState(null);
+  const [excluindo, setExcluindo] = useState(false);
   
   // Modal Atribuição
   const [modalAtribuir, setModalAtribuir] = useState({
@@ -341,6 +345,23 @@ export default function ReembolsosPage() {
     setModalDadosBancarios(reembolso);
   };
 
+  const excluirReembolso = async () => {
+    if (!modalExcluir) return;
+    
+    setExcluindo(true);
+    try {
+      await api.delete(`/reembolsos/${modalExcluir.id}`);
+      toast.success('Reembolso excluído com sucesso!');
+      setModalExcluir(null);
+      carregarDashboard();
+      carregarReembolsos();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao excluir reembolso');
+    } finally {
+      setExcluindo(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       {/* Header */}
@@ -375,7 +396,7 @@ export default function ReembolsosPage() {
 
       {/* Dashboard Cards - Clicáveis para filtrar */}
       {dashboard && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
           <Card 
             className="bg-yellow-50 border-yellow-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
             onClick={() => { setFiltroStatus('aberto'); carregarReembolsos(1, 'aberto'); }}
@@ -421,6 +442,18 @@ export default function ReembolsosPage() {
               <CheckCircle className="w-8 h-8 mx-auto text-green-600 mb-2" />
               <p className="text-2xl font-bold text-green-700">{dashboard.total_pago}</p>
               <p className="text-sm text-green-600">Pagos</p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="bg-red-50 border-red-200 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+            onClick={() => { setFiltroStatus('cancelado'); carregarReembolsos(1, 'cancelado'); }}
+            data-testid="card-cancelados"
+          >
+            <CardContent className="p-4 text-center">
+              <XCircle className="w-8 h-8 mx-auto text-red-600 mb-2" />
+              <p className="text-2xl font-bold text-red-700">{dashboard.total_cancelado}</p>
+              <p className="text-sm text-red-600">Cancelados</p>
             </CardContent>
           </Card>
           
@@ -648,6 +681,18 @@ export default function ReembolsosPage() {
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
+                            {user?.role === 'admin' && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setModalExcluir(r)}
+                                title="Excluir (Admin)"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                data-testid={`btn-excluir-${r.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1363,6 +1408,48 @@ export default function ReembolsosPage() {
         responsavelAtual={modalAtribuir.reembolso?.responsavel_id}
         onSuccess={handleAtribuicaoSuccess}
       />
+
+      {/* Modal de Confirmação de Exclusão (Admin) */}
+      <Dialog open={!!modalExcluir} onOpenChange={() => setModalExcluir(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Excluir Reembolso
+            </DialogTitle>
+            <DialogDescription>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-2">
+                <p className="text-red-800 font-medium mb-2">⚠️ Atenção!</p>
+                <p className="text-red-700 text-sm">
+                  Você está prestes a excluir permanentemente o reembolso de:
+                </p>
+                <p className="text-red-900 font-bold mt-2">
+                  {modalExcluir?.aluno_nome}
+                </p>
+                <p className="text-red-700 text-sm mt-2">
+                  Motivo: {modalExcluir?.motivo_solicitacao}
+                </p>
+                <p className="text-red-700 text-sm mt-3 font-medium">
+                  Esta ação não pode ser desfeita!
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setModalExcluir(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={excluirReembolso}
+              disabled={excluindo}
+            >
+              {excluindo ? 'Excluindo...' : 'Confirmar Exclusão'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
