@@ -43,6 +43,20 @@ async def init_painel_turmas(session: AsyncSession):
 
 # ============== ENDPOINTS ==============
 
+@router.get("/periodos")
+async def listar_periodos(
+    current_user: Usuario = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """Lista períodos letivos disponíveis"""
+    await init_painel_turmas(session)
+    result = await session.execute(
+        text("SELECT DISTINCT periodo_letivo FROM painel_turmas WHERE periodo_letivo IS NOT NULL ORDER BY periodo_letivo DESC")
+    )
+    periodos = [row[0] for row in result.fetchall()]
+    return {"periodos": periodos}
+
+
 @router.get("/dashboard")
 async def dashboard_vagas(
     periodo: Optional[str] = None,

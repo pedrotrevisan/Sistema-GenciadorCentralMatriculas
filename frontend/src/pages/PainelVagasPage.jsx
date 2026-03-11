@@ -22,7 +22,8 @@ import {
   Clock,
   CheckCircle,
   BarChart3,
-  Download
+  Download,
+  Calendar
 } from 'lucide-react';
 
 export default function PainelVagasPage() {
@@ -30,6 +31,8 @@ export default function PainelVagasPage() {
   const [turmas, setTurmas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroTurno, setFiltroTurno] = useState('');
+  const [filtroPeriodo, setFiltroPeriodo] = useState('');
+  const [periodos, setPeriodos] = useState([]);
   const [busca, setBusca] = useState('');
   const [showNovaTurma, setShowNovaTurma] = useState(false);
   const [novaTurma, setNovaTurma] = useState({
@@ -45,11 +48,14 @@ export default function PainelVagasPage() {
   const carregarDados = async () => {
     try {
       setLoading(true);
+      const params = {
+        turno: filtroTurno || undefined,
+        busca: busca || undefined,
+        periodo: filtroPeriodo || undefined
+      };
       const [dashRes, turmasRes] = await Promise.all([
-        api.get('/painel-vagas/dashboard'),
-        api.get('/painel-vagas/turmas', {
-          params: { turno: filtroTurno || undefined, busca: busca || undefined }
-        })
+        api.get('/painel-vagas/dashboard', { params: { periodo: filtroPeriodo || undefined } }),
+        api.get('/painel-vagas/turmas', { params })
       ]);
       setDashboard(dashRes.data);
       setTurmas(turmasRes.data.turmas);
@@ -61,9 +67,28 @@ export default function PainelVagasPage() {
     }
   };
 
+  const carregarPeriodos = async () => {
+    try {
+      const res = await api.get('/painel-vagas/periodos');
+      const lista = res.data.periodos || [];
+      setPeriodos(lista);
+      if (lista.length > 0 && !filtroPeriodo) {
+        setFiltroPeriodo(lista[0]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar períodos:', err);
+    }
+  };
+
   useEffect(() => {
-    carregarDados();
-  }, [filtroTurno]);
+    carregarPeriodos();
+  }, []);
+
+  useEffect(() => {
+    if (filtroPeriodo || periodos.length === 0) {
+      carregarDados();
+    }
+  }, [filtroTurno, filtroPeriodo]);
 
   const handleBusca = (e) => {
     e.preventDefault();
@@ -151,9 +176,24 @@ export default function PainelVagasPage() {
             <GraduationCap className="h-7 w-7 text-blue-600" />
             Painel de Vagas
           </h1>
-          <p className="text-slate-500 mt-1">Controle visual de ocupação por curso e turma</p>
+          <div className="text-slate-500 mt-1 flex items-center gap-2">
+            Controle visual de ocupação por curso e turma
+            {filtroPeriodo && <Badge variant="outline" className="text-[#004587] border-[#004587]">{filtroPeriodo}</Badge>}
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap items-center">
+          <Select value={filtroPeriodo || "all"} onValueChange={(v) => setFiltroPeriodo(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-[180px]" data-testid="select-periodo">
+              <Calendar className="h-4 w-4 mr-2 text-slate-500" />
+              <SelectValue placeholder="Período Letivo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Períodos</SelectItem>
+              {periodos.map(p => (
+                <SelectItem key={p} value={p}>{p}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button variant="outline" onClick={carregarDados} data-testid="btn-refresh">
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
@@ -370,6 +410,7 @@ export default function PainelVagasPage() {
                   <th className="pb-2 font-medium text-center">Ocupadas</th>
                   <th className="pb-2 font-medium text-center">Disponíveis</th>
                   <th className="pb-2 font-medium">Ocupação</th>
+                  <th className="pb-2 font-medium">Período</th>
                   <th className="pb-2 font-medium">Status</th>
                 </tr>
               </thead>
@@ -394,12 +435,15 @@ export default function PainelVagasPage() {
                         <span className="text-xs font-medium">{turma.percentual}%</span>
                       </div>
                     </td>
+                    <td className="py-3">
+                      <Badge variant="outline" className="text-xs font-mono">{turma.periodo_letivo || '-'}</Badge>
+                    </td>
                     <td className="py-3">{getStatusBadge(turma.status_ocupacao)}</td>
                   </tr>
                 ))}
                 {turmas.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-slate-500">
+                    <td colSpan={9} className="py-8 text-center text-slate-500">
                       Nenhuma turma encontrada. 
                       <Button variant="link" onClick={importarCursos} className="ml-2">
                         Importar cursos CIMATEC

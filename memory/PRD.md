@@ -23,6 +23,14 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - Backend: `/api/produtividade/dashboard` com aggregações em tempo real
 - Restrito a admin e assistente
 
+### Filtro por Período Letivo no Painel de Vagas (2026-03-11) - CONCLUÍDO
+- Seletor de período letivo no topo da página (dropdown)
+- Dashboard e lista de turmas filtrados pelo período selecionado
+- Período mais recente selecionado como padrão (ex: 2026.1)
+- Novo endpoint `/api/painel-vagas/periodos` para listar períodos disponíveis
+- Coluna "Período" adicionada à tabela de turmas
+- Badge visual no subtítulo mostrando período ativo
+
 ### Limpeza de Nomes de Cursos (2026-03-11) - CONCLUÍDO
 - 3 cursos limpos: removidos prefixos numéricos indevidos
 - "3003Técnico em Design de Interiores" -> "Técnico em Design de Interiores"
