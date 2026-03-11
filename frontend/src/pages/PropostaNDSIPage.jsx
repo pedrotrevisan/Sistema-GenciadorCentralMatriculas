@@ -40,7 +40,7 @@ export default function PropostaNDSIPage() {
             Integração SYNAPSE ↔ TOTVS
           </h1>
           <p className="text-slate-400">
-            Proposta de integração para a Central de Matrículas
+            Solicitação de integração — Central de Matrículas CAC
           </p>
         </div>
 
@@ -72,9 +72,11 @@ export default function PropostaNDSIPage() {
               reembolsos e controle de vagas.
             </p>
             <p className="text-slate-300 leading-relaxed">
-              O sistema já está operacional com <strong className="text-white">413 matrículas</strong>, 
-              <strong className="text-white"> 50 reembolsos</strong> e <strong className="text-white">10 turmas</strong> cadastradas (420 vagas, 89.5% ocupação), 
-              eliminando o uso de planilhas Excel para controle.
+              O sistema está <strong className="text-white">100% operacional em produção</strong> em 
+              <strong className="text-white"> synapse.pedrotrevisan.dev.br</strong>, com 
+              <strong className="text-white"> 414 matrículas</strong>, 
+              <strong className="text-white"> 50 reembolsos</strong> e <strong className="text-white">10 turmas</strong> cadastradas (420 vagas, ~90% ocupação), 
+              substituindo completamente o uso de planilhas Excel para controle.
             </p>
           </CardContent>
         </Card>
@@ -91,20 +93,20 @@ export default function PropostaNDSIPage() {
                 <h3 className="font-semibold text-blue-400 mb-2">Backend</h3>
                 <ul className="text-sm text-slate-300 space-y-1">
                   <li>• Python 3.11 + FastAPI</li>
-                  <li>• SQLite (pode migrar para PostgreSQL)</li>
-                  <li>• SQLAlchemy ORM</li>
-                  <li>• Autenticação JWT</li>
-                  <li>• API RESTful documentada</li>
+                  <li>• MongoDB (Motor/PyMongo async)</li>
+                  <li>• Autenticação JWT + bcrypt</li>
+                  <li>• API RESTful documentada (OpenAPI)</li>
+                  <li>• Deploy em Kubernetes (Emergent)</li>
                 </ul>
               </div>
               <div className="p-4 bg-white/5 rounded-lg">
                 <h3 className="font-semibold text-green-400 mb-2">Frontend</h3>
                 <ul className="text-sm text-slate-300 space-y-1">
-                  <li>• React 18 + Vite</li>
-                  <li>• Tailwind CSS</li>
+                  <li>• React 19 + Tailwind CSS</li>
                   <li>• Shadcn/UI Components</li>
-                  <li>• Recharts (gráficos)</li>
-                  <li>• React Beautiful DnD (Kanban)</li>
+                  <li>• Recharts (gráficos interativos)</li>
+                  <li>• React Router (SPA)</li>
+                  <li>• Axios (HTTP client)</li>
                 </ul>
               </div>
             </div>
@@ -295,7 +297,7 @@ export default function PropostaNDSIPage() {
               O sistema está disponível para avaliação técnica:
             </p>
             <div className="space-y-2">
-              <p className="text-white font-mono">🔗 hub-senai.preview.emergentagent.com</p>
+              <p className="text-white font-mono">🔗 synapse.pedrotrevisan.dev.br</p>
               <p className="text-sm text-blue-200">Modo Apresentação: /apresentacao</p>
             </div>
             <div className="mt-6 pt-4 border-t border-white/20">

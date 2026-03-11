@@ -3,13 +3,14 @@
 ## Problem Statement
 Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligência Operacional" que atua como middleware de front-end entre a CAC (Central de Atendimento ao Cliente) e o TOTVS Educacional. O objetivo é substituir processos manuais para gerenciar solicitações de matrícula, pendências de documentos, reembolsos, e apoio cognitivo para funcionários.
 
-## Última Atualização: 2026-03-11
+## Última Atualização: 2026-03-11 (Sessão 2)
 
 ## Tech Stack Atual
 - Backend: Python 3.10+, FastAPI, **MongoDB (Motor/PyMongo)**, Pydantic
 - Frontend: React 19, Tailwind CSS, Shadcn/UI, Axios, Recharts
 - Auth: JWT (python-jose), bcrypt
 - Deploy: Emergent Platform (Kubernetes)
+- Auto-seeding: initial_data.json.gz (5426 docs, 283KB comprimido)
 
 ## Credenciais de Acesso
 - Admin: `pedro.passos@fieb.org.br` (senha: Pedro@2026)
@@ -80,12 +81,10 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - [x] Filtro por Período Letivo (Painel de Vagas) + Duplicação de Período
 - [x] **Migração SQLite → MongoDB** (2026-03-11) - Deploy na Emergent desbloqueado
 - [x] Normalização de campos boolean no MongoDB (2026-03-11)
-- [x] **Correção de módulos pós-migração** (2026-03-11):
-  - Dashboard BI: endpoint `/bi/completo` criado com todos os KPIs
-  - Dashboard SLA: campos corrigidos (pedidos_abertos, taxa_conclusao, metricas_por_status, evolucao_semanal, alertas_sla)
-  - Chamados SGC: dashboard com total_abertos, sla_critico, fechados_hoje; estrutura nested no detalhe
-  - Caixa de Entrada: endpoint `/atribuicoes/resumo` criado
-  - BI endpoints adicionais: `/bi/matriculas`, `/bi/reembolsos`, `/bi/pendencias`, `/bi/evolucao`
+- [x] **Correção de módulos pós-migração** (2026-03-11)
+- [x] **Auto-seeding no startup** (2026-03-11) - src/seeds/initial_data.json.gz
+- [x] **Endpoint de seed via API** (2026-03-11) - /api/admin/seed/{collection}
+- [x] **Apresentações atualizadas** (2026-03-11) - URLs, tech stack, números, módulos
 
 ### P1 (Próximos)
 - [ ] Integração com TOTVS via API (aguardando TI SENAI)

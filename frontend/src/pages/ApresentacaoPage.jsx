@@ -41,7 +41,7 @@ export default function ApresentacaoPage() {
       // Se não tem token, usar dados estáticos de demonstração
       if (!token) {
         setDados({
-          pedidos: { total: 413, por_status: { realizado: 350, aprovado: 20, em_analise: 25, pendente: 10, documentacao_pendente: 8 } },
+          pedidos: { total: 414, por_status: { realizado: 0, aprovado: 396, em_analise: 1, pendente: 16, documentacao_pendente: 0, cancelado: 1 } },
           vagas: { 
             resumo: { total_turmas: 10, total_vagas: 420, total_ocupadas: 376, vagas_disponiveis: 44, percentual_ocupacao: 89.5, turmas_lotando: 6 },
             por_curso: [
@@ -58,7 +58,7 @@ export default function ApresentacaoPage() {
             ]
           },
           reembolsos: { total: 50, total_aberto: 20, total_aguardando: 0, total_enviado: 5, total_pago: 25 },
-          pendencias: { total_pendente: 8, total_aguardando: 5, total_em_analise: 3, total_reenvio: 2, total_aprovado: 350 }
+          pendencias: { total_pendente: 0, total_aguardando: 0, total_em_analise: 0, total_reenvio: 0, total_aprovado: 414 }
         });
         setLoading(false);
         return;
@@ -81,7 +81,7 @@ export default function ApresentacaoPage() {
       console.error('Erro ao carregar dados:', error);
       // Fallback para dados de demonstração
       setDados({
-        pedidos: { total: 413 },
+        pedidos: { total: 414 },
         vagas: { resumo: { total_turmas: 10, total_vagas: 420, total_ocupadas: 376, vagas_disponiveis: 44, percentual_ocupacao: 89.5, turmas_lotando: 6 }, por_curso: [] },
         reembolsos: { total: 50 },
         pendencias: { total_pendente: 8 }
@@ -203,7 +203,7 @@ export default function ApresentacaoPage() {
             <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all hover:scale-105">
               <CardContent className="p-6 text-center">
                 <FileText className="h-10 w-10 mx-auto mb-3 text-blue-400" />
-                <p className="text-5xl font-bold text-white mb-2">{dados.pedidos?.total || 413}</p>
+                <p className="text-5xl font-bold text-white mb-2">{dados.pedidos?.total || 414}</p>
                 <p className="text-blue-300">Matrículas</p>
               </CardContent>
             </Card>
@@ -236,10 +236,14 @@ export default function ApresentacaoPage() {
           {/* Módulos */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: BarChart3, label: 'Dashboards', desc: 'BI, SLA, Gestão', color: 'from-blue-500 to-blue-600' },
+              { icon: BarChart3, label: 'Dashboards', desc: 'BI, SLA, Produtividade', color: 'from-blue-500 to-blue-600' },
               { icon: Target, label: 'Kanban', desc: 'Fluxo Visual', color: 'from-purple-500 to-purple-600' },
               { icon: Ticket, label: 'Chamados SGC', desc: 'Demandas BMP', color: 'from-pink-500 to-pink-600' },
               { icon: Zap, label: 'Assistente TOTVS', desc: 'Automação ERP', color: 'from-amber-500 to-amber-600' },
+              { icon: Users, label: 'Painel de Vagas', desc: 'Ocupação Visual', color: 'from-emerald-500 to-emerald-600' },
+              { icon: FileText, label: 'Pendências', desc: 'Docs. Alunos', color: 'from-orange-500 to-orange-600' },
+              { icon: TrendingUp, label: 'Reembolsos', desc: 'Controle Financeiro', color: 'from-green-500 to-green-600' },
+              { icon: AlertCircle, label: 'Central Alertas', desc: 'Retornos Atrasados', color: 'from-red-500 to-red-600' },
             ].map((modulo, idx) => (
               <div key={idx} className={`bg-gradient-to-br ${modulo.color} rounded-xl p-4 hover:scale-105 transition-all`}>
                 <modulo.icon className="h-8 w-8 mb-2 opacity-80" />
@@ -489,7 +493,7 @@ export default function ApresentacaoPage() {
           <div className="text-center mt-10">
             <div className="inline-block bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-8">
               <h3 className="text-2xl font-bold mb-2">Pronto para Produção</h3>
-              <p className="text-blue-200 mb-4">413 matrículas • 50 reembolsos • 10 turmas • 89.5% ocupação</p>
+              <p className="text-blue-200 mb-4">414 matrículas • 50 reembolsos • 10 turmas • ~90% ocupação</p>
               <div className="flex justify-center gap-4">
                 <Badge className="bg-white/20 text-white text-lg px-4 py-2">
                   <Building2 className="h-4 w-4 mr-2 inline" />

@@ -38,7 +38,7 @@ export default function PropostaCristianePage() {
             Hub de Inteligência Operacional
           </p>
           <p className="text-slate-500 mt-2">
-            Proposta de Sistema para a Central de Matrículas
+            Sistema Operacional da Central de Matrículas
           </p>
         </div>
 
@@ -67,9 +67,9 @@ export default function PropostaCristianePage() {
             <p className="text-slate-600 leading-relaxed">
               O <strong>SYNAPSE</strong> é um sistema desenvolvido especificamente para resolver 
               os desafios operacionais da Central de Matrículas do SENAI CIMATEC. 
-              O sistema já está <strong>funcional e populado com dados reais</strong> (413 matrículas, 
-              50 reembolsos, 11 turmas), eliminando a necessidade de controles em planilhas 
-              Excel e alimentação manual de relatórios.
+              O sistema está <strong>100% operacional em produção</strong> com dados reais (414 matrículas, 
+              50 reembolsos, 10 turmas), substituindo completamente o controle em planilhas 
+              Excel e a alimentação manual de relatórios.
             </p>
           </CardContent>
         </Card>
@@ -135,7 +135,7 @@ export default function PropostaCristianePage() {
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
-                <p className="text-4xl font-bold">413</p>
+                <p className="text-4xl font-bold">414</p>
                 <p className="text-sm opacity-80">Matrículas</p>
               </div>
               <div>
@@ -201,16 +201,20 @@ export default function PropostaCristianePage() {
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                { nome: 'Painel de Controle', desc: 'Visão geral com KPIs clicáveis', icon: BarChart3 },
+                { nome: 'Painel de Controle', desc: 'KPIs clicáveis em tempo real', icon: BarChart3 },
                 { nome: 'Painel de Vagas', desc: 'Ocupação visual por curso/turma', icon: Users },
                 { nome: 'Kanban', desc: 'Fluxo visual de matrículas', icon: Target },
                 { nome: 'Central de Pendências', desc: 'Gestão de documentos pendentes', icon: FileText },
                 { nome: 'Reembolsos', desc: 'Controle de solicitações de reembolso', icon: TrendingUp },
-                { nome: 'Dashboard BI', desc: 'Gráficos e análises', icon: BarChart3 },
-                { nome: 'Dashboard SLA', desc: 'Métricas de atendimento', icon: Clock },
+                { nome: 'Dashboard BI', desc: 'Gráficos, funis e análises', icon: BarChart3 },
+                { nome: 'Dashboard SLA', desc: 'Métricas e prazos de atendimento', icon: Clock },
                 { nome: 'Chamados SGC', desc: 'Demandas BMP do SGC Plus', icon: FileText },
+                { nome: 'Dashboard Produtividade', desc: 'Desempenho individual da equipe', icon: TrendingUp },
+                { nome: 'Central de Alertas', desc: 'Notificações e retornos pendentes', icon: Zap },
+                { nome: 'Importação em Lote', desc: 'Upload em massa via Excel/CSV', icon: Sparkles },
                 { nome: 'Assistente TOTVS', desc: 'Auxílio no preenchimento do ERP', icon: Zap },
-                { nome: 'Modo Apresentação', desc: 'Slides para reuniões', icon: Sparkles },
+                { nome: 'Apoio Cognitivo', desc: 'Base de conhecimento e tarefas diárias', icon: Heart },
+                { nome: 'Modo Apresentação', desc: 'Slides para reuniões com dados ao vivo', icon: Sparkles },
               ].map((modulo, idx) => (
                 <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                   <modulo.icon className="h-5 w-5 text-blue-600" />
@@ -260,13 +264,13 @@ export default function PropostaCristianePage() {
             </h2>
             <div className="space-y-3">
               {[
-                { passo: '1', titulo: 'Validação', desc: 'Apresentação do sistema para a equipe CAC' },
-                { passo: '2', titulo: 'Feedback', desc: 'Coleta de sugestões e ajustes necessários' },
-                { passo: '3', titulo: 'Integração TOTVS', desc: 'Proposta ao NDSI para automatizar importação de dados' },
-                { passo: '4', titulo: 'Implantação', desc: 'Uso em produção pela equipe' },
+                { passo: '✓', titulo: 'Desenvolvimento', desc: 'Sistema desenvolvido e em produção', done: true },
+                { passo: '2', titulo: 'Validação com a Equipe', desc: 'Apresentação e treinamento da equipe CAC', done: false },
+                { passo: '3', titulo: 'Integração TOTVS', desc: 'Proposta ao NDSI para automatizar importação de dados', done: false },
+                { passo: '4', titulo: 'Expansão', desc: 'Novos módulos e melhorias baseadas no feedback da equipe', done: false },
               ].map((item, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
-                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+                <div key={idx} className={`flex items-center gap-4 p-3 rounded-lg ${item.done ? 'bg-green-50' : 'bg-slate-50'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${item.done ? 'bg-green-500 text-white' : 'bg-[#004587] text-white'}`}>
                     {item.passo}
                   </div>
                   <div>
@@ -284,7 +288,7 @@ export default function PropostaCristianePage() {
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-bold mb-4">Acesse o Sistema</h2>
             <div className="space-y-2">
-              <p className="text-blue-300">🔗 hub-senai.preview.emergentagent.com</p>
+              <p className="text-blue-300">🔗 synapse.pedrotrevisan.dev.br</p>
               <p className="text-sm opacity-70">Login: cristiane.mendes@fieb.org.br</p>
             </div>
             <div className="mt-4 pt-4 border-t border-white/20">
