@@ -308,11 +308,11 @@ class PedidoRepository(IPedidoRepository):
         
         return pedidos, total
 
-    async def listar_para_exportacao(self) -> List[PedidoMatricula]:
+    async def listar_para_exportacao(self, limite: int = 500) -> List[PedidoMatricula]:
         """Lista pedidos aptos para exportação (status REALIZADO)"""
         query = select(PedidoModel).where(
             PedidoModel.status == StatusPedido.REALIZADO.value
-        ).order_by(PedidoModel.created_at.desc())
+        ).order_by(PedidoModel.created_at.desc()).limit(limite)
         
         result = await self.session.execute(query)
         models = result.scalars().all()
