@@ -35,7 +35,9 @@ import {
   Ban,
   ClipboardList,
   Ticket,
-  GraduationCap
+  GraduationCap,
+  HelpCircle,
+  Activity
 } from 'lucide-react';
 import AlertaRetornos from './AlertaRetornos';
 import CentralAlertas from './CentralAlertas';
@@ -90,7 +92,8 @@ const DashboardLayout = () => {
         { to: '/consultor', icon: LayoutDashboard, label: 'Meus Pedidos' },
         { to: '/consultor/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' },
-        { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' }
+        { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' },
+        { to: '/manual', icon: HelpCircle, label: 'Manual' }
       );
     } else if (user?.role === 'assistente') {
       items.push(
@@ -109,7 +112,8 @@ const DashboardLayout = () => {
         { to: '/assistente-totvs', icon: ClipboardList, label: 'Assistente TOTVS' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' },
         { to: '/formatador', icon: FileSpreadsheet, label: 'Formatador Planilhas' },
-        { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' }
+        { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' },
+        { to: '/manual', icon: HelpCircle, label: 'Manual' }
       );
     } else if (user?.role === 'admin') {
       items.push(
@@ -131,7 +135,9 @@ const DashboardLayout = () => {
         { to: '/admin/novo-pedido', icon: Plus, label: 'Nova Solicitação' },
         { to: '/importacao', icon: Upload, label: 'Importar Lote' },
         { to: '/formatador', icon: FileSpreadsheet, label: 'Formatador Planilhas' },
-        { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' }
+        { to: '/produtividade', icon: Activity, label: 'Produtividade' },
+        { to: '/base-conhecimento', icon: BookOpen, label: 'Base de Conhecimento' },
+        { to: '/manual', icon: HelpCircle, label: 'Manual' }
       );
     }
     

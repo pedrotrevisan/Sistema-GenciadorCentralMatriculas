@@ -38,6 +38,8 @@ import PainelVagasPage from "./pages/PainelVagasPage";
 import ApresentacaoPage from "./pages/ApresentacaoPage";
 import PropostaCristianePage from "./pages/PropostaCristianePage";
 import PropostaNDSIPage from "./pages/PropostaNDSIPage";
+import ManualAjudaPage from "./pages/ManualAjudaPage";
+import ProdutividadePage from "./pages/ProdutividadePage";
 
 function App() {
   return (
@@ -100,6 +102,7 @@ function App() {
               <Route path="/assistente-totvs/:pedidoId/:alunoIndex" element={<AssistenteTOTVSPage />} />
               <Route path="/chamados-sgc" element={<ChamadosSGCPage />} />
               <Route path="/painel-vagas" element={<PainelVagasPage />} />
+              <Route path="/produtividade" element={<ProdutividadePage />} />
             </Route>
           </Route>
 
@@ -110,6 +113,7 @@ function App() {
               <Route path="/base-conhecimento" element={<BaseConhecimentoPage />} />
               <Route path="/minha-conta" element={<ConfiguracaoContaPage />} />
               <Route path="/caixa-entrada" element={<CaixaEntradaPage />} />
+              <Route path="/manual" element={<ManualAjudaPage />} />
             </Route>
           </Route>
 
