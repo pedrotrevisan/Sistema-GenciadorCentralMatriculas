@@ -20,8 +20,6 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # Domain imports
-from src.domain.entities import Usuario, RoleUsuario
-from src.domain.value_objects import Email
 from src.domain.exceptions import (
     ValidationException, BusinessRuleException,
     NotFoundException, AuthorizationException,
@@ -29,12 +27,7 @@ from src.domain.exceptions import (
 )
 
 # Infrastructure imports
-from src.infrastructure.persistence.database import engine, async_session, init_db
-from src.infrastructure.persistence.repositories import UsuarioRepository
-from src.infrastructure.persistence.models import (
-    CursoModel, ProjetoModel, EmpresaModel, TipoDocumentoModel, UsuarioModel
-)
-from sqlalchemy import select, func
+from src.infrastructure.persistence.mongodb import db, init_db
 from src.infrastructure.security import JWTAuthenticator
 
 # Application imports
@@ -53,132 +46,64 @@ jwt_auth = JWTAuthenticator()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan context manager for startup/shutdown"""
-    # Startup
-    logger.info("Initializing database...")
+    """Lifespan context manager for startup/shutdown - MongoDB version"""
+    logger.info("Initializing MongoDB...")
     await init_db()
-    
-    # Create default users and seed data
-    async with async_session() as session:
-        usuario_repo = UsuarioRepository(session)
-        
-        # Senha padrão para primeiro acesso
-        SENHA_PADRAO = "Senai@2026"
-        
-        # Lista de usuários oficiais
-        usuarios_oficiais = [
-            # Administradores
-            {"nome": "Pedro Henrique Trevisan Passos Costa", "email": "pedro.passos@fieb.org.br", "role": RoleUsuario.ADMIN},
-            {"nome": "Cristiane dos Santos Mendes", "email": "cristiane.mendes@fieb.org.br", "role": RoleUsuario.ADMIN},
-            # Assistentes
-            {"nome": "Camila de Deus Mota Reis", "email": "camila.mreis@fieb.org.br", "role": RoleUsuario.ASSISTENTE},
-            {"nome": "Vanessa da Silva Santos", "email": "vanessa.silvasantos@fieb.org.br", "role": RoleUsuario.ASSISTENTE},
-            {"nome": "Saulo Serra Santos", "email": "saulo.serra@fbest.org.br", "role": RoleUsuario.ASSISTENTE},
-            {"nome": "Vitoria Vanessa dos Santos Oliveira", "email": "vitoria.soliveira@fbest.org.br", "role": RoleUsuario.ASSISTENTE},
-            {"nome": "José Hericles Santos de Almeida", "email": "jose.hericles@fieb.org.br", "role": RoleUsuario.ASSISTENTE},
-            # Consultor exemplo
-            {"nome": "Consultor Exemplo", "email": "consultorexemplocimatec@fieb.org.br", "role": RoleUsuario.CONSULTOR},
+
+    # Seed default users if collection is empty
+    SENHA_PADRAO = "Senai@2026"
+    usuarios_oficiais = [
+        {"nome": "Pedro Henrique Trevisan Passos Costa", "email": "pedro.passos@fieb.org.br", "role": "admin"},
+        {"nome": "Cristiane dos Santos Mendes", "email": "cristiane.mendes@fieb.org.br", "role": "admin"},
+        {"nome": "Camila de Deus Mota Reis", "email": "camila.mreis@fieb.org.br", "role": "assistente"},
+        {"nome": "Vanessa da Silva Santos", "email": "vanessa.silvasantos@fieb.org.br", "role": "assistente"},
+        {"nome": "Saulo Serra Santos", "email": "saulo.serra@fbest.org.br", "role": "assistente"},
+        {"nome": "Vitoria Vanessa dos Santos Oliveira", "email": "vitoria.soliveira@fbest.org.br", "role": "assistente"},
+        {"nome": "José Hericles Santos de Almeida", "email": "jose.hericles@fieb.org.br", "role": "assistente"},
+        {"nome": "Consultor Exemplo", "email": "consultorexemplocimatec@fieb.org.br", "role": "consultor"},
+    ]
+
+    for user_data in usuarios_oficiais:
+        existing = await db.usuarios.find_one({"email": user_data["email"]})
+        if not existing:
+            now = datetime.now(timezone.utc).isoformat()
+            await db.usuarios.insert_one({
+                "id": str(uuid.uuid4()),
+                "nome": user_data["nome"],
+                "email": user_data["email"],
+                "senha_hash": jwt_auth.hash_senha(SENHA_PADRAO),
+                "role": user_data["role"],
+                "ativo": True,
+                "primeiro_acesso": True,
+                "created_at": now,
+                "updated_at": now,
+                "ultimo_acesso": None
+            })
+            logger.info(f"Usuário criado: {user_data['nome']} ({user_data['email']})")
+
+    # Seed tipos_documento if empty
+    tipos_count = await db.tipos_documento.count_documents({})
+    if tipos_count == 0:
+        tipos_documentos = [
+            {"codigo": "94", "nome": "Comprovante de Residência", "obrigatorio": True, "observacoes": "PDF ou JPG – Máx. 10MB"},
+            {"codigo": "96", "nome": "Solicitação Desconto (Sindicato/CIEB/Ex-Aluno/Col. Sistema FIEB)", "obrigatorio": False, "observacoes": "Se aplicável"},
+            {"codigo": "97", "nome": "CPF/RG Responsável Legal (menor de 18 anos)", "obrigatorio": False, "observacoes": "Se aplicável"},
+            {"codigo": "131", "nome": "RG – Frente", "obrigatorio": True, "observacoes": "PDF ou JPG – Máx. 10MB"},
+            {"codigo": "132", "nome": "RG – Verso", "obrigatorio": True, "observacoes": "PDF ou JPG – Máx. 10MB"},
+            {"codigo": "136", "nome": "Comprovante de Escolaridade – Frente", "obrigatorio": True, "observacoes": "Histórico ou Atestado - PDF ou JPG – Máx. 10MB"},
+            {"codigo": "137", "nome": "Comprovante de Escolaridade – Verso", "obrigatorio": True, "observacoes": "Histórico ou Atestado - PDF ou JPG – Máx. 10MB"},
+            {"codigo": "205", "nome": "CPF", "obrigatorio": False, "observacoes": "PDF ou JPG – Máx. 10MB"},
         ]
-        
-        for user_data in usuarios_oficiais:
-            existing = await usuario_repo.buscar_por_email(user_data["email"])
-            if not existing:
-                new_user = Usuario(
-                    id=str(uuid.uuid4()),
-                    nome=user_data["nome"],
-                    email=Email(user_data["email"]),
-                    senha_hash=jwt_auth.hash_senha(SENHA_PADRAO),
-                    role=user_data["role"]
-                )
-                await usuario_repo.salvar(new_user)
-                # Marcar como primeiro acesso
-                result = await session.execute(
-                    select(UsuarioModel).where(UsuarioModel.email == user_data["email"])
-                )
-                usuario_model = result.scalar_one_or_none()
-                if usuario_model:
-                    usuario_model.primeiro_acesso = True
-                    await session.commit()
-                logger.info(f"Usuário criado: {user_data['nome']} ({user_data['email']})")
-        
-        # Seed Cursos
-        cursos_count = await session.execute(select(func.count(CursoModel.id)))
-        if cursos_count.scalar() == 0:
-            cursos_iniciais = [
-                "Técnico em Mecatrônica",
-                "Técnico em Automação Industrial",
-                "Técnico em Eletrotécnica",
-                "Técnico em Desenvolvimento de Sistemas",
-                "Técnico em Redes de Computadores",
-                "Técnico em Segurança do Trabalho",
-                "Engenharia de Produção",
-                "Engenharia Mecânica"
-            ]
-            for nome in cursos_iniciais:
-                session.add(CursoModel(id=str(uuid.uuid4()), nome=nome))
-            await session.commit()
-            logger.info(f"{len(cursos_iniciais)} cursos criados")
-        
-        # Seed Projetos
-        projetos_count = await session.execute(select(func.count(ProjetoModel.id)))
-        if projetos_count.scalar() == 0:
-            projetos_iniciais = [
-                "Projeto SENAI de Inovação",
-                "Projeto Capacitação Industrial 4.0",
-                "Projeto Jovem Aprendiz",
-                "Projeto Qualifica Bahia"
-            ]
-            for nome in projetos_iniciais:
-                session.add(ProjetoModel(id=str(uuid.uuid4()), nome=nome))
-            await session.commit()
-            logger.info(f"{len(projetos_iniciais)} projetos criados")
-        
-        # Seed Empresas
-        empresas_count = await session.execute(select(func.count(EmpresaModel.id)))
-        if empresas_count.scalar() == 0:
-            empresas_iniciais = [
-                "Petrobras",
-                "Ford Brasil",
-                "BYD Energy",
-                "Braskem",
-                "Suzano Papel e Celulose"
-            ]
-            for nome in empresas_iniciais:
-                session.add(EmpresaModel(id=str(uuid.uuid4()), nome=nome))
-            await session.commit()
-            logger.info(f"{len(empresas_iniciais)} empresas criadas")
-        
-        # Seed Tipos de Documento para Pendências
-        tipos_doc_count = await session.execute(select(func.count(TipoDocumentoModel.id)))
-        if tipos_doc_count.scalar() == 0:
-            tipos_documentos = [
-                {"codigo": "94", "nome": "Comprovante de Residência", "obrigatorio": True, "observacoes": "PDF ou JPG – Máx. 10MB"},
-                {"codigo": "96", "nome": "Solicitação Desconto (Sindicato/CIEB/Ex-Aluno/Col. Sistema FIEB)", "obrigatorio": False, "observacoes": "Se aplicável"},
-                {"codigo": "97", "nome": "CPF/RG Responsável Legal (menor de 18 anos)", "obrigatorio": False, "observacoes": "Se aplicável"},
-                {"codigo": "131", "nome": "RG – Frente", "obrigatorio": True, "observacoes": "PDF ou JPG – Máx. 10MB"},
-                {"codigo": "132", "nome": "RG – Verso", "obrigatorio": True, "observacoes": "PDF ou JPG – Máx. 10MB"},
-                {"codigo": "136", "nome": "Comprovante de Escolaridade – Frente", "obrigatorio": True, "observacoes": "Histórico ou Atestado - PDF ou JPG – Máx. 10MB"},
-                {"codigo": "137", "nome": "Comprovante de Escolaridade – Verso", "obrigatorio": True, "observacoes": "Histórico ou Atestado - PDF ou JPG – Máx. 10MB"},
-                {"codigo": "205", "nome": "CPF", "obrigatorio": False, "observacoes": "PDF ou JPG – Máx. 10MB"},
-            ]
-            for tipo in tipos_documentos:
-                session.add(TipoDocumentoModel(
-                    id=str(uuid.uuid4()),
-                    codigo=tipo["codigo"],
-                    nome=tipo["nome"],
-                    obrigatorio=tipo["obrigatorio"],
-                    observacoes=tipo.get("observacoes")
-                ))
-            await session.commit()
-            logger.info(f"{len(tipos_documentos)} tipos de documento criados")
-    
-    logger.info("Database initialized successfully!")
-    
+        for tipo in tipos_documentos:
+            tipo["id"] = str(uuid.uuid4())
+        await db.tipos_documento.insert_many(tipos_documentos)
+        logger.info(f"{len(tipos_documentos)} tipos de documento criados")
+
+    logger.info("MongoDB initialized successfully!")
+
     yield
-    
-    # Shutdown
-    await engine.dispose()
-    logger.info("Database connection closed.")
+
+    logger.info("Shutdown complete.")
 
 
 # Create the main app

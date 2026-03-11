@@ -108,15 +108,22 @@ class Usuario:
 
     def to_dict(self, include_sensitive: bool = False) -> dict:
         """Converte para dicionário"""
+        def _fmt(val):
+            if val is None:
+                return None
+            if isinstance(val, str):
+                return val
+            return val.isoformat()
+
         data = {
             "id": self.id,
             "nome": self.nome,
             "email": self.email.valor,
             "role": self.role.value,
             "ativo": self.ativo,
-            "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat(),
-            "ultimo_acesso": self.ultimo_acesso.isoformat() if self.ultimo_acesso else None,
+            "created_at": _fmt(self.created_at),
+            "updated_at": _fmt(self.updated_at),
+            "ultimo_acesso": _fmt(self.ultimo_acesso),
             "permissoes": self.role.permissoes
         }
         if include_sensitive:

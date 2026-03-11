@@ -116,7 +116,7 @@ export default function CentralPendenciasPage() {
         api.get('/pendencias/tipos-documento')
       ]);
       setDashboard(dashRes.data);
-      setTiposDocumento(tiposRes.data);
+      setTiposDocumento(tiposRes.data.tipos || tiposRes.data || []);
     } catch (error) {
       toast.error('Erro ao carregar dados');
     }

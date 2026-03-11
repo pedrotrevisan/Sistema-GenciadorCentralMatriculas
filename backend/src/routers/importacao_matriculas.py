@@ -7,14 +7,13 @@ from fastapi.responses import StreamingResponse
 from typing import Optional, List
 from pydantic import BaseModel
 from datetime import datetime, timezone
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
 import pandas as pd
 import io
 import uuid
 import re
 
-from .dependencies import get_current_user, get_db_session
+from .dependencies import get_current_user
+from ..infrastructure.persistence.mongodb import db
 from ..domain.entities import Usuario
 
 router = APIRouter(prefix="/importacao", tags=["Importação de Matrículas"])
@@ -165,7 +164,6 @@ async def validar_arquivo(
     projeto_id: Optional[str] = Query(None, description="ID do projeto"),
     empresa_id: Optional[str] = Query(None, description="ID da empresa"),
     current_user: Usuario = Depends(get_current_user),
-    session: AsyncSession = Depends(get_db_session)
 ):
     """
     Valida arquivo Excel/CSV antes da importação
@@ -243,11 +241,8 @@ async def validar_arquivo(
         
         # Verificar duplicidade no banco
         if cpf:
-            result = await session.execute(
-                text("SELECT COUNT(*) FROM alunos WHERE cpf = :cpf"),
-                {"cpf": cpf}
-            )
-            if result.scalar() > 0:
+            count = await db.alunos.count_documents({"cpf": cpf})
+            if count > 0:
                 erros.append('CPF já cadastrado')
         
         valido = len(erros) == 0 and nome
@@ -286,7 +281,6 @@ async def executar_importacao(
     empresa_id: Optional[str] = Query(None, description="ID da empresa"),
     empresa_nome: Optional[str] = Query(None, description="Nome da empresa"),
     current_user: Usuario = Depends(get_current_user),
-    session: AsyncSession = Depends(get_db_session)
 ):
     """
     Executa importação de alunos criando pedidos de matrícula
@@ -326,9 +320,20 @@ async def executar_importacao(
     df.rename(columns=column_mapping, inplace=True)
     
     # Buscar próximo número de protocolo
-    result = await session.execute(text("SELECT COUNT(*) FROM pedidos"))
-    contador = result.scalar()
-    
+    ano = datetime.now().year
+    prefixo = f"CM-{ano}-"
+    last = await db.pedidos.find(
+        {"numero_protocolo": {"$regex": f"^{prefixo}"}},
+        {"numero_protocolo": 1, "_id": 0}
+    ).sort("numero_protocolo", -1).limit(1).to_list(1)
+    if last:
+        try:
+            contador = int(last[0]["numero_protocolo"].split("-")[-1])
+        except (ValueError, IndexError):
+            contador = 0
+    else:
+        contador = await db.pedidos.count_documents({})
+
     pedidos_criados = 0
     alunos_importados = 0
     erros = []
@@ -350,104 +355,66 @@ async def executar_importacao(
             
             # Verificar duplicidade
             if cpf:
-                result = await session.execute(
-                    text("SELECT COUNT(*) FROM alunos WHERE cpf = :cpf"),
-                    {"cpf": cpf}
-                )
-                if result.scalar() > 0:
+                count = await db.alunos.count_documents({"cpf": cpf})
+                if count > 0:
                     erros.append(ErroImportacao(linha=linha_num, erro="CPF já cadastrado"))
                     continue
             else:
-                # Gerar CPF placeholder
                 cpf = f"IMP{contador + pedidos_criados + 1:08d}"
             
             # Criar pedido
             contador += 1
             pedido_id = str(uuid.uuid4())
-            protocolo = f"CM-2026-{contador:04d}"
+            protocolo = f"{prefixo}{contador:04d}"
             
-            await session.execute(
-                text("""
-                INSERT INTO pedidos (
-                    id, numero_protocolo, consultor_id, consultor_nome,
-                    curso_id, curso_nome, projeto_id, projeto_nome, 
-                    empresa_id, empresa_nome, status, observacoes, prioridade,
-                    created_at, updated_at
-                ) VALUES (:id, :protocolo, :consultor_id, :consultor_nome,
-                    :curso_id, :curso_nome, :projeto_id, :projeto_nome,
-                    :empresa_id, :empresa_nome, :status, :observacoes, :prioridade,
-                    :created_at, :updated_at)
-                """),
-                {
-                    "id": pedido_id, "protocolo": protocolo,
-                    "consultor_id": current_user.id, "consultor_nome": current_user.nome,
-                    "curso_id": curso_id, "curso_nome": curso_nome,
-                    "projeto_id": projeto_id, "projeto_nome": projeto_nome,
-                    "empresa_id": empresa_id, "empresa_nome": empresa_nome,
-                    "status": "pendente",
-                    "observacoes": f"Importado via planilha Excel em {datetime.now().strftime('%d/%m/%Y %H:%M')}",
-                    "prioridade": "normal",
-                    "created_at": now, "updated_at": now
-                }
-            )
+            pedido_doc = {
+                "id": pedido_id, "numero_protocolo": protocolo,
+                "consultor_id": current_user.id, "consultor_nome": current_user.nome,
+                "curso_id": curso_id, "curso_nome": curso_nome,
+                "projeto_id": projeto_id, "projeto_nome": projeto_nome,
+                "empresa_id": empresa_id, "empresa_nome": empresa_nome,
+                "status": "pendente",
+                "observacoes": f"Importado via planilha Excel em {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+                "prioridade": "normal",
+                "motivo_rejeicao": None, "data_exportacao": None, "exportado_por": None,
+                "responsavel_id": None, "responsavel_nome": None,
+                "created_at": now, "updated_at": now
+            }
+            await db.pedidos.insert_one(pedido_doc)
             
             # Criar aluno
-            aluno_id = str(uuid.uuid4())
-            
-            # Pegar dados adicionais se disponíveis
             data_nasc = '2000-01-01'
             if 'DATA_NASCIMENTO' in df.columns and pd.notna(row.get('DATA_NASCIMENTO')):
                 try:
                     data_nasc = pd.to_datetime(row['DATA_NASCIMENTO']).strftime('%Y-%m-%d')
-                except:
+                except Exception:
                     pass
             
             rg = str(row.get('RG', 'IMPORTADO')).strip() if pd.notna(row.get('RG')) else 'IMPORTADO'
             rg_orgao = str(row.get('RG_ORGAO', 'SSP')).strip() if pd.notna(row.get('RG_ORGAO')) else 'SSP'
             rg_uf = str(row.get('RG_UF', 'BA')).strip()[:2] if pd.notna(row.get('RG_UF')) else 'BA'
             
-            endereco_cep = str(row.get('ENDERECO_CEP', '00000000')).strip() if pd.notna(row.get('ENDERECO_CEP')) else '00000000'
-            endereco_logradouro = str(row.get('ENDERECO_LOGRADOURO', 'Endereço não informado')).strip() if pd.notna(row.get('ENDERECO_LOGRADOURO')) else 'Endereço não informado'
-            endereco_numero = str(row.get('ENDERECO_NUMERO', 'S/N')).strip() if pd.notna(row.get('ENDERECO_NUMERO')) else 'S/N'
-            endereco_complemento = str(row.get('ENDERECO_COMPLEMENTO', '')).strip() if pd.notna(row.get('ENDERECO_COMPLEMENTO')) else None
-            endereco_bairro = str(row.get('ENDERECO_BAIRRO', 'N/A')).strip() if pd.notna(row.get('ENDERECO_BAIRRO')) else 'N/A'
-            endereco_cidade = str(row.get('ENDERECO_CIDADE', 'Salvador')).strip() if pd.notna(row.get('ENDERECO_CIDADE')) else 'Salvador'
-            endereco_uf = str(row.get('ENDERECO_UF', 'BA')).strip()[:2] if pd.notna(row.get('ENDERECO_UF')) else 'BA'
-            
-            await session.execute(
-                text("""
-                INSERT INTO alunos (
-                    id, pedido_id, nome, cpf, email, telefone, data_nascimento,
-                    rg, rg_orgao_emissor, rg_uf,
-                    endereco_cep, endereco_logradouro, endereco_numero,
-                    endereco_complemento, endereco_bairro, endereco_cidade, endereco_uf,
-                    created_at, updated_at
-                ) VALUES (:id, :pedido_id, :nome, :cpf, :email, :telefone, :data_nascimento,
-                    :rg, :rg_orgao_emissor, :rg_uf,
-                    :endereco_cep, :endereco_logradouro, :endereco_numero,
-                    :endereco_complemento, :endereco_bairro, :endereco_cidade, :endereco_uf,
-                    :created_at, :updated_at)
-                """),
-                {
-                    "id": aluno_id, "pedido_id": pedido_id, 
-                    "nome": formatar_nome(nome), "cpf": cpf, "email": email, 
-                    "telefone": telefone, "data_nascimento": data_nasc,
-                    "rg": rg, "rg_orgao_emissor": rg_orgao, "rg_uf": rg_uf,
-                    "endereco_cep": endereco_cep, "endereco_logradouro": endereco_logradouro, 
-                    "endereco_numero": endereco_numero, "endereco_complemento": endereco_complemento, 
-                    "endereco_bairro": endereco_bairro, "endereco_cidade": endereco_cidade, 
-                    "endereco_uf": endereco_uf,
-                    "created_at": now, "updated_at": now
-                }
-            )
+            aluno_doc = {
+                "id": str(uuid.uuid4()), "pedido_id": pedido_id,
+                "nome": formatar_nome(nome), "cpf": cpf, "email": email,
+                "telefone": telefone, "data_nascimento": data_nasc,
+                "rg": rg, "rg_orgao_emissor": rg_orgao, "rg_uf": rg_uf,
+                "endereco_cep": str(row.get('ENDERECO_CEP', '00000000')).strip() if pd.notna(row.get('ENDERECO_CEP')) else '00000000',
+                "endereco_logradouro": str(row.get('ENDERECO_LOGRADOURO', 'N/A')).strip() if pd.notna(row.get('ENDERECO_LOGRADOURO')) else 'N/A',
+                "endereco_numero": str(row.get('ENDERECO_NUMERO', 'S/N')).strip() if pd.notna(row.get('ENDERECO_NUMERO')) else 'S/N',
+                "endereco_complemento": str(row.get('ENDERECO_COMPLEMENTO', '')).strip() if pd.notna(row.get('ENDERECO_COMPLEMENTO')) else None,
+                "endereco_bairro": str(row.get('ENDERECO_BAIRRO', 'N/A')).strip() if pd.notna(row.get('ENDERECO_BAIRRO')) else 'N/A',
+                "endereco_cidade": str(row.get('ENDERECO_CIDADE', 'Salvador')).strip() if pd.notna(row.get('ENDERECO_CIDADE')) else 'Salvador',
+                "endereco_uf": str(row.get('ENDERECO_UF', 'BA')).strip()[:2] if pd.notna(row.get('ENDERECO_UF')) else 'BA',
+                "created_at": now, "updated_at": now
+            }
+            await db.alunos.insert_one(aluno_doc)
             
             pedidos_criados += 1
             alunos_importados += 1
             
         except Exception as e:
             erros.append(ErroImportacao(linha=linha_num, erro=str(e)))
-    
-    await session.commit()
     
     return ImportacaoResult(
         pedidos_criados=pedidos_criados,

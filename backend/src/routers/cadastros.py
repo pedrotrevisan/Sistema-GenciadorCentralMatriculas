@@ -103,7 +103,11 @@ async def listar_cursos(
 ):
     query = {}
     if ativo is not None:
-        query["ativo"] = ativo
+        # Handle both boolean True and integer 1 from SQLite migration
+        if ativo:
+            query["ativo"] = {"$nin": [False, 0]}
+        else:
+            query["ativo"] = {"$in": [False, 0]}
     if tipo:
         query["tipo"] = tipo
     if modalidade:

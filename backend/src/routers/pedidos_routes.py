@@ -9,7 +9,7 @@ import logging
 from src.domain.entities import Usuario, PedidoMatricula, Aluno
 from src.domain.value_objects import StatusPedido, CPF, Email, Telefone
 from src.infrastructure.persistence.mongodb import db
-from src.infrastructure.exporters.exportador_totvs import ExportadorXLSX, ExportadorCSV
+from src.infrastructure.exporters.exportador_totvs import ExportadorXLSXTOTVS, ExportadorCSVTOTVS
 from src.application.dtos.request import CriarPedidoDTO, AtualizarStatusDTO, FiltrosPedidoDTO
 from src.application.dtos.response import (
     PedidoResponseDTO, ListaPedidosResponseDTO, PaginacaoDTO, AlunoResponseDTO
@@ -355,7 +355,7 @@ async def exportar_totvs(
         )
         pedidos_entities.append(pedido)
 
-    exportador = ExportadorXLSX() if formato == "xlsx" else ExportadorCSV()
+    exportador = ExportadorXLSXTOTVS() if formato == "xlsx" else ExportadorCSVTOTVS()
     arquivo = exportador.exportar(pedidos_entities)
     content_type = exportador.get_content_type()
     ext = exportador.get_extension()

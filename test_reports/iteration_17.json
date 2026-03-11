@@ -1,0 +1,83 @@
+{
+  "summary": "Regressão completa pós-migração SQLite→MongoDB. Todos os 22 testes backend passaram. Dois bugs críticos encontrados e CORRIGIDOS: (1) CentralPendenciasPage crashava com 'tiposDocumento.map is not a function'; (2) Cadastros mostrava 'Nenhum registro encontrado' com filtro ativo=true por incompatibilidade de tipos (integer 1 vs boolean True no MongoDB). Dados migrados confirmados: 414 pedidos, 4487 cursos, 10 turmas, período 2026.1. Todos os fluxos principais funcionando.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "GET /api/contatos/retornos",
+        "issue": "Endpoint não existe no backend. Frontend (AlertaRetornos.jsx) chama contatosAPI.getRetornos() que mapeia para /api/contatos/retornos → 404. A feature 'Retornos Atrasados' não funciona. O componente trata o erro graciosamente (não crasha), mas a feature está inativa.",
+        "priority": "MEDIUM"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "bugs_fixed_by_testing_agent": [
+    {
+      "component": "CentralPendenciasPage",
+      "issue": "tiposDocumento.map is not a function - runtime crash",
+      "rca": "setTiposDocumento(tiposRes.data) recebia o objeto {tipos: [...]} do endpoint /api/pendencias/tipos-documento em vez do array. A migração MongoDB mudou o formato da resposta.",
+      "fix": "Alterado para setTiposDocumento(tiposRes.data.tipos || tiposRes.data || [])",
+      "file": "/app/frontend/src/pages/CentralPendenciasPage.jsx"
+    },
+    {
+      "component": "GestaoCadastrosPage + backend/cadastros.py",
+      "issue": "Tabela de cursos mostrava 'Nenhum registro encontrado' com filtro ativo=true, apesar de 4487 cursos existirem",
+      "rca": "Migração SQLite armazenou campo 'ativo' como integer (1/0) no MongoDB, mas a query backend usava {'ativo': True} (boolean Python). MongoDB não faz match estrito entre 1 e True.",
+      "fix": "Query atualizada em cadastros.py para usar {'$nin': [False, 0]} (ativos) e {'$in': [False, 0]} (inativos), compatível com integer e boolean",
+      "file": "/app/backend/src/routers/cadastros.py"
+    }
+  ],
+  "regression_data_validation": {
+    "pedidos": "414 (413 migrados + 1 criado no teste)",
+    "cursos": "4487",
+    "turmas": "10",
+    "periodos_letivos": ["2026.1"],
+    "admin_primeiro_acesso": "false - login direto sem trocar senha",
+    "admin_role": "admin"
+  },
+  "features_tested": {
+    "login_admin": "PASS - pedro.passos@fieb.org.br / Pedro@2026 sem exigir troca de senha",
+    "dashboard_principal": "PASS - métricas corretas exibidas",
+    "listagem_pedidos": "PASS - 414 pedidos paginados (Página 1 de 42, 414 itens)",
+    "criar_pedido": "PASS - CM-2026-0414 criado com 1 aluno",
+    "visualizar_pedido": "PASS - detalhes completos exibidos",
+    "alterar_status": "PASS - modal 'Alterar Status do Pedido' funcional",
+    "painel_vagas": "PASS - 10 turmas, filtro por 2026.1 funcional",
+    "dashboard_produtividade": "PASS - KPIs carregados corretamente",
+    "cadastros_cursos": "PASS (após fix) - 4487 cursos na tabela",
+    "central_pendencias": "PASS (após fix) - sem crash, carrega corretamente",
+    "navegacao_lateral": "PASS - todos itens navegáveis"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_regression_mongodb.py",
+    "/app/test_reports/pytest/pytest_regression_mongodb.xml"
+  ],
+  "action_items": [
+    "Implementar endpoint GET /api/contatos/retornos no backend (contatos.py) para funcionalidade de retornos atrasados no componente AlertaRetornos",
+    "Avaliar se outros campos boolean migrados do SQLite (projetos.ativo, empresas.ativo, usuarios.ativo, usuarios.primeiro_acesso) têm a mesma incompatibilidade de tipo integer vs boolean no MongoDB e corrigir conforme necessário",
+    "Considerar script de normalização de dados para converter todos os campos boolean de integer para boolean nativo no MongoDB"
+  ],
+  "critical_code_review_comments": [
+    "O campo 'ativo' em múltiplas coleções (cursos, projetos, empresas) está armazenado como integer (0/1) em vez de boolean Python/MongoDB. Isso causa inconsistências em queries. Necessário normalizar a migração para todos os campos boolean.",
+    "A geração de id nos pedidos usa uuid4() - correto. Mas as coleções MongoDB ainda usam o campo string 'id' separado do '_id' ObjectId nativo - garantir que _id está excluído de todas as respostas (aparentemente já está implementado).",
+    "GET /api/contatos/retornos endpoint completamente ausente no router de contatos - necessita implementação"
+  ],
+  "updated_files": [
+    "/app/backend/src/routers/cadastros.py",
+    "/app/frontend/src/pages/CentralPendenciasPage.jsx",
+    "/app/backend/tests/test_regression_mongodb.py"
+  ],
+  "success_rate": {
+    "backend": "100% (22/22 testes passaram)",
+    "frontend": "95% (2 bugs corrigidos, 1 feature não funcional por endpoint ausente)"
+  },
+  "seed_data_creation": "Pedido CM-2026-0414 criado durante testes (TEST_Curso Teste MongoDB Regression, TEST_Aluno Regression MongoDB, TEST_Empresa Teste)",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Migração SQLite→MongoDB concluída. Dois bugs corrigidos: (1) CentralPendenciasPage tiposDocumento fix; (2) cadastros.py query ativo integer vs boolean fix. Endpoint ausente: GET /api/contatos/retornos. Dados: 414 pedidos (413+1 teste), 4487 cursos, 10 turmas, 2026.1. Admin: pedro.passos@fieb.org.br / Pedro@2026. Todos os outros fluxos principais funcionando.",
+  "rca_ativo_field": "SQLite armazena booleanos como integers (0=False, 1=True). A migração não converteu estes valores para boolean Python/BSON. No MongoDB, True (BSON boolean) !== 1 (BSON int32) em queries de igualdade estrita. A correção atual usa $nin/$in para aceitar ambos os tipos, mas a solução definitiva é um script de data cleanup para converter todos os campos boolean no MongoDB."
+}
