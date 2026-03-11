@@ -68,8 +68,62 @@ async def listar_contatos(
     contatos = await db.contatos.find(query, {"_id": 0}).sort("created_at", -1).limit(limite).to_list(limite)
     return {"contatos": contatos, "total": len(contatos)}
 
-@router.get("/pedido/{pedido_id}/resumo")
-async def resumo_contatos_pedido(pedido_id: str, usuario: Usuario = Depends(get_current_user)):
+@router.get("/retornos")
+async def listar_retornos(
+    limite: int = Query(20, ge=1, le=100),
+    usuario: Usuario = Depends(get_current_user)
+):
+    """Retorna contatos com retorno agendado (atrasados e pendentes nas próximas 24h)"""
+    from datetime import timedelta
+    now_dt = datetime.now(timezone.utc)
+    now_str = now_dt.isoformat()
+    amanha_str = (now_dt + timedelta(hours=24)).isoformat()
+
+    # Atrasados: proximo_retorno < agora e não marcado
+    atrasados_cursor = db.contatos.find(
+        {"proximo_retorno": {"$lt": now_str, "$exists": True}, "retorno_realizado": {"$ne": True}},
+        {"_id": 0}
+    ).sort("proximo_retorno", 1).limit(limite)
+    atrasados = await atrasados_cursor.to_list(limite)
+
+    # Pendentes: proximo_retorno entre agora e amanhã
+    pendentes_cursor = db.contatos.find(
+        {"proximo_retorno": {"$gte": now_str, "$lte": amanha_str}, "retorno_realizado": {"$ne": True}},
+        {"_id": 0}
+    ).sort("proximo_retorno", 1).limit(limite)
+    pendentes = await pendentes_cursor.to_list(limite)
+
+    return {"atrasados": atrasados, "pendentes": pendentes,
+            "total_atrasados": len(atrasados), "total_pendentes": len(pendentes)}
+
+
+@router.post("/{contato_id}/marcar-retorno")
+async def marcar_retorno(contato_id: str, usuario: Usuario = Depends(get_current_user)):
+    """Marca um contato como retorno realizado"""
+    now = datetime.now(timezone.utc).isoformat()
+    result = await db.contatos.update_one(
+        {"id": contato_id},
+        {"$set": {"retorno_realizado": True, "retorno_em": now, "updated_at": now}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(404, "Contato não encontrado")
+    return {"message": "Retorno marcado com sucesso"}
+
+
+@router.get("/stats")
+async def stats_contatos(usuario: Usuario = Depends(get_current_user)):
+    """Estatísticas gerais de contatos para BI"""
+    total = await db.contatos.count_documents({})
+    retornos_pendentes = await db.contatos.count_documents(
+        {"proximo_retorno": {"$exists": True}, "retorno_realizado": {"$ne": True}}
+    )
+    por_canal = {}
+    pipeline = [{"$group": {"_id": "$canal", "count": {"$sum": 1}}}]
+    async for r in db.contatos.aggregate(pipeline):
+        por_canal[r["_id"]] = r["count"]
+    return {"total_contatos": total, "retornos_pendentes": retornos_pendentes, "por_canal": por_canal}
+
+
     total = await db.contatos.count_documents({"pedido_id": pedido_id})
     pipeline = [
         {"$match": {"pedido_id": pedido_id}},
