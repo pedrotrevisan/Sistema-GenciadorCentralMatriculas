@@ -23,8 +23,9 @@ TIPOS_CURSO = [
     {"value": "tecnico", "label": "Escola Técnica"},
     {"value": "graduacao", "label": "Graduação"},
     {"value": "pos_graduacao", "label": "Pós-Graduação"},
+    {"value": "qualificacao", "label": "Qualificação Profissional"},
+    {"value": "aperfeicoamento", "label": "Aperfeiçoamento"},
     {"value": "livre", "label": "Curso Livre"},
-    {"value": "capacitacao", "label": "Capacitação"},
 ]
 
 MODALIDADES_CURSO = [

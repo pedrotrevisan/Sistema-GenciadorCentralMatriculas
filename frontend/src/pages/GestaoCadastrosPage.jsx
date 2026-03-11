@@ -257,10 +257,23 @@ const GestaoCadastrosPage = () => {
       tecnico: 'bg-blue-100 text-blue-800',
       graduacao: 'bg-green-100 text-green-800',
       pos_graduacao: 'bg-purple-100 text-purple-800',
+      qualificacao: 'bg-cyan-100 text-cyan-800',
+      aperfeicoamento: 'bg-amber-100 text-amber-800',
       livre: 'bg-orange-100 text-orange-800',
-      capacitacao: 'bg-yellow-100 text-yellow-800'
     };
     return colors[tipo] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getTipoEmoji = (tipo) => {
+    const emojis = {
+      tecnico: '🎓',
+      graduacao: '🏛️',
+      pos_graduacao: '📚',
+      qualificacao: '📝',
+      aperfeicoamento: '🔧',
+      livre: '📖',
+    };
+    return emojis[tipo] || '📌';
   };
 
   const getModalidadeIcon = (modalidade) => {
@@ -283,30 +296,60 @@ const GestaoCadastrosPage = () => {
 
       {/* Estatísticas de Cursos */}
       {activeTab === 'cursos' && estatisticasCursos && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-blue-50 border-blue-200">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+          <Card 
+            className="bg-slate-50 border-slate-200 cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => setFiltros({ ...filtros, tipo: '' })}
+          >
             <CardContent className="p-4 text-center">
-              <GraduationCap className="w-8 h-8 mx-auto text-blue-600 mb-2" />
-              <p className="text-2xl font-bold text-blue-700">{estatisticasCursos.total}</p>
-              <p className="text-sm text-blue-600">Total de Cursos</p>
+              <GraduationCap className="w-8 h-8 mx-auto text-slate-600 mb-2" />
+              <p className="text-2xl font-bold text-slate-700">{estatisticasCursos.total}</p>
+              <p className="text-xs text-slate-600">Total</p>
             </CardContent>
           </Card>
-          <Card className="bg-green-50 border-green-200">
+          <Card 
+            className="bg-blue-50 border-blue-200 cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => setFiltros({ ...filtros, tipo: 'tecnico' })}
+          >
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-700">{estatisticasCursos.por_tipo?.tecnico || 0}</p>
-              <p className="text-sm text-green-600">Escola Técnica</p>
+              <p className="text-2xl font-bold text-blue-700">{estatisticasCursos.por_tipo?.tecnico || 0}</p>
+              <p className="text-xs text-blue-600">🎓 Técnico</p>
             </CardContent>
           </Card>
-          <Card className="bg-purple-50 border-purple-200">
+          <Card 
+            className="bg-green-50 border-green-200 cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => setFiltros({ ...filtros, tipo: 'graduacao' })}
+          >
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-purple-700">{estatisticasCursos.por_tipo?.graduacao || 0}</p>
-              <p className="text-sm text-purple-600">Graduação</p>
+              <p className="text-2xl font-bold text-green-700">{estatisticasCursos.por_tipo?.graduacao || 0}</p>
+              <p className="text-xs text-green-600">🏛️ Graduação</p>
             </CardContent>
           </Card>
-          <Card className="bg-orange-50 border-orange-200">
+          <Card 
+            className="bg-purple-50 border-purple-200 cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => setFiltros({ ...filtros, tipo: 'pos_graduacao' })}
+          >
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-orange-700">{estatisticasCursos.por_tipo?.pos_graduacao || 0}</p>
-              <p className="text-sm text-orange-600">Pós-Graduação</p>
+              <p className="text-2xl font-bold text-purple-700">{estatisticasCursos.por_tipo?.pos_graduacao || 0}</p>
+              <p className="text-xs text-purple-600">📚 Pós-Grad</p>
+            </CardContent>
+          </Card>
+          <Card 
+            className="bg-cyan-50 border-cyan-200 cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => setFiltros({ ...filtros, tipo: 'qualificacao' })}
+          >
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-cyan-700">{estatisticasCursos.por_tipo?.qualificacao || 0}</p>
+              <p className="text-xs text-cyan-600">📝 Qualificação</p>
+            </CardContent>
+          </Card>
+          <Card 
+            className="bg-amber-50 border-amber-200 cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => setFiltros({ ...filtros, tipo: 'aperfeicoamento' })}
+          >
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-amber-700">{estatisticasCursos.por_tipo?.aperfeicoamento || 0}</p>
+              <p className="text-xs text-amber-600">🔧 Aperfeiç.</p>
             </CardContent>
           </Card>
         </div>
