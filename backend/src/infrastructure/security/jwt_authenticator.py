@@ -13,7 +13,9 @@ class JWTAuthenticator:
     """Serviço de autenticação JWT"""
 
     def __init__(self):
-        self.secret_key = os.environ.get("JWT_SECRET_KEY", "senai-cimatec-central-matriculas-secret-key-2024")
+        self.secret_key = os.environ.get("JWT_SECRET_KEY")
+        if not self.secret_key:
+            raise ValueError("JWT_SECRET_KEY environment variable is required")
         self.algorithm = "HS256"
         self.access_token_expire_minutes = 60 * 8  # 8 horas
 
