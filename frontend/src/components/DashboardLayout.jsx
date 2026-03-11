@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import AlertaRetornos from './AlertaRetornos';
 import CentralAlertas from './CentralAlertas';
+import AlertaLembretes from './AlertaLembretes';
 
 const DashboardLayout = () => {
   const { user, logout, hasPermission } = useAuth();
@@ -264,6 +265,9 @@ const DashboardLayout = () => {
           <Outlet />
         </div>
       </main>
+
+      {/* Sistema de Alertas de Lembretes */}
+      <AlertaLembretes />
     </div>
   );
 };

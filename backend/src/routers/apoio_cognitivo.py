@@ -186,6 +186,37 @@ async def meu_dia(
     lembretes_result = await session.execute(lembretes_query)
     lembretes = lembretes_result.scalars().all()
     
+    # Converter tarefas com horário em lembretes também
+    tarefas_com_horario = [t for t in tarefas if t.horario_sugerido and not t.concluida]
+    
+    # Criar lista unificada de lembretes (lembretes reais + tarefas com horário)
+    lembretes_unificados = []
+    
+    # Adicionar lembretes da tabela lembretes
+    for l in lembretes:
+        lembretes_unificados.append({
+            "id": l.id,
+            "titulo": l.titulo,
+            "descricao": l.descricao,
+            "horario": l.data_lembrete.strftime("%H:%M") if l.data_lembrete else None,
+            "tipo": l.tipo,
+            "fonte": "lembrete"
+        })
+    
+    # Adicionar tarefas com horário como lembretes
+    for t in tarefas_com_horario:
+        lembretes_unificados.append({
+            "id": t.id,
+            "titulo": t.titulo,
+            "descricao": t.descricao or f"Tarefa: {t.categoria}",
+            "horario": t.horario_sugerido,
+            "tipo": t.categoria or "tarefa",
+            "fonte": "tarefa"
+        })
+    
+    # Ordenar por horário
+    lembretes_unificados.sort(key=lambda x: x.get("horario") or "23:59")
+    
     # Buscar retornos de contato pendentes (usando a tabela de contatos correta)
     retornos_query = select(func.count(LogContatoModel.id)).where(
         and_(
@@ -226,27 +257,19 @@ async def meu_dia(
                 "prioridade": t.prioridade,
                 "horario_sugerido": t.horario_sugerido,
                 "concluida": t.concluida,
-                "recorrente": t.recorrente
+                "recorrente": t.recorrente,
+                "data_tarefa": t.data_tarefa.isoformat() if hasattr(t, 'data_tarefa') and t.data_tarefa else None
             }
             for t in tarefas
         ],
-        "lembretes": [
-            {
-                "id": l.id,
-                "titulo": l.titulo,
-                "descricao": l.descricao,
-                "horario": l.data_lembrete.strftime("%H:%M") if l.data_lembrete else None,
-                "tipo": l.tipo
-            }
-            for l in lembretes
-        ],
+        "lembretes": lembretes_unificados,
         "retornos_pendentes": total_retornos,
         "resumo": {
             "tarefas_total": len(tarefas),
             "tarefas_concluidas": len([t for t in tarefas if t.concluida]),
             "pendencias_abertas": total_pendencias,
             "pedidos_andamento": total_pedidos_andamento,
-            "lembretes_hoje": len(lembretes)
+            "lembretes_hoje": len(lembretes_unificados)
         }
     }
 

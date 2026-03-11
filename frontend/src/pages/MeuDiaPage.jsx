@@ -308,27 +308,52 @@ const MeuDiaPage = () => {
               <CardTitle className="text-lg flex items-center gap-2">
                 <Bell className="w-5 h-5 text-purple-500" />
                 Lembretes de Hoje
+                {meuDia?.lembretes?.length > 0 && (
+                  <Badge className="bg-purple-500 text-white text-xs">
+                    {meuDia.lembretes.length}
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {meuDia?.lembretes?.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-4">
-                  Nenhum lembrete para hoje
-                </p>
+                <div className="text-center py-6">
+                  <Bell className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+                  <p className="text-sm text-slate-500">
+                    Nenhum lembrete para hoje
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Adicione uma tarefa com horário para criar lembretes
+                  </p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {meuDia?.lembretes?.map((lembrete) => (
                     <div 
                       key={lembrete.id}
-                      className="p-3 bg-purple-50 rounded-lg border border-purple-100"
+                      className={`p-3 rounded-lg border transition-all hover:shadow-md ${
+                        lembrete.fonte === 'tarefa' 
+                          ? 'bg-blue-50 border-blue-100' 
+                          : 'bg-purple-50 border-purple-100'
+                      }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-purple-600" />
-                        <span className="text-sm font-medium text-purple-700">
-                          {lembrete.horario}
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock className={`w-4 h-4 ${
+                          lembrete.fonte === 'tarefa' ? 'text-blue-600' : 'text-purple-600'
+                        }`} />
+                        <span className={`text-sm font-bold ${
+                          lembrete.fonte === 'tarefa' ? 'text-blue-700' : 'text-purple-700'
+                        }`}>
+                          {lembrete.horario || '--:--'}
                         </span>
+                        <Badge variant="outline" className="text-[10px] px-1 py-0">
+                          {lembrete.fonte === 'tarefa' ? 'Tarefa' : lembrete.tipo || 'Lembrete'}
+                        </Badge>
                       </div>
-                      <p className="text-sm text-slate-700 mt-1">{lembrete.titulo}</p>
+                      <p className="text-sm text-slate-700 font-medium">{lembrete.titulo}</p>
+                      {lembrete.descricao && (
+                        <p className="text-xs text-slate-500 mt-1">{lembrete.descricao}</p>
+                      )}
                     </div>
                   ))}
                 </div>
