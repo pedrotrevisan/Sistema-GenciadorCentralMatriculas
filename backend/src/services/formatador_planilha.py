@@ -151,7 +151,8 @@ class FormatadorPlanilha:
     @staticmethod
     def formatar_telefone(telefone: str) -> Tuple[str, bool, str]:
         """
-        Formata telefone para padrão (00) 00000-0000 ou (00) 0000-0000
+        Formata telefone para padrão APENAS NÚMEROS (sem máscara)
+        Exemplo: 7199886664
         Retorna: (telefone_formatado, is_valido, mensagem)
         """
         if not telefone:
@@ -166,14 +167,9 @@ class FormatadorPlanilha:
         elif len(tel_limpo) == 9:
             tel_limpo = '71' + tel_limpo
         
-        if len(tel_limpo) == 10:
-            # Telefone fixo: (00) 0000-0000
-            formatado = f"({tel_limpo[:2]}) {tel_limpo[2:6]}-{tel_limpo[6:]}"
-            return formatado, True, ""
-        elif len(tel_limpo) == 11:
-            # Celular: (00) 00000-0000
-            formatado = f"({tel_limpo[:2]}) {tel_limpo[2:7]}-{tel_limpo[7:]}"
-            return formatado, True, ""
+        if len(tel_limpo) == 10 or len(tel_limpo) == 11:
+            # Retorna apenas os números, sem máscara
+            return tel_limpo, True, ""
         else:
             return telefone, False, f"Telefone inválido ({len(tel_limpo)} dígitos)"
 

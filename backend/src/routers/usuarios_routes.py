@@ -173,3 +173,69 @@ async def deletar_usuario(
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     
     return {"message": "Usuário deletado com sucesso"}
+
+
+@router.post("/{usuario_id}/resetar-senha")
+async def resetar_senha_usuario(
+    usuario_id: str,
+    deps: tuple = Depends(require_permission("usuario:gerenciar"))
+):
+    """Reseta a senha de um usuário para a senha padrão"""
+    from src.infrastructure.security import JWTAuthenticator
+    from src.infrastructure.persistence.models import UsuarioModel
+    from sqlalchemy import select
+    
+    current_user, session = deps
+    usuario_repo = UsuarioRepository(session)
+    jwt_auth = JWTAuthenticator()
+    
+    usuario = await usuario_repo.buscar_por_id(usuario_id)
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    # Resetar para senha padrão
+    SENHA_PADRAO = "Senai@2026"
+    usuario.senha_hash = jwt_auth.hash_senha(SENHA_PADRAO)
+    await usuario_repo.salvar(usuario)
+    
+    # Marcar como primeiro acesso
+    result = await session.execute(
+        select(UsuarioModel).where(UsuarioModel.id == usuario_id)
+    )
+    usuario_model = result.scalar_one_or_none()
+    if usuario_model:
+        usuario_model.primeiro_acesso = True
+        await session.commit()
+    
+    return {"message": f"Senha resetada com sucesso para {usuario.nome}"}
+
+
+@router.post("/resetar-todas-senhas")
+async def resetar_todas_senhas(
+    deps: tuple = Depends(require_permission("usuario:gerenciar"))
+):
+    """Reseta a senha de TODOS os usuários para a senha padrão (apenas admin)"""
+    from src.infrastructure.security import JWTAuthenticator
+    from src.infrastructure.persistence.models import UsuarioModel
+    from sqlalchemy import select, update
+    
+    current_user, session = deps
+    
+    # Verificar se é admin
+    if current_user.role.value != 'admin':
+        raise HTTPException(status_code=403, detail="Apenas administradores podem resetar todas as senhas")
+    
+    jwt_auth = JWTAuthenticator()
+    SENHA_PADRAO = "Senai@2026"
+    hash_padrao = jwt_auth.hash_senha(SENHA_PADRAO)
+    
+    # Atualizar todas as senhas
+    await session.execute(
+        update(UsuarioModel).values(
+            senha_hash=hash_padrao,
+            primeiro_acesso=True
+        )
+    )
+    await session.commit()
+    
+    return {"message": "Todas as senhas foram resetadas com sucesso"}

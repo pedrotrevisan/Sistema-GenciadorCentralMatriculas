@@ -40,7 +40,9 @@ import {
   Search,
   Shield,
   CheckCircle,
-  XCircle
+  XCircle,
+  KeyRound,
+  RotateCcw
 } from 'lucide-react';
 
 const roleConfig = {
@@ -71,6 +73,12 @@ const GestaoUsuariosPage = () => {
   // Delete modal
   const [deleteModal, setDeleteModal] = useState({ open: false, user: null });
   const [deleting, setDeleting] = useState(false);
+
+  // Reset senha modal
+  const [resetSenhaModal, setResetSenhaModal] = useState({ open: false, user: null });
+  const [resettingSenha, setResettingSenha] = useState(false);
+  const [resetAllModal, setResetAllModal] = useState(false);
+  const [resettingAll, setResettingAll] = useState(false);
 
   const fetchUsuarios = async () => {
     setLoading(true);
@@ -173,6 +181,32 @@ const GestaoUsuariosPage = () => {
     }
   };
 
+  const handleResetSenha = async () => {
+    setResettingSenha(true);
+    try {
+      await usuariosAPI.resetarSenha(resetSenhaModal.user.id);
+      toast.success(`Senha de ${resetSenhaModal.user.nome} resetada para: Senai@2026`);
+      setResetSenhaModal({ open: false, user: null });
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao resetar senha');
+    } finally {
+      setResettingSenha(false);
+    }
+  };
+
+  const handleResetAll = async () => {
+    setResettingAll(true);
+    try {
+      await usuariosAPI.resetarTodasSenhas();
+      toast.success('Senhas de todos os usuários resetadas para: Senai@2026');
+      setResetAllModal(false);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao resetar senhas');
+    } finally {
+      setResettingAll(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -223,6 +257,16 @@ const GestaoUsuariosPage = () => {
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setResetAllModal(true)}
+            className="text-amber-600 border-amber-300 hover:bg-amber-50"
+            data-testid="reset-all-btn"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Resetar Todas Senhas
           </Button>
           <Button
             className="bg-[#E30613] hover:bg-[#b9050f]"
@@ -297,6 +341,16 @@ const GestaoUsuariosPage = () => {
                     <TableCell>{formatDate(usuario.ultimo_acesso)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setResetSenhaModal({ open: true, user: usuario })}
+                          className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                          title="Resetar senha"
+                          data-testid={`reset-senha-${usuario.id}`}
+                        >
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -442,6 +496,70 @@ const GestaoUsuariosPage = () => {
               data-testid="confirm-delete-btn"
             >
               {deleting ? 'Excluindo...' : 'Excluir'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Senha Individual Modal */}
+      <Dialog open={resetSenhaModal.open} onOpenChange={(open) => setResetSenhaModal({ open, user: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-amber-600" />
+              Resetar Senha
+            </DialogTitle>
+            <DialogDescription>
+              A senha do usuário <strong>{resetSenhaModal.user?.nome}</strong> será resetada para a senha padrão: <code className="bg-slate-100 px-2 py-1 rounded">Senai@2026</code>
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetSenhaModal({ open: false, user: null })}>
+              Cancelar
+            </Button>
+            <Button 
+              className="bg-amber-500 hover:bg-amber-600"
+              onClick={handleResetSenha}
+              disabled={resettingSenha}
+            >
+              {resettingSenha ? 'Resetando...' : 'Confirmar Reset'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Todas Senhas Modal */}
+      <Dialog open={resetAllModal} onOpenChange={setResetAllModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <RotateCcw className="h-5 w-5" />
+              Resetar TODAS as Senhas
+            </DialogTitle>
+            <DialogDescription>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-2">
+                <p className="text-red-800 font-medium mb-2">⚠️ Atenção!</p>
+                <p className="text-red-700 text-sm">
+                  Esta ação irá resetar a senha de <strong>TODOS</strong> os usuários para a senha padrão: <code className="bg-red-100 px-2 py-0.5 rounded">Senai@2026</code>
+                </p>
+                <p className="text-red-700 text-sm mt-2">
+                  Todos os usuários precisarão trocar a senha no próximo login.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetAllModal(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleResetAll}
+              disabled={resettingAll}
+            >
+              {resettingAll ? 'Resetando...' : 'Confirmar Reset de Todas'}
             </Button>
           </DialogFooter>
         </DialogContent>

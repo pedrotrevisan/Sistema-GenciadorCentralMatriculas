@@ -64,6 +64,8 @@ export const usuariosAPI = {
   buscarPorId: (id) => api.get(`/usuarios/${id}`),
   atualizar: (id, data) => api.patch(`/usuarios/${id}`, data),
   deletar: (id) => api.delete(`/usuarios/${id}`),
+  resetarSenha: (id) => api.post(`/usuarios/${id}/resetar-senha`),
+  resetarTodasSenhas: () => api.post('/usuarios/resetar-todas-senhas'),
 };
 
 // Dados Auxiliares API

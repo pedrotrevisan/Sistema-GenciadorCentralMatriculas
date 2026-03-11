@@ -30,13 +30,15 @@ const MeuDiaPage = () => {
   const [loading, setLoading] = useState(true);
   const [meuDia, setMeuDia] = useState(null);
   const [showNovaTarefa, setShowNovaTarefa] = useState(false);
+  const [dataSelecionada, setDataSelecionada] = useState(new Date().toISOString().split('T')[0]);
   const [novaTarefa, setNovaTarefa] = useState({
     titulo: '',
     descricao: '',
     categoria: 'outro',
     prioridade: 2,
     recorrente: false,
-    horario_sugerido: ''
+    horario_sugerido: '',
+    data_tarefa: new Date().toISOString().split('T')[0]
   });
 
   useEffect(() => {
@@ -72,7 +74,7 @@ const MeuDiaPage = () => {
     try {
       await api.post('/apoio/tarefas', {
         ...novaTarefa,
-        data_tarefa: new Date().toISOString().split('T')[0]
+        data_tarefa: novaTarefa.data_tarefa || new Date().toISOString().split('T')[0]
       });
       toast.success('Tarefa adicionada!');
       setShowNovaTarefa(false);
@@ -82,7 +84,8 @@ const MeuDiaPage = () => {
         categoria: 'outro',
         prioridade: 2,
         recorrente: false,
-        horario_sugerido: ''
+        horario_sugerido: '',
+        data_tarefa: new Date().toISOString().split('T')[0]
       });
       carregarMeuDia();
     } catch (error) {
@@ -418,22 +421,13 @@ const MeuDiaPage = () => {
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Categoria</Label>
-                <Select 
-                  value={novaTarefa.categoria} 
-                  onValueChange={(v) => setNovaTarefa({ ...novaTarefa, categoria: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIAS.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Data da Tarefa *</Label>
+                <Input
+                  type="date"
+                  value={novaTarefa.data_tarefa}
+                  onChange={(e) => setNovaTarefa({ ...novaTarefa, data_tarefa: e.target.value })}
+                  min={new Date().toISOString().split('T')[0]}
+                />
               </div>
               
               <div>
@@ -444,6 +438,25 @@ const MeuDiaPage = () => {
                   onChange={(e) => setNovaTarefa({ ...novaTarefa, horario_sugerido: e.target.value })}
                 />
               </div>
+            </div>
+            
+            <div>
+              <Label>Categoria</Label>
+              <Select 
+                value={novaTarefa.categoria} 
+                onValueChange={(v) => setNovaTarefa({ ...novaTarefa, categoria: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIAS.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="flex items-center gap-2">
