@@ -86,9 +86,19 @@ async def get_meu_dia(data: Optional[str] = None, usuario: Usuario = Depends(get
     concluidas = len([t for t in tarefas if t.get("concluida")])
     progresso = round((concluidas / total * 100) if total > 0 else 0, 1)
 
+    # Saudação baseada no horário
+    hora = datetime.now(timezone.utc).hour - 3  # Ajuste para BRT (UTC-3)
+    if hora < 0: hora += 24
+    if hora < 12:
+        saudacao = "Bom dia"
+    elif hora < 18:
+        saudacao = "Boa tarde"
+    else:
+        saudacao = "Boa noite"
+
     return {"tarefas": tarefas, "lembretes": lembretes, "lembretes_tarefas": tarefas_com_horario,
             "estatisticas": {"total": total, "concluidas": concluidas, "pendentes": total - concluidas, "progresso": progresso},
-            "data": hoje, "dia_semana": dia_semana}
+            "data": hoje, "dia_semana": dia_semana, "saudacao": saudacao}
 
 
 @router.post("/tarefas")
