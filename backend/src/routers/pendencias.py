@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 import uuid
 import re
 import io
+import pandas as pd
 
 from src.domain.entities import Usuario
 from src.infrastructure.persistence.mongodb import db
@@ -44,6 +45,32 @@ STATUS_PENDENCIA = {
     "em_analise": "Em Análise", "aprovado": "Aprovado",
     "rejeitado": "Rejeitado", "reenvio_necessario": "Reenvio Necessário"
 }
+
+
+@router.get("/importacao/template")
+async def download_template_pendencias():
+    """Baixa template Excel para importação de pendências em lote"""
+    df = pd.DataFrame(columns=[
+        'ALUNO_NOME', 'ALUNO_CPF', 'ALUNO_EMAIL', 'ALUNO_TELEFONE',
+        'DOCUMENTO_CODIGO', 'CURSO_NOME', 'OBSERVACOES'
+    ])
+    df.loc[0] = [
+        'João da Silva Santos', '123.456.789-00', 'joao@email.com', '(71) 99999-9999',
+        'RG', 'Técnico em Mecânica', 'Urgente'
+    ]
+    df.loc[1] = [
+        'Maria Oliveira', '987.654.321-00', 'maria@email.com', '(71) 98888-8888',
+        'CPF', 'Técnico em Redes', ''
+    ]
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Pendencias')
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=template_importacao_pendencias.xlsx"}
+    )
 
 
 @router.get("/buscar-aluno/{cpf}")

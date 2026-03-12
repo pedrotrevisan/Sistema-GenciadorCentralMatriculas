@@ -54,7 +54,7 @@ const BaseConhecimentoPage = () => {
       if (categoriaFiltro) params.categoria = categoriaFiltro;
       
       const response = await api.get('/apoio/conhecimento', { params });
-      setArtigos(response.data);
+      setArtigos(Array.isArray(response.data) ? response.data : (response.data.artigos || []));
     } catch (error) {
       toast.error('Erro ao carregar artigos');
     } finally {
