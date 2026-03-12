@@ -222,7 +222,10 @@ const BaseConhecimentoPage = () => {
                 <div className="mt-8 pt-4 border-t">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Tag className="w-4 h-4 text-slate-400" />
-                    {artigoSelecionado.tags.map((tag, i) => (
+                    {(Array.isArray(artigoSelecionado.tags)
+                      ? artigoSelecionado.tags
+                      : String(artigoSelecionado.tags).split(',').filter(Boolean)
+                    ).map((tag, i) => (
                       <Badge key={i} variant="outline" className="text-slate-600">
                         {tag.trim()}
                       </Badge>

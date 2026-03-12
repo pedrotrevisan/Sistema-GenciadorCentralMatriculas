@@ -243,9 +243,11 @@ async def criar_artigo(dto: ArtigoCreateDTO, usuario: Usuario = Depends(get_curr
     if usuario.role.value not in ("admin",):
         raise HTTPException(403, "Sem permissão")
     now = datetime.now(timezone.utc).isoformat()
+    # Converte tags de string CSV para array
+    tags_list = [t.strip() for t in dto.tags.split(',') if t.strip()] if dto.tags else []
     doc = {
         "id": str(uuid.uuid4()), "titulo": dto.titulo, "conteudo": dto.conteudo,
-        "resumo": dto.resumo, "categoria": dto.categoria, "tags": dto.tags,
+        "resumo": dto.resumo, "categoria": dto.categoria, "tags": tags_list,
         "icone": dto.icone, "destaque": dto.destaque, "ordem": 0,
         "visualizacoes": 0, "criado_por_id": usuario.id, "criado_por_nome": usuario.nome,
         "ativo": True, "created_at": now, "updated_at": now
@@ -262,7 +264,11 @@ async def atualizar_artigo(artigo_id: str, dto: ArtigoUpdateDTO, usuario: Usuari
     updates = {"updated_at": datetime.now(timezone.utc).isoformat()}
     for k, v in dto.model_dump(exclude_unset=True).items():
         if v is not None:
-            updates[k] = v
+            # Converte tags de string CSV para array
+            if k == "tags" and isinstance(v, str):
+                updates[k] = [t.strip() for t in v.split(',') if t.strip()]
+            else:
+                updates[k] = v
     result = await db.artigos_conhecimento.update_one({"id": artigo_id}, {"$set": updates})
     if result.matched_count == 0:
         raise HTTPException(404, "Artigo não encontrado")
