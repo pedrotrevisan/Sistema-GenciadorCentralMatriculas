@@ -82,12 +82,26 @@ const AlertaLembretes = () => {
     setAlertaAtivo(null);
   };
 
-  const marcarConcluido = async (lembreteId) => {
+  const marcarConcluido = async (lembrete) => {
     try {
       const token = localStorage.getItem('token');
-      // Se for uma tarefa, marcar como concluída
-      await fetch(`${API_URL}/api/apoio/tarefas/${lembreteId}/concluir`, {
-        method: 'POST',
+      const lembreteId = lembrete.id;
+      
+      // Determinar endpoint correto baseado na fonte do lembrete
+      let endpoint;
+      if (lembrete.fonte === 'tarefa') {
+        endpoint = `/api/apoio/tarefas/${lembreteId}/concluir`;
+      } else if (lembrete.fonte === 'lembrete') {
+        endpoint = `/api/apoio/lembretes/${lembreteId}/concluir`;
+      } else {
+        // Alertas operacionais não são "concluíveis" - apenas fechamos o modal
+        setAlertaAtivo(null);
+        toast.info('Alerta fechado. Acesse a seção correspondente para mais ações.');
+        return;
+      }
+      
+      await fetch(`${API_URL}${endpoint}`, {
+        method: 'PATCH',  // Corrigido de POST para PATCH
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setAlertaAtivo(null);
@@ -95,6 +109,7 @@ const AlertaLembretes = () => {
       toast.success('Marcado como concluído!');
     } catch (error) {
       console.error('Erro ao marcar como concluído:', error);
+      toast.error('Erro ao marcar como concluído');
     }
   };
 
@@ -158,7 +173,7 @@ const AlertaLembretes = () => {
             </Button>
             <Button
               className="flex-1 bg-green-600 hover:bg-green-700"
-              onClick={() => marcarConcluido(alertaAtivo.id)}
+              onClick={() => marcarConcluido(alertaAtivo)}
             >
               <CheckCircle className="h-4 w-4 mr-2" />
               Concluído

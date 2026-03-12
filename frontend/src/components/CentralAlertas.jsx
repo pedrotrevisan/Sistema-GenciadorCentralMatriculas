@@ -25,7 +25,10 @@ const tipoIcons = {
   critico: AlertTriangle,
   sla_risco: Clock,
   reembolso: DollarSign,
-  vagas: GraduationCap
+  vagas: GraduationCap,
+  tarefa: CheckCircle,
+  lembrete: Bell,
+  pendencia: AlertTriangle
 };
 
 // Cores por tipo
@@ -33,7 +36,10 @@ const tipoCores = {
   critico: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', badge: 'bg-red-500' },
   sla_risco: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', badge: 'bg-amber-500' },
   reembolso: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', badge: 'bg-orange-500' },
-  vagas: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', badge: 'bg-purple-500' }
+  vagas: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', badge: 'bg-purple-500' },
+  tarefa: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', badge: 'bg-blue-500' },
+  lembrete: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', badge: 'bg-indigo-500' },
+  pendencia: { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', badge: 'bg-rose-500' }
 };
 
 // Labels por tipo
@@ -41,7 +47,10 @@ const tipoLabels = {
   critico: 'Crítico',
   sla_risco: 'SLA em Risco',
   reembolso: 'Reembolso',
-  vagas: 'Vagas'
+  vagas: 'Vagas',
+  tarefa: 'Tarefa',
+  lembrete: 'Lembrete',
+  pendencia: 'Pendência'
 };
 
 const CentralAlertas = () => {
@@ -126,7 +135,7 @@ const CentralAlertas = () => {
           
           {/* Stats */}
           {data?.estatisticas && (
-            <div className="flex gap-3 mt-2 text-xs">
+            <div className="flex flex-wrap gap-2 mt-2 text-xs">
               {data.estatisticas.criticos > 0 && (
                 <span className="flex items-center gap-1 bg-red-500/30 px-2 py-0.5 rounded">
                   <AlertTriangle className="h-3 w-3" />
@@ -143,6 +152,18 @@ const CentralAlertas = () => {
                 <span className="flex items-center gap-1 bg-orange-500/30 px-2 py-0.5 rounded">
                   <DollarSign className="h-3 w-3" />
                   {data.estatisticas.reembolsos} reembolso(s)
+                </span>
+              )}
+              {data.estatisticas.pendencias > 0 && (
+                <span className="flex items-center gap-1 bg-rose-500/30 px-2 py-0.5 rounded">
+                  <AlertTriangle className="h-3 w-3" />
+                  {data.estatisticas.pendencias} pendência(s)
+                </span>
+              )}
+              {data.estatisticas.lembretes > 0 && (
+                <span className="flex items-center gap-1 bg-indigo-500/30 px-2 py-0.5 rounded">
+                  <Bell className="h-3 w-3" />
+                  {data.estatisticas.lembretes} lembrete(s)
                 </span>
               )}
             </div>
