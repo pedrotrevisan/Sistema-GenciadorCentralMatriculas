@@ -67,9 +67,9 @@ export default function PropostaCristianePage() {
             <p className="text-slate-600 leading-relaxed">
               O <strong>SYNAPSE</strong> é um sistema desenvolvido especificamente para resolver 
               os desafios operacionais da Central de Matrículas do SENAI CIMATEC. 
-              O sistema está <strong>100% operacional em produção</strong> com dados reais (414 matrículas, 
-              50 reembolsos, 10 turmas), substituindo completamente o controle em planilhas 
-              Excel e a alimentação manual de relatórios.
+              O sistema está <strong>100% operacional em produção</strong> com dados reais, 
+              oferecendo <strong>28 alertas automáticos</strong> em tempo real,
+              substituindo completamente o controle em planilhas Excel e a alimentação manual de relatórios.
             </p>
           </CardContent>
         </Card>
@@ -115,7 +115,11 @@ export default function PropostaCristianePage() {
                 'Histórico completo de interações',
                 'Importação em lote via Excel',
                 'Gestão de Reembolsos',
-                'Assistente TOTVS para preenchimento'
+                'Assistente TOTVS para preenchimento',
+                'Central de Alertas com 7 tipos de notificações',
+                'Formatador inteligente de planilhas BMP',
+                'Exportação para Template TOTVS automática',
+                'Meu Dia com tarefas e lembretes'
               ].map((item, idx) => (
                 <div key={idx} className="flex items-start gap-2">
                   <span className="text-green-500 mt-1">✓</span>
@@ -135,24 +139,24 @@ export default function PropostaCristianePage() {
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
-                <p className="text-4xl font-bold">414</p>
-                <p className="text-sm opacity-80">Matrículas</p>
+                <p className="text-4xl font-bold">41</p>
+                <p className="text-sm opacity-80">Turmas</p>
+              </div>
+              <div>
+                <p className="text-4xl font-bold">1.710</p>
+                <p className="text-sm opacity-80">Vagas Totais</p>
               </div>
               <div>
                 <p className="text-4xl font-bold">50</p>
                 <p className="text-sm opacity-80">Reembolsos</p>
               </div>
               <div>
-                <p className="text-4xl font-bold">10</p>
-                <p className="text-sm opacity-80">Turmas</p>
-              </div>
-              <div>
-                <p className="text-4xl font-bold">89.5%</p>
-                <p className="text-sm opacity-80">Ocupação</p>
+                <p className="text-4xl font-bold">28</p>
+                <p className="text-sm opacity-80">Alertas Ativos</p>
               </div>
             </div>
             <div className="mt-4 pt-4 border-t border-white/20 text-center">
-              <p className="text-sm opacity-80">420 vagas totais • 376 ocupadas • 44 disponíveis</p>
+              <p className="text-sm opacity-80">7 tipos de alertas automáticos • Notificações em tempo real • Dashboard de produtividade</p>
             </div>
           </CardContent>
         </Card>
@@ -162,33 +166,31 @@ export default function PropostaCristianePage() {
           <CardContent className="p-6">
             <h2 className="text-xl font-bold text-amber-700 mb-4 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
-              Situação Atual das Turmas (Dados Reais)
+              Novidades desta Versão
             </h2>
             <div className="space-y-2">
               {[
-                { curso: 'Técnico em Mecânica', ocupadas: 46, vagas: 42, status: 'lotado' },
-                { curso: 'Técnico em Redes de Computadores', ocupadas: 46, vagas: 42, status: 'lotado' },
-                { curso: 'Técnico em Manutenção Automotiva', ocupadas: 42, vagas: 42, status: 'lotado' },
-                { curso: 'Técnico em Petroquímica', ocupadas: 40, vagas: 42, status: 'lotando' },
-                { curso: 'Técnico em Mecatrônica', ocupadas: 39, vagas: 42, status: 'lotando' },
-                { curso: 'Técnico em Eletrotécnica', ocupadas: 38, vagas: 42, status: 'lotando' },
-              ].map((turma, idx) => (
+                { nome: 'Central de Alertas Expandida', desc: '7 tipos de notificações: críticos, SLA, reembolsos, vagas, tarefas, lembretes, pendências', icon: '🔔' },
+                { nome: 'Formatador para TOTVS', desc: 'Converte planilhas de entrada para o template exato do TOTVS com correção ortográfica', icon: '📊' },
+                { nome: 'Meu Dia Aprimorado', desc: 'Tarefas diárias + Lembretes + Alertas operacionais integrados', icon: '📅' },
+                { nome: 'Painel de Vagas Melhorado', desc: 'Criar períodos vazios, duplicar turmas entre períodos', icon: '🎓' },
+                { nome: 'Correção Ortográfica BMP', desc: 'Nomes e endereços corrigidos automaticamente (João, Gonçalves, Conceição)', icon: '✍️' },
+                { nome: 'Auditoria de Processamento', desc: 'Relatório detalhado de todas as correções aplicadas nas planilhas', icon: '📋' },
+              ].map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between p-2 bg-white rounded-lg">
-                  <span className="text-slate-700 text-sm">{turma.curso}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{turma.ocupadas}/{turma.vagas}</span>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      turma.status === 'lotado' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {turma.status === 'lotado' ? 'LOTADO' : 'LOTANDO'}
-                    </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{item.icon}</span>
+                    <div>
+                      <span className="text-slate-700 text-sm font-medium">{item.nome}</span>
+                      <p className="text-xs text-slate-500">{item.desc}</p>
+                    </div>
                   </div>
+                  <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                    NOVO
+                  </span>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-amber-600 mt-3 text-center">
-              * 3 cursos lotados, 3 cursos acima de 90% de ocupação
-            </p>
           </CardContent>
         </Card>
 
@@ -202,7 +204,7 @@ export default function PropostaCristianePage() {
             <div className="grid md:grid-cols-2 gap-4">
               {[
                 { nome: 'Painel de Controle', desc: 'KPIs clicáveis em tempo real', icon: BarChart3 },
-                { nome: 'Painel de Vagas', desc: 'Ocupação visual por curso/turma', icon: Users },
+                { nome: 'Painel de Vagas', desc: 'Ocupação visual por curso/turma + criação de períodos', icon: Users },
                 { nome: 'Kanban', desc: 'Fluxo visual de matrículas', icon: Target },
                 { nome: 'Central de Pendências', desc: 'Gestão de documentos pendentes', icon: FileText },
                 { nome: 'Reembolsos', desc: 'Controle de solicitações de reembolso', icon: TrendingUp },
@@ -210,16 +212,21 @@ export default function PropostaCristianePage() {
                 { nome: 'Dashboard SLA', desc: 'Métricas e prazos de atendimento', icon: Clock },
                 { nome: 'Chamados SGC', desc: 'Demandas BMP do SGC Plus', icon: FileText },
                 { nome: 'Dashboard Produtividade', desc: 'Desempenho individual da equipe', icon: TrendingUp },
-                { nome: 'Central de Alertas', desc: 'Notificações e retornos pendentes', icon: Zap },
+                { nome: 'Central de Alertas', desc: '7 tipos: críticos, SLA, reembolsos, vagas, tarefas, lembretes, pendências', icon: Zap, novo: true },
+                { nome: 'Formatador TOTVS', desc: 'Processa planilhas e gera template TOTVS com correção ortográfica', icon: FileText, novo: true },
                 { nome: 'Importação em Lote', desc: 'Upload em massa via Excel/CSV', icon: Sparkles },
                 { nome: 'Assistente TOTVS', desc: 'Auxílio no preenchimento do ERP', icon: Zap },
-                { nome: 'Apoio Cognitivo', desc: 'Base de conhecimento e tarefas diárias', icon: Heart },
+                { nome: 'Meu Dia', desc: 'Tarefas diárias + Lembretes + Alertas integrados', icon: Heart, novo: true },
+                { nome: 'Base de Conhecimento', desc: 'Artigos, tutoriais e procedimentos', icon: FileText },
                 { nome: 'Modo Apresentação', desc: 'Slides para reuniões com dados ao vivo', icon: Sparkles },
               ].map((modulo, idx) => (
                 <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                   <modulo.icon className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="font-medium text-slate-800">{modulo.nome}</p>
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-800 flex items-center gap-2">
+                      {modulo.nome}
+                      {modulo.novo && <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">NOVO</span>}
+                    </p>
                     <p className="text-xs text-slate-500">{modulo.desc}</p>
                   </div>
                 </div>

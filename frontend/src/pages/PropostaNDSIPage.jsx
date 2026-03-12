@@ -74,8 +74,9 @@ export default function PropostaNDSIPage() {
             <p className="text-slate-300 leading-relaxed">
               O sistema está <strong className="text-white">100% operacional em produção</strong> em 
               <strong className="text-white"> synapse.pedrotrevisan.dev.br</strong>, com 
-              <strong className="text-white"> 414 matrículas</strong>, 
-              <strong className="text-white"> 50 reembolsos</strong> e <strong className="text-white">10 turmas</strong> cadastradas (420 vagas, ~90% ocupação), 
+              <strong className="text-white"> 41 turmas</strong> cadastradas (1.710 vagas),
+              <strong className="text-white"> Central de Alertas com 7 tipos</strong> de notificações automáticas, e
+              <strong className="text-white"> Formatador inteligente</strong> que gera templates TOTVS com correção ortográfica BMP,
               substituindo completamente o uso de planilhas Excel para controle.
             </p>
           </CardContent>
@@ -97,6 +98,7 @@ export default function PropostaNDSIPage() {
                   <li>• Autenticação JWT + bcrypt</li>
                   <li>• API RESTful documentada (OpenAPI)</li>
                   <li>• Deploy em Kubernetes (Emergent)</li>
+                  <li>• Auto-seeding para novos deploys</li>
                 </ul>
               </div>
               <div className="p-4 bg-white/5 rounded-lg">
@@ -107,8 +109,20 @@ export default function PropostaNDSIPage() {
                   <li>• Recharts (gráficos interativos)</li>
                   <li>• React Router (SPA)</li>
                   <li>• Axios (HTTP client)</li>
+                  <li>• Hot reload habilitado</li>
                 </ul>
               </div>
+            </div>
+            <div className="mt-4 p-4 bg-white/5 rounded-lg">
+              <h3 className="font-semibold text-purple-400 mb-2">Funcionalidades Avançadas</h3>
+              <ul className="text-sm text-slate-300 space-y-1 grid md:grid-cols-2 gap-2">
+                <li>• Central de Alertas (7 tipos)</li>
+                <li>• Formatador BMP para TOTVS</li>
+                <li>• Correção ortográfica automática</li>
+                <li>• Validação de CPF/CEP/Telefone</li>
+                <li>• Geração de templates Excel</li>
+                <li>• Aba de Auditoria detalhada</li>
+              </ul>
             </div>
           </CardContent>
         </Card>
