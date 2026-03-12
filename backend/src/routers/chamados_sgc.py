@@ -221,6 +221,7 @@ async def criar_interacao(chamado_id: str, dto: InteracaoCreate, usuario: Usuari
     }
     await db.chamados_sgc_interacoes.insert_one(interacao)
     await db.chamados_sgc.update_one({"id": chamado_id}, {"$set": {"updated_at": now}})
+    interacao.pop("_id", None)
     return interacao
 
 

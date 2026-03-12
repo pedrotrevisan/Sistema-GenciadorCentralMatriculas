@@ -139,6 +139,7 @@ async def criar_pendencia(dto: CriarPendenciaDTO, usuario: Usuario = Depends(get
         "created_at": now, "updated_at": now
     }
     await db.pendencias.insert_one(doc)
+    doc.pop("_id", None)
     return doc
 
 
@@ -160,6 +161,7 @@ async def criar_pendencia_manual(dto: CriarPendenciaManualDTO, usuario: Usuario 
         "created_at": now, "updated_at": now
     }
     await db.pendencias.insert_one(doc)
+    doc.pop("_id", None)
     return doc
 
 
@@ -206,6 +208,7 @@ async def registrar_contato(pendencia_id: str, dto: RegistrarContatoDTO, usuario
     await db.pendencias.update_one({"id": pendencia_id}, {"$set": {
         "ultimo_contato": now, "updated_at": now
     }})
+    contato.pop("_id", None)
     return contato
 
 

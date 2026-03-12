@@ -42,6 +42,7 @@ async def criar_pendencia_doc(dto: CriarPendenciaDocDTO, usuario: Usuario = Depe
         "created_at": now, "updated_at": now
     }
     await db.pendencias_doc.insert_one(doc)
+    doc.pop("_id", None)
     return doc
 
 

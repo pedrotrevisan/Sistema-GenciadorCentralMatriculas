@@ -42,6 +42,7 @@ async def criar_turma(dto: CriarTurmaDTO, usuario: Usuario = Depends(get_current
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.turmas.insert_one(doc)
+    doc.pop("_id", None)
     return doc
 
 @router.get("/{turma_id}")
@@ -69,6 +70,7 @@ async def reservar_vaga(turma_id: str, dto: ReservarVagaDTO, usuario: Usuario = 
     }
     await db.reservas_vaga.insert_one(reserva)
     await db.turmas.update_one({"id": turma_id}, {"$inc": {"vagas_ocupadas": 1}})
+    reserva.pop("_id", None)
     return reserva
 
 @router.post("/{turma_id}/liberar/{reserva_id}")

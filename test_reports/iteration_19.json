@@ -1,0 +1,124 @@
+{
+  "summary": "Comprehensive backend audit (71 tests) covering all 23 feature areas. Backend is 100% functional. Fixed 3 bugs found during testing: (1) _id serialization in POST /api/pendencias/{id}/contato, (2) 500 error in GET /api/status/pedidos/{id}/proximos due to wrong import name 'TRANSICOES_PERMITIDAS' and wrong fallback 'StatusMatriculaEnum.PENDENTE'. All previously reported _id bugs (apoio_cognitivo, pendencias, contatos, documentos, turmas, chamados_sgc) are confirmed fixed.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/alertas/pendencias-vencidas",
+        "issue": "Endpoint returns 404 - does not exist. Review request mentioned this but actual route is GET /api/alertas/dashboard which aggregates all alerts including overdue pendências",
+        "priority": "LOW"
+      },
+      {
+        "endpoint": "GET /api/alertas/reembolsos-abertos",
+        "issue": "Endpoint returns 404 - does not exist. Use GET /api/alertas/dashboard instead",
+        "priority": "LOW"
+      },
+      {
+        "endpoint": "GET /api/apoio/saudacao",
+        "issue": "Endpoint returns 404 - saudação is included in GET /api/apoio/meu-dia response (field 'saudacao'). Not a critical issue.",
+        "priority": "LOW"
+      },
+      {
+        "endpoint": "GET /api/painel-vagas/resumo",
+        "issue": "Endpoint returns 404 - resumo data is inside GET /api/painel-vagas/dashboard (field 'resumo'). Not a critical issue.",
+        "priority": "LOW"
+      }
+    ]
+  },
+
+  "bugs_fixed_in_this_iteration": [
+    {
+      "file": "/app/backend/src/routers/pendencias.py",
+      "endpoint": "POST /api/pendencias/{id}/contato",
+      "bug": "_id ObjectId serialization - 'return contato' without 'contato.pop(\"_id\", None)' after insert_one",
+      "fix": "Added contato.pop(\"_id\", None) before return",
+      "line": "211"
+    },
+    {
+      "file": "/app/backend/src/routers/status_matricula.py",
+      "endpoint": "GET /api/status/pedidos/{id}/proximos",
+      "bug": "ImportError: 'TRANSICOES_PERMITIDAS' doesn't exist in status_matricula.py (it's called TRANSICOES_VALIDAS). Also fallback 'StatusMatriculaEnum.PENDENTE' doesn't exist. Both caused 500 error.",
+      "fix": "Changed import to TRANSICOES_VALIDAS, changed fallback to StatusMatriculaEnum.INSCRITO",
+      "lines": "32, 37, 39"
+    }
+  ],
+
+  "confirmed_fixed_from_prev_iteration": [
+    "POST /api/apoio/tarefas - no _id in response (CONFIRMED FIXED)",
+    "POST /api/apoio/lembretes - no _id in response (CONFIRMED FIXED)",
+    "POST /api/apoio/conhecimento - no _id in response (CONFIRMED FIXED)",
+    "POST /api/pendencias - no _id in response (CONFIRMED FIXED)",
+    "POST /api/pendencias/manual - no _id in response (CONFIRMED FIXED)",
+    "POST /api/contatos - no _id in response (CONFIRMED FIXED)",
+    "POST /api/documentos/pendencias - no _id in response (CONFIRMED FIXED)",
+    "POST /api/turmas - no _id in response (CONFIRMED FIXED)",
+    "POST /api/turmas/{id}/reservar - no _id in response (CONFIRMED FIXED)",
+    "POST /api/chamados-sgc/{id}/interacoes - no _id in response (CONFIRMED FIXED)",
+    "GET /api/chamados-sgc/{id} - nested structure {chamado:{...}, andamentos:[], interacoes:[]} (CONFIRMED FIXED)"
+  ],
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_full_audit_production.py",
+    "/app/test_reports/pytest/pytest_full_audit.xml"
+  ],
+
+  "action_items": [
+    "OPTIONAL: Add GET /api/alertas/pendencias-vencidas and GET /api/alertas/reembolsos-abertos endpoints if they are needed by frontend (currently frontend should use /api/alertas/dashboard)",
+    "OPTIONAL: Add GET /api/apoio/saudacao endpoint if needed separately (currently saudação is in /api/apoio/meu-dia)",
+    "OPTIONAL: Add GET /api/painel-vagas/resumo endpoint if needed separately (currently in /api/painel-vagas/dashboard)",
+    "CODE QUALITY: Dead code in contatos.py lines 128-136 is unreachable (after return in stats_contatos function) - should be removed",
+    "NOTE: GET /api/pedidos/{id}/exportar-totvs does NOT exist as per-pedido export. The TOTVS export is GET /api/pedidos/exportar/totvs (bulk export of all 'realizado' pedidos). Review if per-pedido TOTVS export is needed."
+  ],
+
+  "critical_code_review_comments": [
+    "contatos.py lines 128-136: Dead/unreachable code after 'return' in stats_contatos function. The code block starting with 'total = await db.contatos.count_documents({\"pedido_id\": pedido_id})' is unreachable.",
+    "status_matricula.py: The StatusMatriculaEnum (inscrito, analise_documental, etc.) is a DIFFERENT state machine from the regular pedido status (pendente, em_analise, etc.). Both coexist in the system but modify pedido.status field. This could cause confusion - a pedido set via /api/status/pedidos/{id}/transicionar to 'inscrito' will have its status changed to 'inscrito' which is not in the regular STATUS_LABELS dict. E1 should decide if both state machines should be active simultaneously or if they should be unified.",
+    "POST /api/pedidos - AlunoCreateDTO requires many mandatory fields (rg, rg_orgao_emissor, rg_uf, all endereco fields). This is a strict requirement that might block quick pedido creation. Consider making some optional.",
+    "POST /api/chamados-sgc - No `doc.pop('_id', None)` after insert but it returns `{'id': doc['id'], ...}` (not the full doc), so it's OK. However future refactors should be careful."
+  ],
+
+  "updated_files": [
+    "/app/backend/src/routers/pendencias.py",
+    "/app/backend/src/routers/status_matricula.py",
+    "/app/backend/tests/test_full_audit_production.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (71/71 tests passed)",
+    "frontend": "Not tested (backend-only audit requested)"
+  },
+
+  "test_credentials": {
+    "admin": "pedro.passos@fieb.org.br / Pedro@2026",
+    "consultor": "cristiane.mendes@fieb.org.br / Senai@2026"
+  },
+
+  "seed_data_creation": "Test data created and cleaned up during tests (TEST_ prefixed). All cleanup successful.",
+
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "Iteration 19: Backend 100% OK (71/71). All _id ObjectId bugs previously reported are confirmed fixed. Two additional bugs found and fixed: (1) POST /api/pendencias/{id}/contato returned 500 due to missing _id pop (fixed). (2) GET /api/status/pedidos/{id}/proximos returned 500 due to wrong import name TRANSICOES_PERMITIDAS (should be TRANSICOES_VALIDAS) and wrong fallback StatusMatriculaEnum.PENDENTE (should be INSCRITO) (fixed). Frontend testing was not requested in this iteration. Key info: There are two separate status machines: regular pedido status (pendente/em_analise/aprovado/realizado/exportado/cancelado) managed via PATCH /api/pedidos/{id}/status, and an enrollment state machine (inscrito/analise_documental/matriculado/etc) managed via POST /api/status/pedidos/{id}/transicionar.",
+
+  "rca_of_issues": {
+    "pendencias_contato_500": {
+      "bug": "POST /api/pendencias/{id}/contato returned 500 Internal Server Error",
+      "root_cause": "After insert_one(contato), MongoDB adds _id ObjectId to the contato dict. Returning this dict causes JSON serialization error since ObjectId is not JSON serializable. Missing contato.pop('_id', None) before return.",
+      "fix": "Added contato.pop('_id', None) in pendencias.py line 211",
+      "reproduction": "POST /api/pendencias/{any_valid_id}/contato with body {tipo_contato: 'email', descricao: 'test'}"
+    },
+    "status_proximos_500": {
+      "bug": "GET /api/status/pedidos/{id}/proximos returned 500 for any pedido with regular status",
+      "root_cause": "1) Import error: 'from src.domain.status_matricula import TRANSICOES_PERMITIDAS' - the dict is named TRANSICOES_VALIDAS not TRANSICOES_PERMITIDAS. 2) AttributeError: 'StatusMatriculaEnum.PENDENTE' doesn't exist in enum (values are: inscrito, analise_documental, pendente_pagamento, matriculado, trancado, cancelado, concluido, evadido)",
+      "fix": "Fixed import name and fallback value in status_matricula.py",
+      "reproduction": "GET /api/status/pedidos/{any_pedido_with_status_pendente}/proximos"
+    }
+  }
+}

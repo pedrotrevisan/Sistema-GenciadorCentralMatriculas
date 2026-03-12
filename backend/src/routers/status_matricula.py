@@ -29,14 +29,14 @@ async def obter_proximos_status(pedido_id: str, usuario: Usuario = Depends(get_c
     if not pedido:
         raise HTTPException(404, "Pedido não encontrado")
 
-    from src.domain.status_matricula import TRANSICOES_PERMITIDAS
-    status_atual = pedido.get("status", "pendente")
+    from src.domain.status_matricula import TRANSICOES_VALIDAS
+    status_atual = pedido.get("status", "inscrito")
     try:
         status_enum = StatusMatriculaEnum(status_atual)
     except ValueError:
-        status_enum = StatusMatriculaEnum.PENDENTE
+        status_enum = StatusMatriculaEnum.INSCRITO
 
-    proximos = TRANSICOES_PERMITIDAS.get(status_enum, [])
+    proximos = TRANSICOES_VALIDAS.get(status_enum, [])
     return {
         "status_atual": {"valor": status_enum.value, "label": STATUS_LABELS.get(status_enum, status_atual), "cor": STATUS_COLORS.get(status_enum, "gray")},
         "proximos_status": [{"valor": s.value, "label": STATUS_LABELS[s], "cor": STATUS_COLORS[s]} for s in proximos]

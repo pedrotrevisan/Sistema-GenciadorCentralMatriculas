@@ -47,6 +47,7 @@ async def registrar_contato(dto: RegistrarContatoDTO, usuario: Usuario = Depends
         "created_at": now
     }
     await db.contatos.insert_one(doc)
+    doc.pop("_id", None)
     return doc
 
 @router.get("")
