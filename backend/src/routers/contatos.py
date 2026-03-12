@@ -123,14 +123,3 @@ async def stats_contatos(usuario: Usuario = Depends(get_current_user)):
     async for r in db.contatos.aggregate(pipeline):
         por_canal[r["_id"]] = r["count"]
     return {"total_contatos": total, "retornos_pendentes": retornos_pendentes, "por_canal": por_canal}
-
-
-    total = await db.contatos.count_documents({"pedido_id": pedido_id})
-    pipeline = [
-        {"$match": {"pedido_id": pedido_id}},
-        {"$group": {"_id": "$canal", "count": {"$sum": 1}}}
-    ]
-    por_canal = {r["_id"]: r["count"] for r in await db.contatos.aggregate(pipeline).to_list(20)}
-    ultimo = await db.contatos.find({"pedido_id": pedido_id}, {"_id": 0}).sort("created_at", -1).limit(1).to_list(1)
-    return {"pedido_id": pedido_id, "total_contatos": total, "por_canal": por_canal,
-            "ultimo_contato": ultimo[0] if ultimo else None}
