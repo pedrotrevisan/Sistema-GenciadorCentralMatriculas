@@ -11,17 +11,53 @@ from src.routers.dependencies import get_current_user
 
 router = APIRouter(prefix="/contatos", tags=["Log de Contatos"])
 
-CANAIS_CONTATO = ["telefone", "email", "whatsapp", "presencial", "sgc"]
+CANAIS_CONTATO = ["ligacao", "whatsapp", "email", "presencial", "sms", "outro"]
 TIPOS_CONTATO = ["primeiro_contato", "retorno", "cobranca_documento", "informacao", "cancelamento", "outros"]
+
+TIPOS_CONTATO_OPCOES = [
+    {"value": "ligacao", "label": "Ligação Telefônica"},
+    {"value": "whatsapp", "label": "WhatsApp"},
+    {"value": "email", "label": "E-mail"},
+    {"value": "presencial", "label": "Presencial"},
+    {"value": "sms", "label": "SMS"},
+    {"value": "outro", "label": "Outro"},
+]
+
+RESULTADOS_CONTATO_OPCOES = [
+    {"value": "sucesso", "label": "Contato realizado com sucesso"},
+    {"value": "nao_atendeu", "label": "Não atendeu"},
+    {"value": "sem_resposta", "label": "Sem resposta"},
+    {"value": "caixa_postal", "label": "Caiu na caixa postal"},
+    {"value": "numero_errado", "label": "Número errado/inválido"},
+    {"value": "agendado", "label": "Retorno agendado"},
+    {"value": "pendente", "label": "Pendente de retorno"},
+]
+
+MOTIVOS_CONTATO_OPCOES = [
+    {"value": "cobranca_documentos", "label": "Cobrança de Documentos"},
+    {"value": "informacao_matricula", "label": "Informação sobre Matrícula"},
+    {"value": "retorno_pendencia", "label": "Retorno de Pendência"},
+    {"value": "confirmacao_vaga", "label": "Confirmação de Vaga"},
+    {"value": "orientacao_acesso", "label": "Orientação de Acesso ao Sistema"},
+    {"value": "cancelamento", "label": "Cancelamento de Matrícula"},
+    {"value": "reagendamento", "label": "Reagendamento"},
+    {"value": "reembolso", "label": "Reembolso"},
+    {"value": "outro", "label": "Outro"},
+]
 
 class RegistrarContatoDTO(BaseModel):
     pedido_id: Optional[str] = None
     aluno_id: Optional[str] = None
-    aluno_nome: str
-    canal: str
-    tipo: str
-    descricao: str
+    aluno_nome: Optional[str] = None
+    canal: Optional[str] = None      # legado
+    tipo: str                         # canal de contato (ligacao, whatsapp, etc.)
     resultado: Optional[str] = None
+    motivo: Optional[str] = None
+    descricao: str
+    contato_nome: Optional[str] = None
+    contato_telefone: Optional[str] = None
+    contato_email: Optional[str] = None
+    data_retorno: Optional[str] = None
 
 class FiltroContatosDTO(BaseModel):
     pedido_id: Optional[str] = None
@@ -34,15 +70,28 @@ class FiltroContatosDTO(BaseModel):
 async def listar_canais():
     return {"canais": CANAIS_CONTATO, "tipos": TIPOS_CONTATO}
 
+@router.get("/tipos")
+async def listar_tipos():
+    return TIPOS_CONTATO_OPCOES
+
+@router.get("/resultados")
+async def listar_resultados():
+    return RESULTADOS_CONTATO_OPCOES
+
+@router.get("/motivos")
+async def listar_motivos():
+    return MOTIVOS_CONTATO_OPCOES
+
 @router.post("")
 async def registrar_contato(dto: RegistrarContatoDTO, usuario: Usuario = Depends(get_current_user)):
-    if dto.canal not in CANAIS_CONTATO:
-        raise HTTPException(400, f"Canal inválido. Use: {', '.join(CANAIS_CONTATO)}")
     now = datetime.now(timezone.utc).isoformat()
     doc = {
         "id": str(uuid.uuid4()), "pedido_id": dto.pedido_id, "aluno_id": dto.aluno_id,
-        "aluno_nome": dto.aluno_nome, "canal": dto.canal, "tipo": dto.tipo,
-        "descricao": dto.descricao, "resultado": dto.resultado,
+        "aluno_nome": dto.aluno_nome or "", "canal": dto.tipo,  # tipo = canal de contato
+        "tipo": dto.tipo, "resultado": dto.resultado, "motivo": dto.motivo,
+        "descricao": dto.descricao,
+        "contato_nome": dto.contato_nome, "contato_telefone": dto.contato_telefone,
+        "contato_email": dto.contato_email, "data_retorno": dto.data_retorno,
         "usuario_id": usuario.id, "usuario_nome": usuario.nome,
         "created_at": now
     }
