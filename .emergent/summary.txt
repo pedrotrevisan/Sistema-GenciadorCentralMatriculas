@@ -1,76 +1,78 @@
 <analysis>**original_problem_statement:**
-O usuário solicitou uma migração completa do banco de dados da aplicação, de SQLite para MongoDB, para resolver problemas de incompatibilidade de deploy na plataforma Emergent. A tarefa é de alta complexidade e envolve a reescrita de toda a camada de acesso a dados do backend.
+O usuário solicitou uma migração completa do banco de dados da aplicação de SQLite para MongoDB para resolver problemas de incompatibilidade de deploy. Após a migração, o usuário reportou múltiplos bugs, que foram o foco principal desta sessão. O objetivo final é ter a aplicação totalmente funcional, estável e com os dados corretos no domínio customizado do usuário ().
 
-Anteriormente, o usuário também solicitou e o agente implementou:
-1.  **Filtro por Período Letivo:** Adicionar um filtro de período letivo no Painel de Vagas para evitar que dados de semestres passados se acumulem.
-2.  **Duplicação de Período:** Criar uma funcionalidade para facilitar a transição de semestres, permitindo ao administrador duplicar as turmas de um período anterior para um novo (com vagas zeradas) ou criar um período novo e vazio.
+O usuário também reiterou o desejo de, futuramente, ter uma versão da aplicação com PostgreSQL para rodar localmente e entregar à sua equipe de TI. Além disso, solicitou a implementação de alertas automáticos para tarefas e pendências, e a atualização de páginas de apresentação para uma reunião.
 
 **User's preferred language**: Português (Brasil). O próximo agente DEVE se comunicar em português.
 
 **what currently exists?**
-Uma aplicação full-stack (FastAPI + React) que está no meio de uma migração de banco de dados de SQLite para MongoDB.
--   As credenciais do MongoDB foram adicionadas ao .
--   Um script de migração () foi criado e executado com sucesso, transferindo todos os dados do SQLite para coleções no MongoDB.
--   A infraestrutura base do backend foi adaptada com um novo conector () e um novo arquivo de dependências ().
--   A grande maioria dos arquivos de rota (endpoints da API) em  foi reescrita para usar Pymongo (MongoDB) em vez de SQLAlchemy (SQLite). A aplicação está em um estado não funcional até que a migração seja concluída.
+Uma aplicação full-stack (FastAPI + React) com a migração para MongoDB concluída. O agente anterior realizou uma auditoria de código massiva, corrigindo dezenas de bugs relacionados à migração (principalmente erros de serialização de  do MongoDB e endpoints ausentes). Foi implementado um mecanismo de auto-seeding que popula o banco de dados na inicialização do servidor, se estiver vazio, resolvendo o problema de deploy em produção com banco de dados zerado. Também foi adicionada uma nova feature de alertas automáticos no dashboard Meu Dia. A base de código está consideravelmente mais estável, mas o usuário encontrou um novo bug no final da sessão.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava executando a Fase 3 da migração para o MongoDB: a conversão de todos os roteadores da API. Ele havia acabado de reescrever dois dos roteadores mais complexos,  e , para serem compatíveis com o MongoDB.
+-   **Last item agent was working:** O agente estava investigando um bug reportado pelo usuário no Painel de Vagas. Ao criar um novo período (ex: 2026.2) e tentar visualizar o painel para esse período, a aplicação gera um erro ou não exibe os dados. O agente estava analisando os arquivos  (frontend) e  (backend) para diagnosticar a causa raiz.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** both. Após a conclusão da migração, será necessário um teste de regressão completo do backend e do frontend. O  é altamente recomendado para garantir que todas as funcionalidades foram preservadas.
+-   **Which testing method agent to use?** Manual testing by user/screenshot tool. O agente deve primeiro reproduzir o erro seguindo os passos do usuário: criar um novo período, ir para o Painel de Vagas e selecionar esse período. Após a correção, deve verificar se o painel carrega corretamente para o novo período.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Concluir a Migração de SQLite para MongoDB (P0)**: Esta é a tarefa principal e bloqueadora. O backend está inoperante até que seja concluída.
+-   **Issue 1: Bug no Painel de Vagas (P0)**: O painel de vagas não funciona para períodos recém-criados.
+-   **Issue 2: Deploy final em Produção (P1)**: A aplicação, apesar de estável no ambiente de desenvolvimento, ainda não foi publicada no domínio do usuário () com todas as últimas correções.
 
 **Issues Detail:**
--   **Issue 1: Concluir a Migração de SQLite para MongoDB**
-    -   **Attempted fixes:** A migração está em andamento. Os dados foram movidos e a maioria dos roteadores foi reescrita.
+-   **Issue 1: Bug no Painel de Vagas**
+    -   **Attempted fixes:** O agente iniciou a investigação visualizando os arquivos , , e . A análise foi interrompida antes de um diagnóstico conclusivo.
     -   **Next debug checklist:**
-        1.  Verificar se existe algum arquivo de rota em  que ainda utiliza a sintaxe do SQLAlchemy (). Se houver, reescrevê-lo para usar Pymongo.
-        2.  Revisar e atualizar o arquivo  para remover as importações antigas do SQLAlchemy e registrar os novos roteadores compatíveis com MongoDB.
-        3.  Remover todos os arquivos e diretórios legados relacionados ao SQLAlchemy (, , o antigo , e o arquivo ).
-        4.  Reiniciar o backend e verificar os logs em busca de erros de inicialização.
-        5.  Realizar testes pontuais com  para validar os principais endpoints (login, dashboard principal).
-        6.  Invocar o  para um teste de regressão completo.
-    -   **Why fix this issue and what will be achieved with the fix?** A conclusão da migração é um requisito para que a aplicação possa ser implantada na plataforma Emergent. Isso desbloqueará futuras funcionalidades e resolverá os erros de build.
+        1.  Verificar o endpoint  no arquivo .
+        2.  Analisar a lógica da função  para entender como o  é consultado no MongoDB.
+        3.  Confirmar se o formato do período (ex: 2026.2) é tratado corretamente pela query no banco de dados. O problema pode ser uma falha na query de agregação do MongoDB ao lidar com o novo período.
+        4.  Verificar como o frontend () envia o valor do período para a API.
+    -   **Why fix this issue and what will be achieved with the fix?** Corrigir este bug é essencial para a funcionalidade de gestão de vagas, uma das principais do sistema. A correção garantirá que o usuário possa gerenciar vagas para períodos futuros.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Both (a API no backend e a renderização no frontend).
+    -   **Blocked on other issue:** Não.
+
+-   **Issue 2: Deploy final em Produção**
+    -   **Attempted fixes:** Foi criado um mecanismo de auto-seeding ( + lógica em ) que resolve a questão do banco de dados vazio em um novo deploy. O código foi exaustivamente testado e corrigido.
+    -   **Next debug checklist:**
+        1.  Após corrigir o Issue 1, confirmar com o usuário que o sistema está pronto.
+        2.  Instruir novamente o usuário a executar a ação **Replace deployment** na plataforma Emergent para seu domínio.
+        3.  Após o deploy, verificar se a aplicação no domínio customizado está funcionando e se os dados foram populados automaticamente pelo mecanismo de auto-seeding.
+    -   **Why fix this issue and what will be achieved with the fix?** Este é o passo final para entregar a aplicação funcional ao usuário em seu próprio domínio, completando o objetivo principal do projeto.
+    -   **Status:** NOT STARTED (Aguardando correção do Issue 1)
+    -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on other issue:** Não, esta é a questão bloqueadora.
+    -   **Blocked on other issue:** Issue 1: Bug no Painel de Vagas.
 
 **In progress Task List**:
--   A migração para MongoDB é a única tarefa em andamento. As fases restantes estão detalhadas acima.
+Nenhuma.
 
 **Upcoming and Future Tasks**
-As tarefas abaixo foram planejadas antes da migração e devem ser retomadas após sua conclusão.
 **Upcoming Tasks:**
--   **(P1) Criar Dashboard de Produtividade para Cristiane:** A base (frontend e backend) foi criada, mas precisa ser testada e validada após a migração.
--   **(P1) Integração com TOTVS:** Próximo passo estratégico após estabilização da aplicação.
--   **(P2) Limpar Nomes de Cursos:** A limpeza inicial foi feita, mas pode precisar de ajustes.
--   **(P2) Evoluir Arquitetura da Informação:** Refinar nomes de menus e fluxos.
+-   **(P1) Criar versão com PostgreSQL:** Após a estabilização completa da versão em produção (MongoDB), criar uma cópia do projeto configurada para usar PostgreSQL. O agente já explicou ao usuário o escopo deste trabalho.
+-   **(P1) Validar Dashboard de Produtividade para Cristiane:** Testar e validar esta funcionalidade que foi colocada em espera.
 
 **Future Tasks:**
--   Implementar filtros por intervalo de datas nas principais listagens.
--   Limpeza final do  e outras dívidas técnicas.
+-   **(P2)** Integração com TOTVS.
+-   **(P2)** Limpar Nomes de Cursos.
+-   **(P2)** Evoluir Arquitetura da Informação (menus e fluxos).
+-   **(P2)** Implementar filtros por intervalo de datas.
 
 **Completed work in this session**
--   **Diagnóstico de Deploy:** Utilizou o  para identificar que o SQLite era a causa raiz das falhas de build.
--   **Migração para MongoDB (Iniciada):**
-    -   Configurou a conexão com o MongoDB.
-    -   Criou e executou um script para migrar todos os dados do SQLite para o MongoDB.
-    -   Reescreveu a grande maioria dos roteadores da API para usar Pymongo.
--   **Funcionalidade: Filtro por Período (Painel de Vagas):**
-    -   Implementou um endpoint () para listar os períodos letivos.
-    -   Adicionou um seletor na página Painel de Vagas que filtra todos os cards e a tabela de turmas pelo período selecionado.
--   **Funcionalidade: Duplicação de Período:**
-    -   Criou um endpoint () e um modal na UI para permitir a criação de um novo período letivo.
-    -   O modal permite ao usuário escolher entre criar um período vazio ou duplicar as turmas de um período existente, zerando as vagas ocupadas.
+-   **Mecanismo de Auto-Seeding:** Implementada uma lógica em  que, na inicialização, verifica se o banco de dados está vazio e, em caso afirmativo, o popula com dados de um arquivo , garantindo que novos deploys sempre tenham dados.
+-   **Auditoria e Correção Massiva de Bugs:**
+    -   Corrigido um bug crítico de serialização do  do MongoDB em mais de 10 locais, que causava erro 500 ao criar novos registros (tarefas, lembretes, artigos, etc.).
+    -   Executado o  que realizou 71 testes, encontrou e corrigiu 2 bugs adicionais.
+    -   Corrigidos múltiplos dropdowns vazios (ex: Registrar Contato) pela criação de endpoints de API ausentes (, , ).
+    -   Corrigido um crash na Base de Conhecimento causado por tipo de dado inconsistente (objeto em vez de array) e por  serem salvas como string em vez de array.
+    -   Corrigido um erro 404 ao baixar o template de pendências.
+    -   Corrigido um bug na geração de templates de mensagem (WhatsApp/Email) que quebrava por chaves de formatação ausentes ().
+-   **Nova Feature - Alertas Automáticos:** Implementado no dashboard Meu Dia um sistema de lembretes automáticos e priorizados para pedidos parados, reembolsos pendentes e tarefas com horário.
+-   **Atualização de Conteúdo:** Atualizadas as páginas de apresentação (, , ) e a página  com informações, métricas e contatos novos, conforme solicitado pelo usuário.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Limpeza do **: Adiado devido à prioridade da migração.
--   **Issue 2: Problema de layout na planilha do SESI**: Bloqueado, aguardando arquivo do usuário.
+-   **Issue 1: Problema de layout na planilha do SESI**: Bloqueado, aguardando arquivo do usuário.
 
 **Known issue recurrence from previous fork**
 -   Nenhum.
@@ -79,59 +81,61 @@ As tarefas abaixo foram planejadas antes da migração e devem ser retomadas ap�
 
 
 **Key Technical Concepts**
--   **Database Migration (SQLite → MongoDB):** Substituição completa da camada de persistência, de um banco relacional para um banco de documentos NoSQL.
--   **Pymongo vs. SQLAlchemy:** Mudança de paradigma do uso de um ORM (SQLAlchemy) com sessões e objetos, para o uso de um driver direto (Pymongo) com dicionários, cursores e manipulação manual de .
--   **ObjectId Serialization:** O desafio técnico mais crítico da migração é garantir que os  do MongoDB sejam convertidos para strings antes de serem enviados nas respostas da API, para evitar erros de serialização JSON.
+-   **Database Auto-Seeding:** Popular um banco de dados automaticamente na inicialização do aplicativo para garantir que ambientes de produção novos não comecem vazios.
+-   **MongoDB Serialization Errors:** O problema recorrente onde o Pydantic/FastAPI não consegue serializar o tipo  do MongoDB, exigindo a remoção do campo  ou a conversão do documento para um dicionário limpo antes de retorná-lo na API.
+-   **Safe String Formatting:** Uso de  para formatar templates de texto de forma segura, evitando  quando uma variável está ausente.
+-   **MongoDB Aggregation:** A investigação do bug no Painel de Vagas provavelmente envolverá a depuração de um pipeline de agregação do MongoDB.
 
 **key DB schema**
--   O esquema agora é baseado em coleções no MongoDB, com nomes que correspondem às tabelas antigas do SQLite (ex: , , , etc.). Os relacionamentos são gerenciados por s de referência.
+-   As coleções do MongoDB espelham as tabelas antigas. O campo  na coleção  foi corrigido de  para .
 
 **changes in tech stack**
--   **Removido (ou em processo de remoção):** , .
--   **Adicionado:** , .
+-   Nenhuma nova dependência foi adicionada. Um arquivo  foi criado para o mecanismo de auto-seeding.
 
 **All files of reference**
--   : Contém a nova variável .
--   : Arquivo de conexão com o MongoDB.
--   : Novo arquivo de injeção de dependência para o MongoDB.
--   : Diretório onde todos os arquivos estão sendo reescritos.
--   : Arquivo principal que precisa ser atualizado para finalizar a migração.
--   : Contém as últimas funcionalidades implementadas e testadas antes da migração.
+-   : Modificado para incluir a lógica de auto-seeding na inicialização.
+-   : Arquivo de dados comprimido para o seeding.
+-   : Corrigido bug de  e implementada a nova lógica de alertas.
+-   : Corrigido bug de  e adicionados novos endpoints para os dropdowns.
+-   : Corrigido bug de formatação de templates ().
+-   : Corrigido bug de  e o tipo do campo .
+-   : Atualizado para exibir os novos alertas automáticos.
+-   : Arquivo a ser investigado para o bug atual.
+-   : Arquivo a ser investigado para o bug atual.
+-   : Relatório da última execução do agente de testes.
 
 **Areas that need refactoring**:
--   Todo o código legado do SQLAlchemy (modelos, repositórios,  antigo) precisa ser removido após a conclusão da migração.
+-   O código ainda pode conter importações ou referências legadas do SQLAlchemy que não quebram a aplicação, mas poderiam ser removidas para limpeza.
 
 **key api endpoints**
--    (POST): Novo endpoint para duplicar turmas para um novo período letivo.
--    (GET): Novo endpoint para listar os períodos letivos disponíveis.
--   *Todos os outros endpoints*: Estão sendo reescritos para funcionar com MongoDB.
+-   **Criados:** , , , .
+-   **Modificados/Corrigidos:** , , e múltiplos endpoints de criação () que agora removem o  antes de retornar a resposta.
 
 **Critical Info for New Agent**
--   **A migração é a prioridade absoluta.** A aplicação não funcionará até que seja concluída. Siga os passos da .
--   **Cuidado com !** É a principal fonte de erros em migrações para MongoDB. Sempre converta  e outros campos de referência  para  antes de retorná-los em uma API. O agente anterior usou modelos Pydantic com validadores para automatizar isso. Continue usando esse padrão.
--   Após reescrever os últimos roteadores, o passo final é editar  para usar os novos roteadores e remover todo o código antigo. Não se esqueça de deletar os arquivos legados.
--   Testes massivos serão necessários. Após a migração, o  é a melhor ferramenta para garantir a integridade da aplicação.
+-   **Prioridade Máxima:** A confiança do usuário está abalada devido aos bugs recorrentes. A principal prioridade é resolver o bug do Painel de Vagas de forma definitiva e realizar uma verificação completa antes de comunicar ao usuário. Não declare o sistema pronto até ter certeza.
+-   **Estratégia de Deploy:** O plano de migração de dados manual foi substituído por um **mecanismo de auto-seeding**. Após a correção do bug atual, o próximo passo é instruir o usuário a fazer o **Replace deployment**. Não é mais necessário rodar scripts de migração.
+-   **Versão PostgreSQL:** Esta é uma tarefa futura importante, mas só deve ser iniciada **após** a versão MongoDB estar 100% estável e em produção no domínio do usuário.
 
 **documents and test reports created in this job**
--    (Contém resultados de testes das funcionalidades pré-migração).
--    (Atualizado com as funcionalidades concluídas antes da migração).
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **Usuário:** Continua (Incentivando o agente a prosseguir com a migração).
-9.  **Usuário:** Quero (Aprovando a sugestão de adicionar a funcionalidade de duplicar período).
-8.  **Usuário:** Ele deve perguntar se a essoa deseja duplicar o período anterior ou não (Solicitando um ajuste no fluxo de duplicação de período).
-7.  **Usuário:** Pode prosseguir (Aprovando o plano para implementar o filtro de período).
-6.  **Usuário:** Informa que no Painel de Vagas os dados de semestres anteriores se acumularão, sugerindo a necessidade de um filtro por período.
-5.  **Usuário:** Migrar para MongoDB — Trabalho significativo, mas viabiliza o deploy na Emergent (Confirmando a decisão de iniciar a migração do banco de dados).
-4.  **Usuário:** Pede para chamar o  e verificar a prontidão para deploy.
-3.  **Usuário:** Aprova o screenshot do novo modal de duplicação de período.
-2.  **Usuário:** Continua (Incentivando o agente a prosseguir com a reescrita dos roteadores).
-1.  **Usuário:** Continua (Incentivando o agente a prosseguir com a reescrita dos roteadores).
+1.  **Usuário:** Vamos fazer algo bem feito - Pede para corrigir os lembretes que não aparecem e implementar alertas automáticos para tarefas paradas.
+2.  **Agente:** Corrige o bug dos lembretes e implementa a feature de alertas automáticos.
+3.  **Usuário:** Reporta que os templates de mensagem em Pedidos não estão carregando.
+4.  **Agente:** Investiga e corrige o  na formatação dos templates.
+5.  **Usuário:** Pede para alterar o e-mail e ramal na página Manual.
+6.  **Agente:** Atualiza as informações de contato.
+7.  **Usuário:** Reporta um erro no Painel de Vagas ao tentar usar um período recém-criado (2026.2).
+8.  **Agente:** Inicia a investigação do bug no Painel de Vagas.
+9.  **Usuário:** (Mensagem anterior) Capricha na auditoria. - Pede uma auditoria completa no sistema antes de subir para o domínio.
+10. **Usuário:** (Mensagem anterior) Expressa frustração com os bugs e o gasto de créditos, reforçando a necessidade de uma verificação completa.
 
 **Project Health Check:**
--   **Broken:** O backend está totalmente inoperante devido à migração em andamento.
+-   **Broken:** O deploy no domínio customizado do usuário () está desatualizado. A funcionalidade Painel de Vagas está quebrada para novos períodos.
 -   **Mocked:** Nenhum.
--   **Technical Debt:** Limpeza pendente do .
+-   **Technical Debt:** Algumas importações e comentários legados do SQLAlchemy que não afetam a funcionalidade.
 
 **3rd Party Integrations**
 -   ViaCEP
@@ -143,14 +147,13 @@ As tarefas abaixo foram planejadas antes da migração e devem ser retomadas ap�
 -   bcrypt
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (para funcionalidades pré-migração).
+-   **Testing agent used after significant changes:** YES. Usado para uma auditoria completa, que resultou em 71 testes passando e 2 bugs corrigidos.
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** Não.
--   **Known regressions:** A aplicação inteira está em estado de regressão até que a migração seja concluída e testada.
+-   **Known regressions:** O Painel de Vagas para novos períodos.
 
 **Credentials to test flow:**
--   **Admin principal:**  (Senha: )
--   **Outros usuários:** Senha padrão  (requer troca no primeiro login).
+-    / 
 
 **What agent forgot to execute**
--   O agente está focado na migração massiva. Nenhuma tarefa foi esquecida, mas sim colocada em espera. A conclusão da migração é o pré-requisito para todas as outras atividades.</analysis>
+-   O agente não esqueceu nada; estava no meio de uma depuração de um bug ativamente reportado pelo usuário quando a sessão terminou.</analysis>

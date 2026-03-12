@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://mongodb-migration-6.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://vagas-debug.preview.emergentagent.com')
 
 # Credenciais oficiais de produção
 TEST_EMAIL = "pedro.passos@fieb.org.br"

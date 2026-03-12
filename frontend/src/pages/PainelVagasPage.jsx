@@ -159,14 +159,13 @@ export default function PainelVagasPage() {
     }
     setDuplicarLoading(true);
     try {
-      if (querDuplicar) {
-        const res = await api.post('/painel-vagas/duplicar-periodo', null, {
-          params: { periodo_origem: duplicarOrigem, periodo_destino: duplicarDestino.trim() }
-        });
-        toast.success(res.data.message);
-      } else {
-        toast.success(`Período ${duplicarDestino.trim()} pronto! Adicione turmas manualmente.`);
+      // Sempre chama a API, passando periodo_origem vazio se for criar vazio
+      const params = { periodo_destino: duplicarDestino.trim() };
+      if (querDuplicar && duplicarOrigem) {
+        params.periodo_origem = duplicarOrigem;
       }
+      const res = await api.post('/painel-vagas/duplicar-periodo', null, { params });
+      toast.success(res.data.message);
       setShowDuplicar(false);
       setDuplicarDestino('');
       setQuerDuplicar(true);

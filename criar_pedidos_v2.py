@@ -1,7 +1,7 @@
 import requests
 import random
 
-API_URL = "https://mongodb-migration-6.preview.emergentagent.com/api"
+API_URL = "https://vagas-debug.preview.emergentagent.com/api"
 
 # Login como admin
 login_resp = requests.post(f"{API_URL}/auth/login", json={

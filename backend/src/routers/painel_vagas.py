@@ -13,9 +13,15 @@ router = APIRouter(prefix="/painel-vagas", tags=["Painel de Vagas"])
 
 @router.get("/periodos")
 async def listar_periodos(current_user: Usuario = Depends(get_current_user)):
-    periodos = await db.painel_turmas.distinct("periodo_letivo", {"periodo_letivo": {"$ne": None}})
-    periodos.sort(reverse=True)
-    return {"periodos": periodos}
+    # Combina períodos das turmas existentes com períodos vazios registrados
+    periodos_turmas = await db.painel_turmas.distinct("periodo_letivo", {"periodo_letivo": {"$ne": None}})
+    periodos_vazios_docs = await db.periodos_letivos.find({}, {"periodo": 1, "_id": 0}).to_list(100)
+    periodos_vazios = [p["periodo"] for p in periodos_vazios_docs if p.get("periodo")]
+    
+    # Une e remove duplicatas
+    todos_periodos = list(set(periodos_turmas + periodos_vazios))
+    todos_periodos.sort(reverse=True)
+    return {"periodos": todos_periodos}
 
 
 @router.get("/dashboard")
@@ -188,21 +194,40 @@ async def importar_cursos_cimatec(current_user: Usuario = Depends(get_current_us
 
 @router.post("/duplicar-periodo")
 async def duplicar_turmas_periodo(
-    periodo_origem: str = Query(...), periodo_destino: str = Query(...),
+    periodo_origem: str = Query(None), periodo_destino: str = Query(...),
     current_user: Usuario = Depends(get_current_user)
 ):
+    """
+    Duplicar turmas de um período ou criar um período vazio.
+    Se periodo_origem for None ou vazio, apenas registra o novo período.
+    """
     if current_user.role.value not in ("admin",):
-        raise HTTPException(403, "Apenas administradores podem duplicar períodos")
+        raise HTTPException(403, "Apenas administradores podem criar/duplicar períodos")
 
     existing = await db.painel_turmas.count_documents({"periodo_letivo": periodo_destino})
     if existing > 0:
         raise HTTPException(409, f"O período {periodo_destino} já possui turmas")
 
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Se não há período de origem, cria um período vazio (registro placeholder)
+    if not periodo_origem or periodo_origem.strip() == "":
+        # Registrar período na coleção de períodos para que apareça no dropdown
+        user_email = current_user.email.valor if hasattr(current_user.email, 'valor') else str(current_user.email)
+        await db.periodos_letivos.update_one(
+            {"periodo": periodo_destino},
+            {"$setOnInsert": {"periodo": periodo_destino, "created_at": now, "created_by": user_email}},
+            upsert=True
+        )
+        return {
+            "message": f"Período {periodo_destino} criado (vazio). Adicione turmas manualmente.",
+            "periodo_destino": periodo_destino, "turmas_criadas": 0
+        }
+
     turmas = await db.painel_turmas.find({"periodo_letivo": periodo_origem}, {"_id": 0}).to_list(1000)
     if not turmas:
         raise HTTPException(404, f"Nenhuma turma no período {periodo_origem}")
 
-    now = datetime.now(timezone.utc).isoformat()
     batch = []
     for t in turmas:
         batch.append({
