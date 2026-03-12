@@ -3,7 +3,7 @@
 ## Problem Statement
 Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligência Operacional" que atua como middleware de front-end entre a CAC (Central de Atendimento ao Cliente) e o TOTVS Educacional. O objetivo é substituir processos manuais para gerenciar solicitações de matrícula, pendências de documentos, reembolsos, e apoio cognitivo para funcionários.
 
-## Última Atualização: 2026-03-11 (Sessão 2)
+## Última Atualização: 2026-03-12 (Sessão 3)
 
 ## Tech Stack Atual
 - Backend: Python 3.10+, FastAPI, **MongoDB (Motor/PyMongo)**, Pydantic
@@ -85,6 +85,7 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - [x] **Auto-seeding no startup** (2026-03-11) - src/seeds/initial_data.json.gz
 - [x] **Endpoint de seed via API** (2026-03-11) - /api/admin/seed/{collection}
 - [x] **Apresentações atualizadas** (2026-03-11) - URLs, tech stack, números, módulos
+- [x] **Bug fix: Criar período vazio no Painel de Vagas** (2026-03-12) - Agora registra períodos vazios na coleção periodos_letivos
 
 ### P1 (Próximos)
 - [ ] Integração com TOTVS via API (aguardando TI SENAI)
@@ -101,9 +102,16 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - `/app/backend/server.py` - FastAPI principal (MongoDB lifespan)
 - `/app/backend/src/infrastructure/persistence/mongodb.py` - Conexão MongoDB
 - `/app/backend/src/routers/` - Todos os routers da API
+- `/app/backend/src/routers/painel_vagas.py` - Painel de Vagas (corrigido 2026-03-12)
 - `/app/frontend/src/pages/` - Páginas do frontend
+- `/app/frontend/src/pages/PainelVagasPage.jsx` - Frontend Painel de Vagas (corrigido 2026-03-12)
 - `/app/frontend/src/App.js` - Rotas
 - `/app/frontend/src/components/DashboardLayout.jsx` - Sidebar
+
+## Notas Técnicas
+- **Nova coleção MongoDB**: `periodos_letivos` - Armazena períodos vazios (sem turmas)
+- O endpoint `GET /api/painel-vagas/periodos` agora combina períodos de `painel_turmas.periodo_letivo` com `periodos_letivos.periodo`
+- O endpoint `POST /api/painel-vagas/duplicar-periodo` aceita `periodo_origem` como opcional. Se vazio, cria apenas o registro do período.
 
 ## Notes para Deploy
 - MongoDB local: mongodb://localhost:27017 (Emergent provê MongoDB nativo)
