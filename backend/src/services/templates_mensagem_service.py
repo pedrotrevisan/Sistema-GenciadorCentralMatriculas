@@ -826,19 +826,11 @@ def render_email_template(
     if not template:
         raise ValueError(f"Template de e-mail não encontrado: {tipo}")
     
-    assunto = template["assunto"].format(**dados)
-    
-    if formato == "html":
-        corpo = template["corpo_html"].format(**dados)
-    else:
-        corpo = template["corpo_texto"].format(**dados)
-    
-    return {
-        "assunto": assunto,
-        "corpo": corpo,
-        "tipo": tipo,
-        "formato": formato
-    }
+    safe = __import__('collections').defaultdict(str, dados)
+    assunto = template["assunto"].format_map(safe)
+    corpo_key = "corpo_html" if formato == "html" else "corpo_texto"
+    corpo = template.get(corpo_key, template.get("corpo_html", "")).format_map(safe)
+    return {"assunto": assunto, "corpo": corpo, "tipo": tipo, "formato": formato}
 
 
 def render_whatsapp_template(
@@ -859,7 +851,8 @@ def render_whatsapp_template(
     if not template:
         raise ValueError(f"Template de WhatsApp não encontrado: {tipo}")
     
-    return template["mensagem"].format(**dados)
+    safe = __import__('collections').defaultdict(str, dados)
+    return template["mensagem"].format_map(safe)
 
 
 def gerar_link_whatsapp(telefone: str, mensagem: str) -> str:
