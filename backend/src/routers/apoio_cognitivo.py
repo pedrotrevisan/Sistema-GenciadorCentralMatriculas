@@ -69,36 +69,116 @@ async def get_meu_dia(data: Optional[str] = None, usuario: Usuario = Depends(get
     hoje = data or date.today().isoformat()
     dia_semana = date.fromisoformat(hoje).isoweekday()
 
+    # Tarefas do dia
     query = {"usuario_id": usuario.id, "ativo": {"$ne": False},
              "$or": [{"data_tarefa": hoje}, {"data_tarefa": None, "recorrente": True}]}
     tarefas = await db.tarefas_diarias.find(query, {"_id": 0}).sort([("ordem", 1), ("prioridade", 1)]).to_list(200)
 
-    # Lembretes do dia
+    # =========================================================
+    # LEMBRETES UNIFICADOS — combina 3 fontes em uma lista só
+    # =========================================================
+    todos_lembretes = []
+
+    # Fonte 1: Lembretes explícitos criados manualmente
     inicio = f"{hoje}T00:00:00"
     fim = f"{hoje}T23:59:59"
-    lembretes_query = {"usuario_id": usuario.id, "data_lembrete": {"$gte": inicio, "$lte": fim}, "concluido": {"$ne": True}}
-    lembretes = await db.lembretes.find(lembretes_query, {"_id": 0}).sort("data_lembrete", 1).to_list(50)
+    lembretes_raw = await db.lembretes.find(
+        {"usuario_id": usuario.id, "data_lembrete": {"$gte": inicio, "$lte": fim}, "concluido": {"$ne": True}},
+        {"_id": 0}
+    ).sort("data_lembrete", 1).to_list(50)
 
-    # Tarefas com horário como lembretes
-    tarefas_com_horario = [t for t in tarefas if t.get("horario_sugerido") and not t.get("concluida")]
+    for l in lembretes_raw:
+        hora = l.get("data_lembrete", "T").split("T")[1][:5] if "T" in str(l.get("data_lembrete", "")) else None
+        todos_lembretes.append({
+            "id": l["id"], "fonte": "lembrete", "prioridade": "normal",
+            "titulo": l.get("titulo", ""), "descricao": l.get("descricao", ""),
+            "horario": hora, "tipo": l.get("tipo", "lembrete")
+        })
+
+    # Fonte 2: Tarefas do dia com horário definido
+    for t in tarefas:
+        if t.get("horario_sugerido") and not t.get("concluida"):
+            todos_lembretes.append({
+                "id": f"tarefa_{t['id']}", "fonte": "tarefa", "prioridade": "normal",
+                "titulo": t["titulo"], "descricao": t.get("descricao", ""),
+                "horario": t.get("horario_sugerido"), "tipo": "tarefa",
+                "tarefa_id": t["id"]
+            })
+
+    # Fonte 3: Alertas operacionais automáticos (admin e assistente)
+    role_val = usuario.role.value if hasattr(usuario.role, 'value') else str(usuario.role)
+    if role_val in ["admin", "assistente"]:
+        now = datetime.now(timezone.utc)
+        limite_48h = (now - timedelta(hours=48)).isoformat()
+        limite_72h = (now - timedelta(hours=72)).isoformat()
+        limite_5d = (now - timedelta(days=5)).isoformat()
+
+        # Pedidos críticos parados (>48h)
+        criticos = await db.pedidos.find(
+            {"updated_at": {"$lt": limite_48h}, "status": {"$in": ["pendente", "em_analise", "documentacao_pendente"]}},
+            {"_id": 0, "id": 1, "numero_protocolo": 1, "curso_nome": 1, "updated_at": 1, "responsavel_nome": 1}
+        ).sort("updated_at", 1).limit(5).to_list(5)
+
+        for p in criticos:
+            try:
+                dt = datetime.fromisoformat(str(p.get("updated_at", "")).replace("Z", "+00:00"))
+                horas = int((now - dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else now - dt).total_seconds() / 3600)
+            except Exception:
+                horas = 99
+            prioridade = "critica" if horas > 72 else "alta"
+            todos_lembretes.append({
+                "id": f"alerta_critico_{p['id']}", "fonte": "alerta", "prioridade": prioridade,
+                "titulo": f"Pedido parado há {horas}h — ação necessária",
+                "descricao": f"{p.get('numero_protocolo', '')} · {p.get('curso_nome', 'Não informado')}",
+                "horario": None, "tipo": "pedido_parado",
+                "acao_url": f"/admin/pedido/{p['id']}"
+            })
+
+        # Reembolsos pendentes há mais de 5 dias
+        reembolsos_pendentes = await db.reembolsos.find(
+            {"created_at": {"$lt": limite_5d}, "status": {"$in": ["aberto", "aguardando_dados"]}},
+            {"_id": 0, "id": 1, "aluno_nome": 1, "created_at": 1, "valor": 1}
+        ).sort("created_at", 1).limit(3).to_list(3)
+
+        for r in reembolsos_pendentes:
+            try:
+                dt = datetime.fromisoformat(str(r.get("created_at", "")).replace("Z", "+00:00"))
+                dias = int((now - dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else now - dt).total_seconds() / 86400)
+            except Exception:
+                dias = 10
+            todos_lembretes.append({
+                "id": f"alerta_reembolso_{r['id']}", "fonte": "alerta", "prioridade": "alta",
+                "titulo": f"Reembolso pendente há {dias} dias",
+                "descricao": f"Aluno: {r.get('aluno_nome', '')}",
+                "horario": None, "tipo": "reembolso_pendente",
+                "acao_url": "/reembolsos"
+            })
+
+    # Ordena: lembretes com horário primeiro, depois alertas críticos, depois outros
+    prioridade_ordem = {"critica": 0, "alta": 1, "normal": 2}
+    fonte_ordem = {"lembrete": 0, "tarefa": 0, "alerta": 1}
+
+    def sort_key(l):
+        return (fonte_ordem.get(l["fonte"], 2), prioridade_ordem.get(l["prioridade"], 2), l.get("horario") or "99:99")
+
+    todos_lembretes.sort(key=sort_key)
 
     total = len(tarefas)
     concluidas = len([t for t in tarefas if t.get("concluida")])
     progresso = round((concluidas / total * 100) if total > 0 else 0, 1)
 
-    # Saudação baseada no horário
-    hora = datetime.now(timezone.utc).hour - 3  # Ajuste para BRT (UTC-3)
+    hora = datetime.now(timezone.utc).hour - 3
     if hora < 0: hora += 24
-    if hora < 12:
-        saudacao = "Bom dia"
-    elif hora < 18:
-        saudacao = "Boa tarde"
-    else:
-        saudacao = "Boa noite"
+    saudacao = "Bom dia" if hora < 12 else "Boa tarde" if hora < 18 else "Boa noite"
 
-    return {"tarefas": tarefas, "lembretes": lembretes, "lembretes_tarefas": tarefas_com_horario,
-            "estatisticas": {"total": total, "concluidas": concluidas, "pendentes": total - concluidas, "progresso": progresso},
-            "data": hoje, "dia_semana": dia_semana, "saudacao": saudacao}
+    return {
+        "tarefas": tarefas,
+        "lembretes": todos_lembretes,           # Lista unificada para o frontend
+        "lembretes_tarefas": [l for l in todos_lembretes if l["fonte"] == "tarefa"],  # compatibilidade
+        "alertas_operacionais": [l for l in todos_lembretes if l["fonte"] == "alerta"],
+        "estatisticas": {"total": total, "concluidas": concluidas, "pendentes": total - concluidas, "progresso": progresso},
+        "data": hoje, "dia_semana": dia_semana, "saudacao": saudacao
+    }
 
 
 @router.post("/tarefas")

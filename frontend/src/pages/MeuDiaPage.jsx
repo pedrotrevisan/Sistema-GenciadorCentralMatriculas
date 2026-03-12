@@ -309,7 +309,11 @@ const MeuDiaPage = () => {
                 <Bell className="w-5 h-5 text-purple-500" />
                 Lembretes de Hoje
                 {meuDia?.lembretes?.length > 0 && (
-                  <Badge className="bg-purple-500 text-white text-xs">
+                  <Badge className={`text-white text-xs ${
+                    meuDia.lembretes.some(l => l.fonte === 'alerta' && l.prioridade === 'critica')
+                      ? 'bg-red-500' : meuDia.lembretes.some(l => l.fonte === 'alerta')
+                      ? 'bg-orange-500' : 'bg-purple-500'
+                  }`}>
                     {meuDia.lembretes.length}
                   </Badge>
                 )}
@@ -319,43 +323,71 @@ const MeuDiaPage = () => {
               {meuDia?.lembretes?.length === 0 ? (
                 <div className="text-center py-6">
                   <Bell className="w-10 h-10 mx-auto text-slate-300 mb-2" />
-                  <p className="text-sm text-slate-500">
-                    Nenhum lembrete para hoje
-                  </p>
+                  <p className="text-sm text-slate-500">Nenhum lembrete para hoje</p>
                   <p className="text-xs text-slate-400 mt-1">
-                    Adicione uma tarefa com horário para criar lembretes
+                    Adicione uma tarefa com horário ou aguarde os alertas automáticos
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {meuDia?.lembretes?.map((lembrete) => (
-                    <div 
-                      key={lembrete.id}
-                      className={`p-3 rounded-lg border transition-all hover:shadow-md ${
-                        lembrete.fonte === 'tarefa' 
-                          ? 'bg-blue-50 border-blue-100' 
-                          : 'bg-purple-50 border-purple-100'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <Clock className={`w-4 h-4 ${
-                          lembrete.fonte === 'tarefa' ? 'text-blue-600' : 'text-purple-600'
-                        }`} />
-                        <span className={`text-sm font-bold ${
-                          lembrete.fonte === 'tarefa' ? 'text-blue-700' : 'text-purple-700'
-                        }`}>
-                          {lembrete.horario || '--:--'}
-                        </span>
-                        <Badge variant="outline" className="text-[10px] px-1 py-0">
-                          {lembrete.fonte === 'tarefa' ? 'Tarefa' : lembrete.tipo || 'Lembrete'}
-                        </Badge>
+                  {meuDia?.lembretes?.map((lembrete) => {
+                    const isAlerta = lembrete.fonte === 'alerta';
+                    const isCritico = isAlerta && lembrete.prioridade === 'critica';
+                    const isAlta = isAlerta && lembrete.prioridade === 'alta';
+                    const isTarefa = lembrete.fonte === 'tarefa';
+
+                    const bgClass = isCritico ? 'bg-red-50 border-red-200'
+                      : isAlta ? 'bg-orange-50 border-orange-200'
+                      : isAlerta ? 'bg-yellow-50 border-yellow-200'
+                      : isTarefa ? 'bg-blue-50 border-blue-100'
+                      : 'bg-purple-50 border-purple-100';
+
+                    const iconColor = isCritico ? 'text-red-500'
+                      : isAlta ? 'text-orange-500'
+                      : isAlerta ? 'text-yellow-600'
+                      : isTarefa ? 'text-blue-600' : 'text-purple-600';
+
+                    const badgeLabel = isCritico ? 'Crítico' : isAlta ? 'Urgente'
+                      : isAlerta ? 'Alerta' : isTarefa ? 'Tarefa' : 'Lembrete';
+
+                    const badgeClass = isCritico ? 'bg-red-100 text-red-700 border-red-200'
+                      : isAlta ? 'bg-orange-100 text-orange-700 border-orange-200'
+                      : isAlerta ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                      : '';
+
+                    return (
+                      <div
+                        key={lembrete.id}
+                        className={`p-3 rounded-lg border transition-all hover:shadow-md ${bgClass}`}
+                        onClick={() => lembrete.acao_url && (window.location.href = lembrete.acao_url)}
+                        style={{ cursor: lembrete.acao_url ? 'pointer' : 'default' }}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          {isAlerta
+                            ? <AlertTriangle className={`w-4 h-4 ${iconColor}`} />
+                            : <Clock className={`w-4 h-4 ${iconColor}`} />
+                          }
+                          {lembrete.horario && (
+                            <span className={`text-sm font-bold ${iconColor}`}>
+                              {lembrete.horario}
+                            </span>
+                          )}
+                          <Badge variant="outline" className={`text-[10px] px-1 py-0 ${badgeClass}`}>
+                            {badgeLabel}
+                          </Badge>
+                          {lembrete.acao_url && (
+                            <span className="ml-auto text-[10px] text-slate-400">Clique para ver →</span>
+                          )}
+                        </div>
+                        <p className={`text-sm font-medium ${isCritico ? 'text-red-800' : isAlta ? 'text-orange-800' : 'text-slate-700'}`}>
+                          {lembrete.titulo}
+                        </p>
+                        {lembrete.descricao && (
+                          <p className="text-xs text-slate-500 mt-1">{lembrete.descricao}</p>
+                        )}
                       </div>
-                      <p className="text-sm text-slate-700 font-medium">{lembrete.titulo}</p>
-                      {lembrete.descricao && (
-                        <p className="text-xs text-slate-500 mt-1">{lembrete.descricao}</p>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
