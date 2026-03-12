@@ -115,6 +115,7 @@ async def criar_tarefa(dto: TarefaCreateDTO, usuario: Usuario = Depends(get_curr
         "ativo": True, "created_at": now, "updated_at": now
     }
     await db.tarefas_diarias.insert_one(doc)
+    doc.pop("_id", None)
     return doc
 
 
@@ -185,6 +186,7 @@ async def criar_lembrete(dto: LembreteCreateDTO, usuario: Usuario = Depends(get_
         "notificado": False, "concluido": False, "ativo": True, "created_at": now
     }
     await db.lembretes.insert_one(doc)
+    doc.pop("_id", None)
     return doc
 
 
@@ -249,6 +251,7 @@ async def criar_artigo(dto: ArtigoCreateDTO, usuario: Usuario = Depends(get_curr
         "ativo": True, "created_at": now, "updated_at": now
     }
     await db.artigos_conhecimento.insert_one(doc)
+    doc.pop("_id", None)
     return doc
 
 
