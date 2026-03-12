@@ -449,14 +449,14 @@ export default function ManualAjudaPage() {
               <Mail className="w-8 h-8 text-blue-600" />
               <div>
                 <p className="font-medium text-sm">Email</p>
-                <p className="text-xs text-slate-500">suporte@fieb.org.br</p>
+                <p className="text-xs text-slate-500">cimatec-centraldeatendimento@fieb.org.br</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
               <Phone className="w-8 h-8 text-green-600" />
               <div>
                 <p className="font-medium text-sm">Ramal</p>
-                <p className="text-xs text-slate-500">3879-8200</p>
+                <p className="text-xs text-slate-500">(71) 3462-9501</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
