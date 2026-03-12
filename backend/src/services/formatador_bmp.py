@@ -11,21 +11,18 @@ Funcionalidades:
 - Padronização de endereços
 - Correção ortográfica de nomes próprios brasileiros
 - Relatório de auditoria detalhado
+- Exportação para Template TOTVS
 """
 import re
 import unicodedata
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
 
 
-# Dicionário de correções ortográficas comuns em nomes brasileiros
+# Dicionário EXPANDIDO de correções ortográficas para nomes brasileiros
 CORRECOES_NOMES = {
-    # Acentuação
+    # Nomes com acento agudo
     'JOAO': 'João', 'JOSE': 'José', 'MARIA': 'Maria',
-    'CONCEICAO': 'Conceição', 'GONCALVES': 'Gonçalves', 
-    'FALCAO': 'Falcão', 'ALCANTARA': 'Alcântara',
-    'FRANCES': 'Francês', 'INES': 'Inês', 'AGNES': 'Agnês',
-    'LUIZ': 'Luiz', 'LUIS': 'Luís', 'RAUL': 'Raul',
     'VALERIA': 'Valéria', 'DEBORA': 'Débora', 'BARBARA': 'Bárbara',
     'MARCIA': 'Márcia', 'LUCIA': 'Lúcia', 'LUCIO': 'Lúcio',
     'MARCIO': 'Márcio', 'SERGIO': 'Sérgio', 'ROGERIO': 'Rogério',
@@ -34,32 +31,74 @@ CORRECOES_NOMES = {
     'MAURICIO': 'Maurício', 'OTAVIO': 'Otávio', 'ANTONIO': 'Antônio',
     'THIAGO': 'Thiago', 'MATHEUS': 'Matheus', 'LUCAS': 'Lucas',
     'GABRIEL': 'Gabriel', 'RAFAEL': 'Rafael', 'DANIEL': 'Daniel',
-    'FERNAO': 'Fernão', 'SIMAO': 'Simão', 'JORDAO': 'Jordão',
-    'ADAO': 'Adão', 'CRISTOVAO': 'Cristóvão', 'SEBASTIAO': 'Sebastião',
     'CICERO': 'Cícero', 'JERONIMO': 'Jerônimo', 'RAMIRO': 'Ramiro',
-    
-    # Sobrenomes com cedilha
-    'SOUZA': 'Souza', 'SOUSA': 'Sousa',
-    'FRANCA': 'França', 'LANCA': 'Lança',
-    'MACEDO': 'Macedo', 'PESSOA': 'Pessoa',
-    'ASSUNCAO': 'Assunção', 'ENCARNACAO': 'Encarnação',
-    
-    # Sobrenomes com acento
-    'FREITAS': 'Freitas', 'SANTOS': 'Santos',
-    'OLIVEIRA': 'Oliveira', 'SILVA': 'Silva',
-    'PEREIRA': 'Pereira', 'FERREIRA': 'Ferreira',
-    'ALMEIDA': 'Almeida', 'ARAUJO': 'Araújo',
-    'RIBEIRO': 'Ribeiro', 'CARVALHO': 'Carvalho',
-    'MENDES': 'Mendes', 'NUNES': 'Nunes',
-    'MARTINS': 'Martins', 'RODRIGUES': 'Rodrigues',
-    'BARBOSA': 'Barbosa', 'COSTA': 'Costa',
-    'GOMES': 'Gomes', 'LIMA': 'Lima',
-    'LOPES': 'Lopes', 'MOREIRA': 'Moreira',
+    'LUIZ': 'Luiz', 'LUIS': 'Luís', 'RAUL': 'Raul',
+    'NATALIA': 'Natália', 'LIVIA': 'Lívia', 'SILVIA': 'Sílvia',
+    'CECILIA': 'Cecília', 'EMILIA': 'Emília', 'JULIA': 'Júlia',
+    'HELIO': 'Hélio', 'HELOISA': 'Heloísa', 'CLARICE': 'Clarice',
+    'BEATRIZ': 'Beatriz', 'PATRICIA': 'Patrícia', 'MONICA': 'Mônica',
+    'PRISCILA': 'Priscila', 'LETICIA': 'Letícia', 'SIMONE': 'Simone',
+    'BRUNA': 'Bruna', 'BRUNO': 'Bruno', 'CAIO': 'Caio',
+    'SOFIA': 'Sofia', 'SOPHIA': 'Sophia', 'ANA': 'Ana',
+    'ENZO': 'Enzo', 'HEITOR': 'Heitor', 'PEDRO': 'Pedro',
+    'VITOR': 'Vítor', 'VICTOR': 'Victor', 'DAVI': 'Davi',
+    'ISAIAS': 'Isaías', 'MATIAS': 'Matias', 'ELIAS': 'Elias',
+    'JEREMIAS': 'Jeremias', 'TOBIAS': 'Tobias', 'JONAS': 'Jonas',
+    'MOISES': 'Moisés', 'TOMAS': 'Tomás', 'NICOLAS': 'Nicolas',
+    'TIAGO': 'Tiago', 'DIEGO': 'Diego', 'DIOGO': 'Diogo',
     
     # Nomes com til
+    'CONCEICAO': 'Conceição', 'ENCARNACAO': 'Encarnação',
+    'ASSUNCAO': 'Assunção', 'ANUNCIACAO': 'Anunciação',
     'GERMANO': 'Germano', 'ADRIANO': 'Adriano',
     'CRISTIANO': 'Cristiano', 'LUCIANO': 'Luciano',
     'MARIANO': 'Mariano', 'FABIANO': 'Fabiano',
+    'SIMAO': 'Simão', 'JOAO': 'João', 'SEBASTIAO': 'Sebastião',
+    'CRISTOVAO': 'Cristóvão', 'ADAO': 'Adão', 'FERNAO': 'Fernão',
+    'JORDAO': 'Jordão',
+    
+    # Sobrenomes com cedilha
+    'GONCALVES': 'Gonçalves', 'FRANCA': 'França', 'LANCA': 'Lança',
+    'ALCANTARA': 'Alcântara', 'FALCAO': 'Falcão',
+    
+    # Sobrenomes com acento
+    'ARAUJO': 'Araújo', 'MERCES': 'Mercês',
+    'FRANCES': 'Francês', 'INES': 'Inês', 'AGNES': 'Agnês',
+    'SOUZA': 'Souza', 'SOUSA': 'Sousa',
+    'MACEDO': 'Macedo', 'PESSOA': 'Pessoa',
+    'FREITAS': 'Freitas', 'SANTOS': 'Santos',
+    'OLIVEIRA': 'Oliveira', 'SILVA': 'Silva',
+    'PEREIRA': 'Pereira', 'FERREIRA': 'Ferreira',
+    'ALMEIDA': 'Almeida', 'RIBEIRO': 'Ribeiro',
+    'CARVALHO': 'Carvalho', 'MENDES': 'Mendes',
+    'NUNES': 'Nunes', 'MARTINS': 'Martins',
+    'RODRIGUES': 'Rodrigues', 'BARBOSA': 'Barbosa',
+    'COSTA': 'Costa', 'GOMES': 'Gomes',
+    'LIMA': 'Lima', 'LOPES': 'Lopes',
+    'MOREIRA': 'Moreira', 'TEIXEIRA': 'Teixeira',
+    'REIS': 'Reis', 'DIAS': 'Dias', 'VIEIRA': 'Vieira',
+    'MONTEIRO': 'Monteiro', 'ANDRADE': 'Andrade',
+    'NASCIMENTO': 'Nascimento', 'SOARES': 'Soares',
+    'MELO': 'Melo', 'AZEVEDO': 'Azevedo',
+    'BORGES': 'Borges', 'BATISTA': 'Batista',
+    'SANTANA': 'Santana', 'BISPO': 'Bispo',
+    'ASSIS': 'Assis', 'JESUS': 'Jesus',
+    
+    # Estados brasileiros (para naturalidade)
+    'BAHIA': 'Bahia', 'SAO PAULO': 'São Paulo',
+    'RIO DE JANEIRO': 'Rio de Janeiro', 'MINAS GERAIS': 'Minas Gerais',
+    'PERNAMBUCO': 'Pernambuco', 'CEARA': 'Ceará',
+    'PARA': 'Pará', 'MARANHAO': 'Maranhão',
+    'GOIAS': 'Goiás', 'PARANA': 'Paraná',
+    'PIAUI': 'Piauí', 'AMAPA': 'Amapá',
+    'RONDONIA': 'Rondônia', 'ESPIRITO SANTO': 'Espírito Santo',
+    
+    # Cidades comuns da Bahia
+    'SALVADOR': 'Salvador', 'FEIRA DE SANTANA': 'Feira de Santana',
+    'SIMOES FILHO': 'Simões Filho', 'CAMACARI': 'Camaçari',
+    'LAURO DE FREITAS': 'Lauro de Freitas', 'CANDEIAS': 'Candeias',
+    'ITABUNA': 'Itabuna', 'VITORIA DA CONQUISTA': 'Vitória da Conquista',
+    'ILHEUS': 'Ilhéus', 'JUAZEIRO': 'Juazeiro',
 }
 
 # Preposições que devem ficar em minúsculo

@@ -172,6 +172,60 @@ const FormatadorPlanilhaPage = () => {
     }
   };
 
+  const baixarTemplateTOTVS = async () => {
+    if (!arquivo) return;
+
+    setProcessando(true);
+    try {
+      const formData = new FormData();
+      formData.append('arquivo', arquivo);
+
+      const response = await api.post('/formatador/processar-para-totvs', formData, {
+        responseType: 'blob',
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      // Verificar se a resposta é um erro JSON em vez de blob
+      if (response.data.type === 'application/json') {
+        const text = await response.data.text();
+        const errorData = JSON.parse(text);
+        throw new Error(errorData.detail || 'Erro ao processar');
+      }
+
+      // Criar blob com tipo MIME correto para Excel
+      const blob = new Blob([response.data], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
+      
+      // Gerar nome do arquivo
+      const nomeBase = arquivo.name.replace(/\.(xlsx?|xls)$/i, '');
+      const nomeFormatado = `${nomeBase}_TOTVS.xlsx`;
+      
+      // Download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = url;
+      link.setAttribute('download', nomeFormatado);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 150);
+
+      toast.success(`Template TOTVS "${nomeFormatado}" gerado com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao gerar template TOTVS:', error);
+      const mensagemErro = error.response?.data?.detail || error.message || 'Erro desconhecido';
+      toast.error(`Erro ao gerar template TOTVS: ${mensagemErro}`);
+    } finally {
+      setProcessando(false);
+    }
+  };
+
   const copiarDados = async (aluno, tipo) => {
     const fmt = aluno.formatado;
     let texto = '';
@@ -295,11 +349,11 @@ ${aluno.erros.map(e => `• ${e}`).join('\n')}`;
           </div>
 
           {arquivo && (
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Button 
                 onClick={processarPlanilha} 
                 disabled={processando}
-                className="flex-1"
+                className="flex-1 min-w-[200px]"
                 data-testid="processar-btn"
               >
                 {processando ? (
@@ -317,6 +371,16 @@ ${aluno.erros.map(e => `• ${e}`).join('\n')}`;
               >
                 <Download className="w-4 h-4 mr-2" />
                 Baixar Formatado
+              </Button>
+              <Button 
+                onClick={baixarTemplateTOTVS} 
+                disabled={processando}
+                variant="default"
+                className="bg-blue-600 hover:bg-blue-700"
+                data-testid="baixar-totvs-btn"
+              >
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                Gerar Template TOTVS
               </Button>
             </div>
           )}

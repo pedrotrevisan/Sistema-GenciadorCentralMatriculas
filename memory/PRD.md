@@ -11,6 +11,7 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - Auth: JWT (python-jose), bcrypt
 - Deploy: Emergent Platform (Kubernetes)
 - Auto-seeding: initial_data.json.gz (5426 docs, 283KB comprimido)
+- Formatador BMP: Processamento inteligente de planilhas com correção ortográfica e validação
 
 ## Credenciais de Acesso
 - Admin: `pedro.passos@fieb.org.br` (senha: Pedro@2026)
@@ -86,6 +87,7 @@ Sistema web completo chamado SYNAPSE para o SENAI CIMATEC - um "Hub de Inteligê
 - [x] **Endpoint de seed via API** (2026-03-11) - /api/admin/seed/{collection}
 - [x] **Apresentações atualizadas** (2026-03-11) - URLs, tech stack, números, módulos
 - [x] **Bug fix: Criar período vazio no Painel de Vagas** (2026-03-12) - Agora registra períodos vazios na coleção periodos_letivos
+- [x] **Formatador para Template TOTVS** (2026-03-12) - Novo endpoint `/api/formatador/processar-para-totvs` que processa planilhas de entrada e gera saída no formato exato do template TOTVS com correção ortográfica completa, validação de CPF, formatação de CEP/telefone/email, auditoria automática
 
 ### P1 (Próximos)
 - [ ] Integração com TOTVS via API (aguardando TI SENAI)
